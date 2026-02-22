@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SFDAS | SIGN UP</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <form class="login-form" action="register.php" method="POST">
+      <div class="form-heading">Create Account</div>
+
+      <!-- Full Name -->
+      <div class="input-group">
+        <label class="label" for="fullname">Full Name</label>
+        <input
+          required
+          placeholder="Enter your full name"
+          name="fullname"
+          id="fullname"
+          type="text"
+        />
+      </div>
+
+      <!-- ✅ Email field added -->
+      <div class="input-group">
+        <label class="label" for="email">Email</label>
+        <input
+          required
+          placeholder="Enter your email"
+          name="email"
+          id="email"
+          type="email"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="input-group">
+        <label class="label" for="password">Password</label>
+        <input
+          required
+          placeholder="Create password"
+          name="password"
+          id="password"
+          type="password"
+        />
+      </div>
+
+      <button class="submit" type="submit">Sign Up</button>
+      <div class="signup-link">
+        Already have an account? <a href="index.html">Login</a>
+      </div>
+    </form>
+  </body>
+</html>
