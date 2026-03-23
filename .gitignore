@@ -1,6 +1,6 @@
-<<<<<<< HEAD
+
 .env
 SFDAASS.env
-=======
->>>>>>> 55c8fb79b4f9655c34a1ff432c8317afc0540cea
 SFDAASS_DESIGN/sfdaass/backend/.env
+node_modules/
+
