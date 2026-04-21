@@ -11,3 +11,36 @@
 [10:40:50] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
 [10:41:22] [32minfo[39m: Socket connected: admin@sfdaass.io
 [10:41:22] [32minfo[39m: Socket connected: admin@sfdaass.io
+[16:40:55] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[16:40:55] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[16:40:55] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[16:40:55] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[16:43:11] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[16:43:11] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[16:43:11] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[16:43:11] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[16:43:28] [32minfo[39m: Socket connected: admin@sfdaass.io
+[16:58:00] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[16:58:13] [32minfo[39m: Socket connected: admin@sfdaass.io
+[16:59:50] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:00:24] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:03:35] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:03:36] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:04:26] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:04:43] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:04:48] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:04:49] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:04:50] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:04:52] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:04:52] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:04:54] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:04:55] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[17:05:07] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[17:05:07] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[17:05:07] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[17:05:07] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[17:05:15] [32minfo[39m: Socket connected: admin@sfdaass.io
+[17:05:28] [32minfo[39m: Socket disconnected: admin@sfdaass.io
