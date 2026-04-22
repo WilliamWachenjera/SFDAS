@@ -3,4 +3,5 @@
 SFDAASS.env
 SFDAASS_DESIGN/sfdaass/backend/.env
 node_modules/
+logs/
 
