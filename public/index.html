@@ -1,0 +1,3980 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <title>SFDAASS — Smart Fire Detection and Alerting with Automated Suppression System</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <style>
+    /* ══════════════════ VARIABLES ══════════════════ */
+    :root {
+      --bg-deep: #060a0f;
+      --bg-panel: #0c1520;
+      --bg-card: #101c2a;
+      --bg-card2: #0e1825;
+      --accent-fire: #ff4e1a;
+      --accent-amber: #ffaa00;
+      --accent-teal: #00d4aa;
+      --accent-blue: #1e90ff;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --text-primary: #e8f4fd;
+      --text-secondary: #7a9ab8;
+      --text-muted: #3d5a70;
+      --border: #1a3045;
+      --border-glow: #1e4060;
+      --font-head: 'Rajdhani', sans-serif;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-body: 'Exo 2', sans-serif;
+      --sidebar-w: 220px;
+      --topbar-h: 56px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      overflow-x: hidden
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 212, 170, .012) 2px, rgba(0, 212, 170, .012) 4px);
+      pointer-events: none;
+      z-index: 9999
+    }
+
+    /* ══════════════════ LOGIN SCREEN ══════════════════ */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity .4s;
+    }
+
+    #login-screen.hidden {
+      opacity: 0;
+      pointer-events: none
+    }
+
+    .login-box {
+      width: 420px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-fire), var(--accent-amber), var(--accent-teal))
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px
+    }
+
+    .login-logo .l-icon {
+      font-size: 64px;
+      display: block;
+      margin-bottom: 12px
+    }
+
+    .login-logo h1 {
+      font-family: var(--font-head);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent-fire);
+      letter-spacing: 3px;
+      text-transform: uppercase
+    }
+
+    .login-logo p {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      margin-top: 4px
+    }
+
+    .l-field {
+      margin-bottom: 18px
+    }
+
+    .l-field label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 7px
+    }
+
+    .l-field input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s
+    }
+
+    .l-field input:focus {
+      border-color: var(--accent-teal);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, .1)
+    }
+
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pass-toggle {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color .2s;
+      user-select: none;
+      z-index: 5;
+    }
+
+    .pass-toggle:hover {
+      color: var(--accent-teal);
+    }
+
+    .l-error {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-fire);
+      margin-bottom: 14px;
+      display: none
+    }
+
+    .l-error.show {
+      display: block
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent-fire), #c03000);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(255, 78, 26, .4)
+    }
+
+    .btn-login:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .login-hint span {
+      color: var(--accent-teal)
+    }
+
+    /* LOGIN VIEW CONTROLS */
+    .login-view {
+      display: none;
+    }
+
+    .login-view.active {
+      display: block;
+      animation: fadeIn .3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* MODAL SYSTEM */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      backdrop-filter: blur(5px);
+      z-index: 11000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent-teal);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlide .3s ease-out;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+    }
+
+    @keyframes modalSlide {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-family: var(--font-head);
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--accent-fire);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* ══════════════════ LAYOUT ══════════════════ */
+    #app {
+      display: none
+    }
+
+    #app.visible {
+      display: flex
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0b1520, #060e18);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .sidebar-logo .logo-icon {
+      font-size: 32px
+    }
+
+    .sidebar-logo h1 {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-fire);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px
+    }
+
+    .sidebar-logo p {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    nav {
+      flex: 1;
+      padding: 14px 0;
+      overflow-y: auto
+    }
+
+    .nav-section {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      padding: 10px 18px 5px;
+      text-transform: uppercase
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 18px;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      letter-spacing: .5px;
+      transition: all .2s;
+      border-left: 3px solid transparent
+    }
+
+    .nav-item:hover {
+      color: var(--text-primary);
+      background: rgba(30, 144, 255, .06)
+    }
+
+    .nav-item.active {
+      color: var(--accent-teal);
+      background: rgba(0, 212, 170, .08);
+      border-left-color: var(--accent-teal)
+    }
+
+    .nav-icon {
+      font-size: 15px;
+      width: 18px;
+      text-align: center
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent-fire);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      animation: pulse-b 2s infinite
+    }
+
+    @keyframes pulse-b {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .sidebar-bottom {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border)
+    }
+
+    .online-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      margin-right: 7px;
+      animation: blink 1.5s infinite
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .25
+      }
+    }
+
+    .sidebar-bottom span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-green)
+    }
+
+    .sidebar-user {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: var(--bg-card2);
+      border-radius: 6px;
+      cursor: pointer
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 700;
+      color: #060a0f;
+      flex-shrink: 0
+    }
+
+    .user-info .user-name {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary)
+    }
+
+    .user-info .user-role {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .logout-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px
+    }
+
+    .logout-btn:hover {
+      color: var(--accent-fire)
+    }
+
+    /* TOPBAR */
+    #topbar {
+      position: fixed;
+      left: var(--sidebar-w);
+      right: 0;
+      top: 0;
+      height: var(--topbar-h);
+      background: rgba(6, 10, 15, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 90
+    }
+
+    .topbar-left {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted)
+    }
+
+    .topbar-left span {
+      color: var(--accent-teal)
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .topbar-time {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-secondary)
+    }
+
+    .alert-pill {
+      background: rgba(255, 78, 26, .12);
+      border: 1px solid rgba(255, 78, 26, .35);
+      color: var(--accent-fire);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      animation: pulse-border 2s infinite
+    }
+
+    @keyframes pulse-border {
+
+      0%,
+      100% {
+        border-color: rgba(255, 78, 26, .35)
+      }
+
+      50% {
+        border-color: rgba(255, 78, 26, .8)
+      }
+    }
+
+    .conn-indicator {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .conn-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: blink 1.5s infinite
+    }
+
+    .conn-dot.disconnected {
+      background: var(--accent-red);
+      animation: none
+    }
+
+    /* MAIN */
+    #main {
+      margin-left: var(--sidebar-w);
+      padding-top: var(--topbar-h);
+      min-height: 100vh
+    }
+
+    .page {
+      display: none;
+      padding: 22px;
+      animation: fadein .3s ease
+    }
+
+    .page.active {
+      display: block
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .page-header {
+      margin-bottom: 22px
+    }
+
+    .page-header h2 {
+      font-family: var(--font-head);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 3px
+    }
+
+    .header-line {
+      width: 44px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-fire), var(--accent-amber));
+      margin-top: 7px;
+      border-radius: 2px
+    }
+
+    /* GRIDS */
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px
+    }
+
+    .g4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px
+    }
+
+    .mb {
+      margin-bottom: 14px
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-teal), transparent);
+      opacity: .35
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-glow)
+    }
+
+    .stat-card .s-icon {
+      font-size: 26px;
+      margin-bottom: 6px
+    }
+
+    .stat-card .s-val {
+      font-family: var(--font-head);
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .stat-card .s-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 3px
+    }
+
+    .stat-card .s-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 5px
+    }
+
+    .stat-card .corner-glow {
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      opacity: .06
+    }
+
+    .sc-fire {
+      border-left: 3px solid var(--accent-fire)
+    }
+
+    .sc-fire .s-val {
+      color: var(--accent-fire)
+    }
+
+    .sc-fire .corner-glow {
+      background: var(--accent-fire)
+    }
+
+    .sc-safe {
+      border-left: 3px solid var(--accent-green)
+    }
+
+    .sc-safe .s-val {
+      color: var(--accent-green)
+    }
+
+    .sc-safe .corner-glow {
+      background: var(--accent-green)
+    }
+
+    .sc-warn {
+      border-left: 3px solid var(--accent-amber)
+    }
+
+    .sc-warn .s-val {
+      color: var(--accent-amber)
+    }
+
+    .sc-warn .corner-glow {
+      background: var(--accent-amber)
+    }
+
+    .sc-info {
+      border-left: 3px solid var(--accent-blue)
+    }
+
+    .sc-info .s-val {
+      color: var(--accent-blue)
+    }
+
+    .sc-info .corner-glow {
+      background: var(--accent-blue)
+    }
+
+    /* MAP */
+    .map-box {
+      height: 320px;
+      border-radius: 6px;
+      background: #081218
+    }
+
+    /* ALERT LIST */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-card2);
+      cursor: pointer;
+      transition: background .2s
+    }
+
+    .alert-item:hover {
+      background: var(--bg-card)
+    }
+
+    .alert-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0
+    }
+
+    .alert-dot.critical {
+      background: var(--accent-fire);
+      box-shadow: 0 0 8px var(--accent-fire);
+      animation: blink 1s infinite
+    }
+
+    .alert-dot.warning {
+      background: var(--accent-amber)
+    }
+
+    .alert-dot.low {
+      background: var(--accent-green)
+    }
+
+    .alert-title {
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary)
+    }
+
+    .alert-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px
+    }
+
+    .alert-time {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0
+    }
+
+    /* SEVERITY BADGES */
+    .sev {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .sev-critical {
+      background: rgba(255, 78, 26, .2);
+      color: var(--accent-fire);
+      border: 1px solid rgba(255, 78, 26, .4)
+    }
+
+    .sev-warning {
+      background: rgba(255, 170, 0, .15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(255, 170, 0, .3)
+    }
+
+    .sev-low {
+      background: rgba(34, 197, 94, .15);
+      color: var(--accent-green);
+      border: 1px solid rgba(34, 197, 94, .3)
+    }
+
+    /* SENSOR TILES */
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px
+    }
+
+    .s-tile {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center
+    }
+
+    .s-tile .sl {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .s-tile .sv {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px
+    }
+
+    .s-tile .su {
+      font-size: 11px;
+      color: var(--text-secondary)
+    }
+
+    .s-tile .sbar {
+      height: 4px;
+      border-radius: 2px;
+      margin-top: 7px;
+      background: var(--border);
+      overflow: hidden
+    }
+
+    .s-tile .sfill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1s
+    }
+
+    /* SPRINKLER ZONES */
+    .zone-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px
+    }
+
+    .zone-tile {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center
+    }
+
+    .zone-tile .zl {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .zone-tile .zs {
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 6px
+    }
+
+    .zone-tile button {
+      margin-top: 8px;
+      width: 100%;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-head);
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-secondary);
+      transition: all .2s
+    }
+
+    .zone-tile button:hover {
+      background: rgba(255, 255, 255, .05)
+    }
+
+    .zone-tile button.on {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal)
+    }
+
+    .zone-tile button.off {
+      border-color: var(--accent-red);
+      color: var(--accent-red)
+    }
+
+    /* TABLE */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    .data-table th {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 9px 13px;
+      text-align: left;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .data-table td {
+      padding: 9px 13px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(26, 48, 69, .4)
+    }
+
+    .data-table tr:hover td {
+      background: rgba(0, 212, 170, .025);
+      cursor: pointer
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-teal)
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase
+    }
+
+    .pill-on {
+      background: rgba(34, 197, 94, .15);
+      color: var(--accent-green);
+      border: 1px solid rgba(34, 197, 94, .3)
+    }
+
+    .pill-off {
+      background: rgba(239, 68, 68, .12);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, .25)
+    }
+
+    .pill-warn {
+      background: rgba(255, 170, 0, .12);
+      color: var(--accent-amber);
+      border: 1px solid rgba(255, 170, 0, .25)
+    }
+
+    /* CHART */
+    .chart-wrap {
+      position: relative;
+      height: 190px
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 5px;
+      border: none;
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .btn-fire {
+      background: linear-gradient(135deg, var(--accent-fire), #c03000);
+      color: #fff
+    }
+
+    .btn-fire:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(255, 78, 26, .4)
+    }
+
+    .btn-teal {
+      background: linear-gradient(135deg, var(--accent-teal), #009977);
+      color: #060a0f
+    }
+
+    .btn-teal:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 212, 170, .4)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary)
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal)
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, var(--accent-amber), #cc8800);
+      color: #060a0f
+    }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      gap: 9px;
+      margin-bottom: 14px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 7px 12px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      outline: none
+    }
+
+    .filter-bar input {
+      flex: 1;
+      min-width: 180px
+    }
+
+    .filter-bar input:focus,
+    .filter-bar select:focus {
+      border-color: var(--accent-teal)
+    }
+
+    /* FORM */
+    .form-group {
+      margin-bottom: 15px
+    }
+
+    .form-group label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent-teal);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, .08)
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 110px
+    }
+
+    /* MODAL */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .72);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal-bg.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px;
+      width: 520px;
+      max-width: 95vw;
+      max-height: 88vh;
+      overflow-y: auto
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px
+    }
+
+    .modal-header h3 {
+      font-family: var(--font-head);
+      font-size: 17px;
+      font-weight: 700
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary)
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 14px
+    }
+
+    .detail-field {
+      background: var(--bg-deep);
+      border-radius: 5px;
+      padding: 9px 13px
+    }
+
+    .df-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .df-val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-top: 3px
+    }
+
+    /* TIMELINE */
+    .timeline {
+      position: relative;
+      padding-left: 18px
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border)
+    }
+
+    .tl-item {
+      position: relative;
+      padding: 0 0 13px 15px
+    }
+
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      border: 2px solid var(--bg-card)
+    }
+
+    .tl-item.fire::before {
+      background: var(--accent-fire)
+    }
+
+    .tl-item.warn::before {
+      background: var(--accent-amber)
+    }
+
+    .tl-time {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted)
+    }
+
+    .tl-label {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-top: 2px
+    }
+
+    /* ABOUT */
+    .about-hero {
+      background: linear-gradient(135deg, rgba(255, 78, 26, .08), rgba(30, 144, 255, .06), rgba(0, 212, 170, .05));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden
+    }
+
+    .about-hero::before {
+      content: '🔥';
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      font-size: 110px;
+      opacity: .05
+    }
+
+    .about-hero h2 {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase
+    }
+
+    .about-hero h2 span {
+      color: var(--accent-fire)
+    }
+
+    .about-hero p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 580px;
+      margin: 10px auto 0;
+      line-height: 1.7
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .tech-cat {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px
+    }
+
+    .tech-cat h4 {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-teal);
+      letter-spacing: 1px;
+      margin-bottom: 9px;
+      text-transform: uppercase
+    }
+
+    .tech-tag {
+      display: inline-block;
+      margin: 3px;
+      background: rgba(0, 212, 170, .08);
+      border: 1px solid rgba(0, 212, 170, .2);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 4px
+    }
+
+    .tech-tag.hw {
+      background: rgba(255, 78, 26, .08);
+      border-color: rgba(255, 78, 26, .2)
+    }
+
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px
+    }
+
+    .cap-item {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 13px;
+      text-align: center;
+      transition: border-color .2s
+    }
+
+    .cap-item:hover {
+      border-color: var(--accent-teal)
+    }
+
+    .cap-icon {
+      font-size: 24px;
+      margin-bottom: 5px
+    }
+
+    .cap-label {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    .cap-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      line-height: 1.4
+    }
+
+    /* DEV CARDS */
+    .dev-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .dev-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all .25s
+    }
+
+    .dev-card:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0, 212, 170, .1)
+    }
+
+    .dev-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-fire), var(--accent-amber), var(--accent-teal))
+    }
+
+    .dev-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      font-family: var(--font-head);
+      border: 2px solid var(--accent-teal)
+    }
+
+    .dev-name {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700
+    }
+
+    .dev-role {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent-teal);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 3px
+    }
+
+    .dev-bio {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 7px;
+      line-height: 1.5
+    }
+
+    .dev-skills {
+      margin-top: 9px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: center
+    }
+
+    .dev-skill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 10px
+    }
+
+    .dev-links {
+      margin-top: 12px;
+      display: flex;
+      gap: 7px;
+      justify-content: center
+    }
+
+    .dev-link {
+      padding: 4px 11px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      transition: all .2s
+    }
+
+    .dev-link:hover {
+      border-color: var(--accent-teal);
+      color: var(--accent-teal)
+    }
+
+    /* CONTACT */
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-teal);
+      border-radius: 6px;
+      padding: 11px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-teal);
+      z-index: 9990;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+      max-width: 360px
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1
+    }
+
+    .toast.error {
+      border-color: var(--accent-fire);
+      color: var(--accent-fire)
+    }
+
+    .toast.warn {
+      border-color: var(--accent-amber);
+      color: var(--accent-amber)
+    }
+
+    /* FIRE OVERLAY */
+    #fire-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 998;
+      border: 4px solid var(--accent-fire);
+      pointer-events: none;
+      display: none;
+      animation: fire-pulse 1s infinite
+    }
+
+    @keyframes fire-pulse {
+
+      0%,
+      100% {
+        opacity: .5;
+        border-color: var(--accent-fire)
+      }
+
+      50% {
+        opacity: 1;
+        border-color: #ff0000
+      }
+    }
+
+    #fire-overlay.active {
+      display: block
+    }
+
+    /* GEO */
+    .geo-info {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 13px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.9
+    }
+
+    /* LOADING SPINNER */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent-teal);
+      border-radius: 50%;
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* LEGEND */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 9px
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary)
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 5px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-deep)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* PROGRESS BAR */
+    .prog {
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 5px
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════ FIRE OVERLAY ═══════════════════ -->
+  <div id="fire-overlay"></div>
+
+  <!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+  <div id="login-screen">
+    <div class="login-box">
+
+      <!-- LOGIN VIEW -->
+      <div id="view-login" class="login-view active">
+        <div class="login-logo">
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
+          <!-- <h1>SFDAASS</h1> -->
+          <p>Smart Fire Detection, Alerting & Automated Suppression System</p>
+        </div>
+        <div class="l-field">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="admin@sfdaass.io" autocomplete="username" />
+        </div>
+        <div class="l-field">
+          <label>Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
+        </div>
+        <div class="l-error" id="loginError">Invalid credentials. Please try again.</div>
+        <button class="btn-login" id="loginBtn" onclick="doLogin()">ACCESS SYSTEM</button>
+        <div style="text-align:center;margin-top:20px;font-size:13px">
+          <a href="#" style="color:var(--accent-teal);text-decoration:none" onclick="switchLoginView('forgot')">Forgot
+            Password?</a>
+        </div>
+      </div>
+
+      <!-- FORGOT PASSWORD VIEW -->
+      <div id="view-forgot" class="login-view">
+        <div class="login-logo">
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
+          <h1>RESET ACCESS</h1>
+          <p>Enter your email to receive a reset link</p>
+        </div>
+        <div class="l-field">
+          <label>Email Address</label>
+          <input type="email" id="forgotEmail" placeholder="your@email.com" />
+        </div>
+        <div id="forgot-status" style="margin-bottom:15px;font-size:13px;display:none"></div>
+        <button class="btn-login" id="forgotBtn" onclick="forgotPassword()">SEND RESET LINK</button>
+        <div style="text-align:center;margin-top:20px;font-size:13px">
+          <a href="#" style="color:var(--text-secondary);text-decoration:none" onclick="switchLoginView('login')">← Back
+            to Login</a>
+        </div>
+      </div>
+
+      <!-- RESET PASSWORD VIEW -->
+      <div id="view-reset" class="login-view">
+        <div class="login-logo">
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
+          <h1>NEW PASSWORD</h1>
+          <p>Create a secure new password</p>
+        </div>
+        <div class="l-field">
+          <label>New Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="newResetPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
+        </div>
+        <div class="l-field">
+          <label>Confirm Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="confirmResetPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
+        </div>
+        <div id="reset-status" style="margin-bottom:15px;font-size:13px;display:none"></div>
+        <button class="btn-login" id="resetBtn" onclick="resetPassword()">UPDATE PASSWORD</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MAIN APP ═══════════════════ -->
+  <div id="app">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <img src="logo.png" alt="SFDAASS"
+          style="width:80px;height:80px;object-fit:contain;display:block;margin-bottom:8px;" />
+        <!-- <h1>SFDAASS</h1> -->
+        <p>Fire Safety Platform v1.0</p>
+      </div>
+      <nav>
+        <div class="nav-section">Monitoring</div>
+        <button class="nav-item active" onclick="goTo('dashboard',this)"><span class="nav-icon">📊</span>Dashboard<span
+            class="nav-badge" id="alert-badge">0</span></button>
+        <button class="nav-item" onclick="goTo('devices',this)"><span class="nav-icon">📡</span>Devices</button>
+        <button class="nav-item" onclick="goTo('incidents',this)"><span class="nav-icon">🚨</span>Incidents</button>
+        <div class="nav-section">Config</div>
+        <button class="nav-item" onclick="goTo('geofence',this)"><span class="nav-icon">🛑</span>Geofence</button>
+        <div id="adminNav" style="display:none">
+          <div class="nav-section">Admin</div>
+          <button class="nav-item" onclick="goTo('users',this)"><span class="nav-icon">👥</span>Users</button>
+          <button class="nav-item" onclick="goTo('system',this)"><span class="nav-icon">⚙️</span>System Config</button>
+          <button class="nav-item" onclick="goTo('audit',this)"><span class="nav-icon">📜</span>Audit Logs</button>
+        </div>
+        <div class="nav-section">Info</div>
+        <button class="nav-item" onclick="goTo('about',this)"><span class="nav-icon">ℹ️</span>About</button>
+        <button class="nav-item" onclick="goTo('developers',this)"><span
+            class="nav-icon">👨‍💻</span>Developers</button>
+        <button class="nav-item" onclick="goTo('contact',this)"><span class="nav-icon">📞</span>Contact</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div><span class="online-dot"></span><span>SYSTEM ONLINE</span></div>
+        <div class="sidebar-user">
+          <div class="user-avatar" id="userInitials">?</div>
+          <div class="user-info">
+            <div class="user-name" id="userName">—</div>
+            <div class="user-role" id="userRole">—</div>
+          </div>
+          <button class="logout-btn" onclick="doLogout()" title="Logout">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div class="topbar-left">NODE: <span>SFDAASS-CORE-01</span> &nbsp;|&nbsp; UPTIME: <span
+          id="uptime">00:00:00</span></div>
+      <div class="topbar-right">
+        <div class="conn-indicator">
+          <div class="conn-dot disconnected" id="wsConnDot"></div><span id="wsConnLabel">Connecting…</span>
+        </div>
+        <div class="topbar-time" id="clock">--:--:--</div>
+        <div class="alert-pill" id="topbarAlertPill">⚠ 0 ACTIVE ALERTS</div>
+      </div>
+    </header>
+
+    <main id="main">
+
+      <!-- ═══════════════ DASHBOARD ═══════════════ -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h2>🔥 Real-Time Dashboard</h2>
+          <p>Live fire detection, sensor monitoring and system status</p>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="g4 mb">
+          <div class="stat-card sc-fire">
+            <div class="corner-glow"></div>
+            <div class="s-icon">🚨</div>
+            <div class="s-val" id="stat-active">—</div>
+            <div class="s-label">Active Alerts</div>
+            <div class="s-sub" id="stat-active-sub">Loading...</div>
+          </div>
+          <div class="stat-card sc-safe">
+            <div class="corner-glow"></div>
+            <div class="s-icon">📡</div>
+            <div class="s-val" id="stat-online">—</div>
+            <div class="s-label">Devices Online</div>
+            <div class="s-sub" id="stat-online-sub">Loading...</div>
+          </div>
+          <div class="stat-card sc-warn">
+            <div class="corner-glow"></div>
+            <div class="s-icon">💧</div>
+            <div class="s-val" id="stat-sprinklers">—</div>
+            <div class="s-label">Sprinklers Active</div>
+            <div class="s-sub" id="stat-spr-sub">Loading...</div>
+          </div>
+          <div class="stat-card sc-info">
+            <div class="corner-glow"></div>
+            <div class="s-icon">📑</div>
+            <div class="s-val" id="stat-total">—</div>
+            <div class="s-label">Total Incidents</div>
+            <div class="s-sub" id="stat-total-sub">Loading...</div>
+          </div>
+        </div>
+
+        <div class="g2 mb">
+          <div class="card">
+            <div class="card-title">🌍 Live Geospatial Map</div>
+            <div id="map1" class="map-box"></div>
+            <div class="legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-fire)"></div>Fire Alert
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-amber)"></div>Warning
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-green)"></div>Normal
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:rgba(0,212,170,.4);border:2px dashed var(--accent-teal)">
+                </div>Geofence
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card" style="flex:1">
+              <div class="card-title">⚡ Active Alerts</div>
+              <div class="alert-list" id="alertList">
+                <div style="color:var(--text-muted);font-size:13px;padding:10px 0">Loading alerts...</div>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost" style="font-size:12px;padding:6px 13px"
+                  onclick="goTo('incidents',null)">All Incidents →</button>
+
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">💧 Sprinkler Control</div>
+              <div class="zone-grid" id="zoneGrid">
+                <div style="color:var(--text-muted);font-size:12px">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2 mb">
+          <div class="card">
+            <div class="card-title">📈 Smoke Level (ppm) — Hourly Average</div>
+            <div class="chart-wrap"><canvas id="smokeChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">🌡 Temperature (°C) — Hourly Average</div>
+            <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="g2 mb">
+          <div class="card">
+            <div class="card-title">🛢 Gas Level (ppm) — Hourly Average</div>
+            <div class="chart-wrap"><canvas id="gasChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">💧 Humidity (%) — Hourly Average</div>
+            <div class="chart-wrap"><canvas id="humChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔬 Live Sensor Readings</div>
+          <div class="sensor-grid" id="sensorTiles">
+            <div class="s-tile">
+              <div class="sl">MQ-2 Smoke</div>
+              <div class="sv" id="sv-smoke" style="color:var(--accent-fire)">—</div>
+              <div class="su">ppm</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-smoke" style="background:var(--accent-fire);width:0%"></div>
+              </div>
+            </div>
+            <div class="s-tile">
+              <div class="sl">Temperature</div>
+              <div class="sv" id="sv-temp" style="color:var(--accent-amber)">—</div>
+              <div class="su">°C</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-temp" style="background:var(--accent-amber);width:0%"></div>
+              </div>
+            </div>
+            <div class="s-tile">
+              <div class="sl">Gas (CO/LPG)</div>
+              <div class="sv" id="sv-gas" style="color:var(--accent-green)">—</div>
+              <div class="su">ppm</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-gas" style="background:var(--accent-green);width:0%"></div>
+              </div>
+            </div>
+            <div class="s-tile">
+              <div class="sl">Humidity</div>
+              <div class="sv" id="sv-hum" style="color:var(--accent-teal)">—</div>
+              <div class="su">%</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-hum" style="background:var(--accent-teal);width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ DEVICES ═══════════════ -->
+      <section class="page" id="page-devices">
+        <div class="page-header">
+          <h2>📡 Device Monitoring</h2>
+          <p>All IoT devices connected to the SFDAASS network</p>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="g4 mb">
+          <div class="stat-card sc-safe">
+            <div class="corner-glow"></div>
+            <div class="s-icon">✅</div>
+            <div class="s-val" id="dev-online">—</div>
+            <div class="s-label">Online</div>
+          </div>
+          <div class="stat-card sc-fire">
+            <div class="corner-glow"></div>
+            <div class="s-icon">❌</div>
+            <div class="s-val" id="dev-offline">—</div>
+            <div class="s-label">Offline</div>
+          </div>
+          <div class="stat-card sc-warn">
+            <div class="corner-glow"></div>
+            <div class="s-icon">⚠️</div>
+            <div class="s-val" id="dev-warn">—</div>
+            <div class="s-label">Warning</div>
+          </div>
+          <div class="stat-card sc-info">
+            <div class="corner-glow"></div>
+            <div class="s-icon">🔧</div>
+            <div class="s-val" id="dev-total">—</div>
+            <div class="s-label">Total</div>
+          </div>
+        </div>
+
+        <div class="card mb">
+          <div class="filter-bar">
+            <input type="text" placeholder="🔍  Search device ID, location..." id="devSearch"
+              oninput="filterDevices()" />
+            <select id="devStatusFilter" onchange="filterDevices()">
+              <option value="">All Status</option>
+              <option value="online">Online</option>
+              <option value="offline">Offline</option>
+              <option value="warning">Warning</option>
+            </select>
+            <button class="btn btn-teal" onclick="openRegisterDevice()" id="registerDevBtn" style="display:none">+
+              Register Device</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Location</th>
+                  <th>GPS</th>
+                  <th>Geofence</th>
+                  <th>Smoke</th>
+                  <th>Temp</th>
+                  <th>Battery</th>
+                  <th>Last Ping</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="devicesTbody">
+                <tr>
+                  <td colspan="10" style="text-align:center;color:var(--text-muted);padding:20px">
+                    <div class="spinner"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📍 Device Map</div>
+          <div id="map2" class="map-box"></div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ INCIDENTS ═══════════════ -->
+      <section class="page" id="page-incidents">
+        <div class="page-header">
+          <h2>🚨 Fire Incident History</h2>
+          <p>All historical fire events with detailed reports</p>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="g4 mb">
+          <div class="stat-card sc-fire">
+            <div class="corner-glow"></div>
+            <div class="s-icon">🔥</div>
+            <div class="s-val" id="inc-total">—</div>
+            <div class="s-label">Total</div>
+          </div>
+          <div class="stat-card sc-warn">
+            <div class="corner-glow"></div>
+            <div class="s-icon">📅</div>
+            <div class="s-val" id="inc-month">—</div>
+            <div class="s-label">This Month</div>
+          </div>
+          <div class="stat-card sc-safe">
+            <div class="corner-glow"></div>
+            <div class="s-icon">✅</div>
+            <div class="s-val" id="inc-resolved">—</div>
+            <div class="s-label">Resolved</div>
+          </div>
+          <div class="stat-card sc-info">
+            <div class="corner-glow"></div>
+            <div class="s-icon">⏱</div>
+            <div class="s-val" id="inc-avgresp">—</div>
+            <div class="s-label">Avg Response</div>
+          </div>
+        </div>
+
+        <div class="card mb">
+          <div class="filter-bar">
+            <input type="text" placeholder="🔍  Search incident ID, device, location..." id="incSearch"
+              oninput="filterIncidents()" />
+            <select id="incSevFilter" onchange="filterIncidents()">
+              <option value="">All Severity</option>
+              <option value="critical">Critical</option>
+              <option value="warning">Warning</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="incStatusFilter" onchange="filterIncidents()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="monitoring">Monitoring</option>
+              <option value="resolved">Resolved</option>
+              <option value="false_alarm">False Alarm</option>
+            </select>
+            <button class="btn btn-ghost" style="font-size:12px;padding:7px 13px" onclick="exportAllCSV()">⬇ Export
+              CSV</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Incident ID</th>
+                  <th>Date & Time</th>
+                  <th>Device</th>
+                  <th>Location</th>
+                  <th>Severity</th>
+                  <th>Sprinkler</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="incidentsTbody">
+                <tr>
+                  <td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px">
+                    <div class="spinner"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📍 Incident Locations</div>
+          <div id="map3" class="map-box"></div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ GEOFENCE ═══════════════ -->
+      <section class="page" id="page-geofence">
+        <div class="page-header">
+          <h2>🛑 Geofence Management</h2>
+          <p>Configure and manage protected area boundaries</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="g2">
+          <div>
+            <div class="card mb">
+              <div class="card-title">⚙ Configuration</div>
+              <div class="form-group">
+                <label>Type</label>
+                <select id="geoType" onchange="updateGeoTypeUI()">
+                  <option value="circle">Radius-Based (Circle)</option>
+                  <option value="polygon">Polygon (Custom Shape)</option>
+                </select>
+              </div>
+              <div id="geoCircleOpts">
+                <div class="form-group"><label>Name</label><input id="geoName" value="Main Facility" /></div>
+                <div class="form-group"><label>Center Latitude</label><input type="number" id="geoLat" value="-13.9626"
+                    step="0.0001" /></div>
+                <div class="form-group"><label>Center Longitude</label><input type="number" id="geoLng" value="33.7741"
+                    step="0.0001" /></div>
+                <div class="form-group"><label>Radius (meters)</label><input type="number" id="geoRadius" value="500"
+                    min="50" max="50000" /></div>
+              </div>
+              <div id="geoPolyOpts" style="display:none">
+                <div class="geo-info">
+                  <strong style="color:var(--accent-teal)">Polygon Mode</strong><br />
+                  Click on the map to place vertices.<br />
+                  Click first point again to close.<br />
+                  Vertices: <span id="polyCount">0</span>
+                </div>
+                <button class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="clearPoly()">🗑
+                  Clear</button>
+              </div>
+              <div style="display:flex;gap:9px;margin-top:4px">
+                <button class="btn btn-teal" onclick="saveGeofence()">✅ Save Geofence</button>
+                <button class="btn btn-ghost" onclick="loadGeofence()">↺ Reset</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">📊 Current Status</div>
+              <div class="geo-info" id="geoStatus">Loading geofence data...</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🗺 Interactive Map</div>
+            <div id="map4" style="height:500px;border-radius:6px;background:#081218"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ USERS (Admin only) ═══════════════ -->
+      <section class="page" id="page-users">
+        <div class="page-header">
+          <h2>👥 User Management</h2>
+          <p>Manage system users and access control</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" style="margin:0">All Users</div>
+            <button class="btn btn-teal" style="font-size:12px" onclick="openAddUser()">+ Add User</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Phone</th>
+                  <th>Last Login</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody">
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:20px">
+                    <div class="spinner"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ SYSTEM CONFIG (Admin only) ═══════════════ -->
+      <section class="page" id="page-system">
+        <div class="page-header">
+          <h2>⚙️ System Configuration</h2>
+          <p>Manage global system settings and fire detection thresholds</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="card" style="max-width:600px">
+          <div class="card-title">🔥 Detection Thresholds</div>
+          <div class="form-group"><label>Smoke Warning (ppm)</label><input type="number" id="sysSmokeW" /></div>
+          <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
+          <div class="form-group"><label>Temperature Warning (°C)</label><input type="number" id="sysTempW" /></div>
+          <div class="form-group"><label>Temperature Critical (°C)</label><input type="number" id="sysTempC" /></div>
+          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="sysGasW" /></div>
+          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="sysGasC" /></div>
+          <div class="form-group"><label>Confirmation Duration (ms)</label><input type="number" id="sysConfMs" /></div>
+          <button class="btn btn-teal" onclick="saveSystemThresholds()">💾 Save Settings</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════ AUDIT LOGS (Admin only) ═══════════════ -->
+      <section class="page" id="page-audit">
+        <div class="page-header">
+          <h2>📜 Audit Logs</h2>
+          <p>View system activity and compliance logs</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="auditTbody">
+                <tr>
+                  <td colspan="5" style="text-align:center;padding:20px">
+                    <div class="spinner"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ABOUT ═══════════════ -->
+      <section class="page" id="page-about">
+        <div class="about-hero">
+          <h2><span>Smart Fire</span> Detection,<br />Alerting & Automated Suppression System</h2>
+          <p>An advanced IoT-based fire safety platform integrating embedded sensors, GPS geolocation, geofencing
+            validation, automated water suppression, and real-time cloud monitoring to protect lives and infrastructure.
+          </p>
+        </div>
+        <div class="card mb">
+          <div class="card-title">📖 Project Overview</div>
+          <div
+            style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px;color:var(--text-secondary);line-height:1.8">
+            <div>
+              <p><strong style="color:var(--text-primary)">Purpose</strong><br />SFDAASS addresses the critical need for
+                fast, accurate fire detection in industrial and commercial facilities. The system detects, confirms,
+                suppresses, and reports fire events within seconds — far faster than manual systems.</p><br />
+              <p><strong style="color:var(--text-primary)">Fire Safety Challenges</strong><br />Conventional detectors
+                miss multi-sensor fire signatures and generate frequent false alarms. SFDAASS solves all three issues
+                using sensor fusion and multi-threshold confirmation logic.</p>
+            </div>
+            <div>
+              <p><strong style="color:var(--text-primary)">IoT Advantages</strong><br />IoT connectivity enables
+                real-time data streaming from distributed sensors, instant alerts via SMS and push notifications, and
+                remote monitoring from any device worldwide, 24/7.</p><br />
+              <p><strong style="color:var(--text-primary)">Geofencing Security</strong><br />GPS-based geofencing
+                ensures alerts are only raised for events within the protected boundary, dramatically reducing false
+                positives from non-critical sources outside the facility.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card mb">
+          <div class="card-title">🔧 System Technologies</div>
+          <div class="tech-grid">
+            <div class="tech-cat">
+              <h4>⚙ Hardware</h4>
+              <span class="tech-tag hw">ESP32 / Arduino</span><span class="tech-tag hw">MQ-2 Smoke</span><span
+                class="tech-tag hw">MQ-135 Gas</span><span class="tech-tag hw">DHT11 Temp</span><span
+                class="tech-tag hw">Flame Sensor</span><span class="tech-tag hw">NEO-6M GPS</span><span
+                class="tech-tag hw">Relay Module</span><span class="tech-tag hw">Water Pump</span><span
+                class="tech-tag hw">Alarm Buzzer</span>
+            </div>
+            <div class="tech-cat">
+              <h4>💻 Software</h4>
+              <span class="tech-tag">Node.js + Express</span><span class="tech-tag">PostgreSQL</span><span
+                class="tech-tag">Socket.IO</span><span class="tech-tag">MQTT</span><span class="tech-tag">Leaflet
+                Maps</span><span class="tech-tag">Chart.js</span><span class="tech-tag">JWT Auth</span><span
+                class="tech-tag">Twilio SMS</span><span class="tech-tag">Bcrypt</span><span
+                class="tech-tag">Winston</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🚀 System Capabilities</div>
+          <div class="cap-grid">
+            <div class="cap-item">
+              <div class="cap-icon">🔥</div>
+              <div class="cap-label">Early Fire Detection</div>
+              <div class="cap-desc">Multi-sensor fusion with threshold confirmation logic</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">🌍</div>
+              <div class="cap-label">GPS Geolocation</div>
+              <div class="cap-desc">Real-time device positioning via NEO-6M GPS</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">🛑</div>
+              <div class="cap-label">Geofencing</div>
+              <div class="cap-desc">Circle and polygon geofence with real-time validation</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">💧</div>
+              <div class="cap-label">Auto Suppression</div>
+              <div class="cap-desc">Automatic sprinkler activation on critical detection</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">📡</div>
+              <div class="cap-label">Cloud Alerts</div>
+              <div class="cap-desc">SMS + email + push via Twilio and WebSocket</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">📊</div>
+              <div class="cap-label">Real-Time Dashboard</div>
+              <div class="cap-desc">Live sensor charts, heatmaps, device status</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">📑</div>
+              <div class="cap-label">Incident Reports</div>
+              <div class="cap-desc">Auto-generated PDF and CSV incident reports</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">🔐</div>
+              <div class="cap-label">Role-Based Auth</div>
+              <div class="cap-desc">JWT tokens, refresh rotation, admin/operator/viewer</div>
+            </div>
+            <div class="cap-item">
+              <div class="cap-icon">⚡</div>
+              <div class="cap-label">False Alarm Guard</div>
+              <div class="cap-desc">Multi-sensor cross-validation + 5s confirmation window</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════ DEVELOPERS ═══════════════ -->
+      <section class="page" id="page-developers">
+        <div class="page-header">
+          <h2>👨‍💻 Development Team</h2>
+          <p>The engineers who built SFDAASS</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="dev-grid">
+          <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(255,78,26,.15);color:var(--accent-fire)">WW</div>
+            <div class="dev-name">William Wachenjera</div>
+            <div class="dev-role">System Architect & IoT Lead</div>
+            <div class="dev-bio">Developed the dashboard, Leaflet map integrations, Chart.js visualizations, and
+              responsive real-time UI.</div>
+            <div class="dev-skills"><span class="dev-skill">Leaflet</span><span class="dev-skill">C++</span><span
+                class="dev-skill">Python</span><span class="dev-skill">System Design</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(30,144,255,.15);color:var(--accent-blue)">IP</div>
+            <div class="dev-name">Ignacio Phiri</div>
+            <div class="dev-role">Backend Developer</div>
+            <div class="dev-bio">Built the Node.js + Express REST API, PostgreSQL schema, Socket.IO real-time events,
+              and JWT authentication system.</div>
+            <div class="dev-skills"><span class="dev-skill">Node.js</span><span class="dev-skill">PostgreSQL</span><span
+                class="dev-skill">REST API</span><span class="dev-skill">Socket.IO</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(0,212,170,.15);color:var(--accent-teal)">NM</div>
+            <div class="dev-name">Neister Mbuzi</div>
+            <div class="dev-role">System & Circuit Designer</div>
+            <div class="dev-bio">Designed full system architecture and ESP32 firmware including sensor polling and MQTT
+              communication protocols.</div>
+            <div class="dev-skills"><span class="dev-skill">AI</span><span class="dev-skill">Arduino</span><span
+                class="dev-skill">ESP32</span><span class="dev-skill">MQTT</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(34,197,94,.15);color:var(--accent-green)">MC</div>
+            <div class="dev-name">Mirriam Chimoyo</div>
+            <div class="dev-role">IoT Engineer</div>
+            <div class="dev-bio">Handled hardware integration — wiring sensors, actuators, GPS modules, relay circuits,
+              and suppression firmware.</div>
+            <div class="dev-skills"><span class="dev-skill">Arduino</span><span class="dev-skill">Sensors</span><span
+                class="dev-skill">GPS</span><span class="dev-skill">Relay</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div>
+          </div>
+          <!-- <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(255,170,0,.15);color:var(--accent-amber)">SM</div>
+            <div class="dev-name">Suleiman Mohammed</div>
+            <div class="dev-role">DevOps & Cloud Engineer</div>
+            <div class="dev-bio">Set up cloud infrastructure, CI/CD pipelines, PostgreSQL hosting, and Twilio SMS alert
+              integration.</div>
+            <div class="dev-skills"><span class="dev-skill">Cloud</span><span class="dev-skill">DevOps</span><span
+                class="dev-skill">Twilio</span><span class="dev-skill">Linux</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar" style="background:rgba(167,139,250,.15);color:#a78bfa">AH</div>
+            <div class="dev-name">Amina Hassan</div>
+            <div class="dev-role">QA & Documentation</div>
+            <div class="dev-bio">Responsible for system testing, quality assurance, technical documentation,
+              requirements, and business logic.</div>
+            <div class="dev-skills"><span class="dev-skill">Testing</span><span class="dev-skill">Docs</span><span
+                class="dev-skill">QA</span><span class="dev-skill">Project Mgmt</span></div>
+            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            </div> -->
+          <!-- </div> -->
+        </div>
+      </section>
+
+      <!-- ═══════════════ CONTACT ═══════════════ -->
+      <section class="page" id="page-contact">
+        <div class="page-header">
+          <h2>📞 Contact</h2>
+          <p>Reach the SFDAASS team or administrators</p>
+          <div class="header-line"></div>
+        </div>
+        <div class="contact-wrap">
+          <div class="card">
+            <div class="card-title">✉ Send a Message</div>
+            <div class="form-group"><label>Full Name</label><input id="cName" placeholder="Your name" /></div>
+            <div class="form-group"><label>Email</label><input type="email" id="cEmail" placeholder="your@email.com" />
+            </div>
+            <div class="form-group"><label>Subject</label>
+              <select id="cSubject">
+                <option>General Inquiry</option>
+                <option>Technical Support</option>
+                <option>Bug Report</option>
+                <option>Feature Request</option>
+                <option>Emergency</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Message</label><textarea id="cMsg"
+                placeholder="Describe your inquiry..."></textarea></div>
+            <button class="btn btn-teal" onclick="sendContact()">📨 Send Message</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">📬 Contact Info</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:2">
+                📧 Lead: <strong style="color:var(--text-primary)">bsc-com-ne-06-22@unima.ac.mw</strong><br />
+                📧 Backend: <strong style="color:var(--text-primary)">bsc-com-ne-10-21@unima.ac.mw</strong><br />
+                📧 Support: <strong style="color:var(--text-primary)">support@sfdaass.io</strong><br /><br />
+                <a href="#" style="color:var(--accent-teal);text-decoration:none">🔗
+                  github.com/williamwachenjera/SFDAS</a><br />
+                <a href="#" style="color:var(--accent-blue);text-decoration:none">🔗 linkedin.com/company/sfdaass</a>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">🚨 Emergency</div>
+              <div
+                style="background:rgba(255,78,26,.08);border:1px solid rgba(255,78,26,.25);border-radius:6px;padding:13px">
+                <div
+                  style="font-family:var(--font-head);font-size:14px;color:var(--accent-fire);font-weight:700;margin-bottom:6px">
+                  🔴 CRITICAL FIRE EMERGENCY</div>
+                <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+                  📞 Hotline: <strong style="color:var(--text-primary)">+265 993 925 581</strong><br />
+                  📧 emergency@sfdaass.io<br />
+                  <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">Available
+                    24/7</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">📍 Office</div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">🏢 SFDAASS
+                Technologies<br />University of Malawi, Zomba<br />P.O. Box 280, Zomba, Malawi<br />🌐 www.sfdaass.io
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════ INCIDENT MODAL ═══════════════ -->
+  <div class="modal-bg" id="incModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🚨 Incident — <span id="mIncCode">—</span></h3>
+        <button class="modal-close" onclick="closeModal('incModal')">✕</button>
+      </div>
+      <div class="detail-grid" id="mDetailGrid"></div>
+      <div class="card-title" style="margin-bottom:9px">⏱ Timeline</div>
+      <div class="timeline" id="mTimeline"></div>
+      <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap" id="mActions"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ REGISTER DEVICE MODAL ═══════════════ -->
+  <div class="modal-bg" id="regDevModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📡 Register New Device</h3><button class="modal-close" onclick="closeModal('regDevModal')">✕</button>
+      </div>
+      <div class="form-group"><label>Device Code</label><input id="rdCode" placeholder="DEV-015" /></div>
+      <div class="form-group"><label>Name</label><input id="rdName" placeholder="Zone E Sensor" /></div>
+      <div class="form-group"><label>Location</label><input id="rdLoc" placeholder="Building 5, Floor 2" /></div>
+      <div class="form-group"><label>MAC Address</label><input id="rdMac" placeholder="AA:BB:CC:DD:EE:FF" /></div>
+      <div class="form-group"><label>Firmware</label><input id="rdFw" value="1.0.0" /></div>
+      <div style="display:flex;gap:9px">
+        <button class="btn btn-teal" onclick="registerDevice()">Register</button>
+        <button class="btn btn-ghost" onclick="closeModal('regDevModal')">Cancel</button>
+      </div>
+      <div id="rdResult" style="margin-top:12px;font-family:var(--font-mono);font-size:12px;display:none"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DEVICE CONFIG MODAL ═══════════════ -->
+  <div class="modal-bg" id="devConfigModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>⚙️ Device Config: <span id="dcCode"></span></h3><button class="modal-close"
+          onclick="closeModal('devConfigModal')">✕</button>
+      </div>
+      <input type="hidden" id="dcId" />
+
+      <div class="card-title" style="margin-top:10px">👥 Assigned Users</div>
+      <div class="form-group">
+        <select id="dcUserAssign" style="margin-bottom:5px"></select>
+        <button class="btn btn-ghost" style="font-size:11px" onclick="assignUserToDevice()">+ Assign</button>
+        <div id="dcUserList" style="margin-top:8px;font-size:12px;color:var(--text-secondary)"></div>
+      </div>
+
+      <div class="card-title" style="margin-top:15px">📬 Alert Contacts</div>
+      <div style="display:flex;gap:5px;margin-bottom:10px">
+        <select id="dcContactChannel" style="width:100px;font-size:12px">
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+        </select>
+        <input id="dcContactRecipient" placeholder="Email or Phone number"
+          style="flex:1;font-size:12px;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--bg-deep);color:#fff" />
+        <button class="btn btn-ghost" style="font-size:11px" onclick="addDeviceContact()">+ Add</button>
+      </div>
+      <div id="dcContactList" style="margin-top:8px;font-size:12px;color:var(--text-secondary)"></div>
+
+      <div class="card-title" style="margin-top:15px">🔧 Maintenance Windows</div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center;">
+        <input type="datetime-local" id="dcMaintStart"
+          style="font-size:12px;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--bg-deep);color:#fff" />
+        <span style="color:var(--text-muted)">to</span>
+        <input type="datetime-local" id="dcMaintEnd"
+          style="font-size:12px;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--bg-deep);color:#fff" />
+        <button class="btn btn-amber" style="font-size:11px" onclick="addDeviceMaintenance()">Schedule</button>
+      </div>
+      <div id="dcMaintList" style="margin-top:8px;font-size:12px;color:var(--text-secondary)"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══════════════════ MODALS ═══════════════════ -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Add New User</h3>
+        <button class="modal-close" onclick="closeModal('userModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="mUserName" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="mUserEmail" placeholder="john@sfdaass.io" />
+        </div>
+        <div class="form-group" id="mUserPassGroup">
+          <label>Initial Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="mUserPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>User Role</label>
+          <select id="mUserRole">
+            <option value="viewer">Viewer (Read-only)</option>
+            <option value="operator">Operator (Action-oriented)</option>
+            <option value="admin">Administrator (Full Access)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone Number (Optional)</label>
+          <input type="text" id="mUserPhone" placeholder="+265..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button>
+        <button class="btn btn-teal" id="userSubmitBtn" onclick="saveUser()">Create User</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <h3>Confirm Action</h3>
+        <button class="modal-close" onclick="closeModal('confirmModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="confirmMsg">Are you sure you want to proceed?</div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+        <button class="btn btn-teal" id="confirmBtn" style="background:var(--accent-fire)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // CONFIG
+    // ═══════════════════════════════════════════════════════
+    const API_BASE = window.location.hostname === 'localhost'
+      ? 'http://localhost:5000/api'
+      : '/api';
+
+    // ═══════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════
+    let authToken = localStorage.getItem('sfdaass_token') || null;
+    let currentUser = JSON.parse(localStorage.getItem('sfdaass_user') || 'null');
+    let socket = null;
+    let smokeChart = null, tempChart = null, gasChart = null, humChart = null;
+    let map1 = null, map2 = null, map3 = null, map4 = null;
+    let map2Init = false, map3Init = false, map4Init = false;
+    let geoCircle = null, geoLayer = null;
+    let polyPoints = [], polyMarkers = [], polyLine = null;
+    let devicesData = [], incidentsData = [];
+    let uptimeSecs = 0;
+    let activeIncidentCount = 0;
+
+    // ═══════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      startClock();
+
+      // Check for reset token in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const resetToken = urlParams.get('resetToken');
+      if (resetToken) {
+        switchLoginView('reset');
+        document.getElementById('resetBtn').onclick = () => resetPassword(resetToken);
+      }
+
+      if (authToken && currentUser) {
+        showApp();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+      }
+
+      // Allow Enter key
+      ['loginEmail', 'loginPassword', 'forgotEmail', 'newResetPassword', 'confirmResetPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            if (id.startsWith('login')) doLogin();
+            if (id.startsWith('forgot')) forgotPassword();
+            if (id.startsWith('new') || id.startsWith('confirm')) resetPassword(resetToken);
+          }
+        });
+      });
+    });
+
+    function switchLoginView(view) {
+      document.querySelectorAll('.login-view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + view).classList.add('active');
+      // Clear errors
+      document.querySelectorAll('.l-error').forEach(e => e.classList.remove('show'));
+    }
+
+    function togglePass(btn) {
+      const input = btn.parentElement.querySelector('input');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '👁️';
+        btn.style.color = 'var(--accent-teal)';
+      } else {
+        input.type = 'password';
+        btn.textContent = '🔒';
+        btn.style.color = 'var(--text-muted)';
+      }
+    }
+
+    async function forgotPassword() {
+      const email = document.getElementById('forgotEmail').value;
+      const btn = document.getElementById('forgotBtn');
+      const status = document.getElementById('forgot-status');
+
+      if (!email) return toast('Please enter your email', 'error');
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        status.style.display = 'block';
+        status.style.color = data.success ? 'var(--accent-teal)' : 'var(--accent-fire)';
+        status.textContent = data.message;
+
+        if (data.success) {
+          toast('✅ Reset link sent successfully');
+        }
+      } catch (err) {
+        toast('Error connection to server', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'SEND RESET LINK';
+      }
+    }
+
+    async function resetPassword(token) {
+      const newPass = document.getElementById('newResetPassword').value;
+      const confirmPass = document.getElementById('confirmResetPassword').value;
+      const btn = document.getElementById('resetBtn');
+      const status = document.getElementById('reset-status');
+
+      if (!newPass || newPass.length < 8) return toast('Password must be at least 8 characters', 'error');
+      if (newPass !== confirmPass) return toast('Passwords do not match', 'error');
+
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword: newPass })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          toast('✅ Password reset successful');
+          status.style.display = 'block';
+          status.style.color = 'var(--accent-teal)';
+          status.textContent = 'Success! Redirecting to login...';
+          setTimeout(() => {
+            window.location.search = ''; // Reload without token
+          }, 2000);
+        } else {
+          status.style.display = 'block';
+          status.style.color = 'var(--accent-fire)';
+          status.textContent = data.message;
+        }
+      } catch (err) {
+        toast('Error resetting password', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'UPDATE PASSWORD';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CLOCK
+    // ═══════════════════════════════════════════════════════
+    function startClock() {
+      setInterval(() => {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
+        uptimeSecs++;
+        const h = String(Math.floor(uptimeSecs / 3600)).padStart(2, '0');
+        const m = String(Math.floor((uptimeSecs % 3600) / 60)).padStart(2, '0');
+        const s = String(uptimeSecs % 60).padStart(2, '0');
+        document.getElementById('uptime').textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════════════════════
+    async function doLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('loginError');
+
+      if (!email || !password) { showLoginError('Please enter email and password'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+      errEl.classList.remove('show');
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          authToken = data.accessToken;
+          currentUser = data.user;
+          localStorage.setItem('sfdaass_token', authToken);
+          localStorage.setItem('sfdaass_user', JSON.stringify(currentUser));
+          localStorage.setItem('sfdaass_refresh', data.refreshToken || '');
+          showApp();
+        } else {
+          showLoginError(data.message || 'Invalid credentials');
+        }
+      } catch (err) {
+        showLoginError('Cannot connect to server. Please ensure the backend is running.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ACCESS SYSTEM';
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    async function doLogout() {
+      try {
+        await apiFetch('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken: localStorage.getItem('sfdaass_refresh') }) });
+      } catch (e) { }
+      authToken = null; currentUser = null;
+      localStorage.removeItem('sfdaass_token');
+      localStorage.removeItem('sfdaass_user');
+      localStorage.removeItem('sfdaass_refresh');
+      if (socket) { socket.disconnect(); socket = null; }
+      document.getElementById('app').classList.remove('visible');
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('loginPassword').value = '';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SHOW APP
+    // ═══════════════════════════════════════════════════════
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('app').classList.add('visible');
+
+      // Set user info
+      const u = currentUser;
+      document.getElementById('userName').textContent = u.name;
+      document.getElementById('userRole').textContent = u.role.toUpperCase();
+      const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('userInitials').textContent = initials;
+
+      // Show admin nav
+      if (u.role === 'admin') {
+        document.getElementById('adminNav').style.display = 'block';
+        document.getElementById('registerDevBtn').style.display = 'flex';
+      }
+
+      // Init maps and data
+      setTimeout(() => {
+        initMap1();
+        initCharts();
+        connectSocket();
+        loadDashboard();
+        loadDevices();
+        loadIncidents();
+        loadGeofence();
+        if (u.role === 'admin') loadUsers();
+      }, 200);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // API HELPER
+    // ═══════════════════════════════════════════════════════
+    async function apiFetch(path, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...(options.headers || {}),
+      };
+      const res = await fetch(API_BASE + path, { ...options, headers });
+
+      if (res.status === 401) {
+        // Try refresh
+        const refreshed = await tryRefresh();
+        if (refreshed) {
+          headers.Authorization = `Bearer ${authToken}`;
+          return fetch(API_BASE + path, { ...options, headers });
+        }
+        doLogout();
+        throw new Error('Session expired');
+      }
+      return res;
+    }
+
+    async function tryRefresh() {
+      const rt = localStorage.getItem('sfdaass_refresh');
+      if (!rt) return false;
+      try {
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: rt }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          authToken = data.accessToken;
+          localStorage.setItem('sfdaass_token', authToken);
+          localStorage.setItem('sfdaass_refresh', data.refreshToken);
+          return true;
+        }
+      } catch (e) { }
+      return false;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SOCKET.IO
+    // ═══════════════════════════════════════════════════════
+    function connectSocket() {
+      try {
+        socket = io(API_BASE.replace('/api', ''), {
+          auth: { token: authToken },
+          transports: ['websocket', 'polling'],
+          reconnectionDelay: 2000,
+        });
+
+        socket.on('connect', () => {
+          setConnStatus(true);
+          toast('✅ Real-time connection established');
+        });
+
+        socket.on('disconnect', (reason) => {
+          setConnStatus(false);
+        });
+
+        socket.on('connect_error', () => {
+          setConnStatus(false);
+          toast('⚠ Real-time connection failed. Retrying...', 'warn');
+        });
+
+        socket.on('init:state', ({ activeIncidents, devices, sprinklerZones }) => {
+          updateAlertCount(activeIncidents.length);
+          renderAlerts(activeIncidents);
+          renderZones(sprinklerZones);
+          devicesData = devices;
+          renderDevicesTable(devices);
+          updateDeviceStats(devices);
+          refreshMap1Devices();
+        });
+
+        socket.on('sensor:reading', (data) => {
+          updateSensorTiles(data);
+          updateDeviceOnMap(data);
+        });
+
+        socket.on('incident:created', (inc) => {
+          activeIncidentCount++;
+          updateAlertCount(activeIncidentCount);
+          document.getElementById('fire-overlay').classList.add('active');
+          setTimeout(() => document.getElementById('fire-overlay').classList.remove('active'), 8000);
+          toast(`🔥 FIRE DETECTED: ${inc.incident_code} — ${inc.locationLabel}`, 'error');
+          loadDashboard();
+          loadIncidents();
+        });
+
+        socket.on('incident:resolved', () => { loadDashboard(); loadIncidents(); });
+        socket.on('sprinkler:activated', ({ zone }) => { toast(`💧 Sprinkler ${zone} activated`); loadDashboard(); });
+        socket.on('sprinkler:deactivated', ({ zone }) => { toast(`✅ Sprinkler ${zone} deactivated`); loadDashboard(); });
+        socket.on('geofence:updated', () => { loadGeofence(); });
+        socket.on('device:status', ({ deviceCode, status }) => {
+          toast(`📡 ${deviceCode}: ${status.toUpperCase()}`);
+          loadDevices();
+        });
+        socket.on('system:heartbeat', ({ connectedClients }) => {
+          // silent
+        });
+
+      } catch (e) {
+        setConnStatus(false);
+        toast('⚠ Could not establish real-time connection', 'warn');
+      }
+    }
+
+    function setConnStatus(connected) {
+      const dot = document.getElementById('wsConnDot');
+      const label = document.getElementById('wsConnLabel');
+      if (connected) {
+        dot.className = 'conn-dot';
+        label.textContent = 'Live';
+      } else {
+        dot.className = 'conn-dot disconnected';
+        label.textContent = 'Disconnected';
+      }
+    }
+
+
+
+
+
+
+    // ═══════════════════════════════════════════════════════
+    // DASHBOARD
+    // ═══════════════════════════════════════════════════════
+    async function loadDashboard() {
+      try {
+        const res = await apiFetch('/dashboard/stats');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const { incidents, devices, sprinklerZones, activeIncidents, recentReadings } = data;
+
+        document.getElementById('stat-active').textContent = incidents.active_count || 0;
+        document.getElementById('stat-active-sub').textContent = `${incidents.today || 0} today`;
+        document.getElementById('stat-online').textContent = devices.online || 0;
+        document.getElementById('stat-online-sub').textContent = `${devices.total || 0} total / ${devices.offline || 0} offline`;
+        const activeSpr = sprinklerZones.filter(z => z.status === 'active').length;
+        document.getElementById('stat-sprinklers').textContent = activeSpr;
+        document.getElementById('stat-spr-sub').textContent = sprinklerZones.filter(z => z.status === 'active').map(z => z.zone_code).join(', ') || 'None';
+        document.getElementById('stat-total').textContent = incidents.total || 0;
+        document.getElementById('stat-total-sub').textContent = `This month: ${incidents.this_month || 0}`;
+
+        updateAlertCount(parseInt(incidents.active_count) || 0);
+        renderAlerts(activeIncidents);
+        renderZones(sprinklerZones);
+
+        if (recentReadings && recentReadings.length > 0) {
+          updateSensorTiles(recentReadings[0]);
+        }
+
+        loadChartData();
+      } catch (e) {
+        toast('Failed to load dashboard data', 'error');
+      }
+    }
+
+
+
+    function renderAlerts(incidents) {
+      const el = document.getElementById('alertList');
+      if (!incidents || incidents.length === 0) {
+        el.innerHTML = '<div style="color:var(--accent-green);font-size:13px;padding:8px 0">✅ No active alerts</div>';
+        return;
+      }
+      el.innerHTML = incidents.slice(0, 5).map(i => {
+        const dotCls = i.severity === 'critical' ? 'critical' : i.severity === 'warning' ? 'warning' : 'low';
+        const sevBadge = `<span class="sev sev-${i.severity}">${i.severity.toUpperCase()}</span>`;
+        const dt = new Date(i.detected_at);
+        const timeStr = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        return `<div class="alert-item" onclick="openIncidentModal('${i.id || i.incident_code}')">
+      <div class="alert-dot ${dotCls}"></div>
+      <div style="flex:1">
+        <div class="alert-title">${i.severity === 'critical' ? 'FIRE DETECTED' : 'ALERT'} — ${i.location_label || i.locationLabel}</div>
+        <div class="alert-meta">${i.device_code || i.deviceCode} &nbsp;|&nbsp; Smoke:${i.smoke_ppm}ppm Temp:${i.temperature_c}°C &nbsp;|&nbsp; ${sevBadge}</div>
+      </div>
+      <div class="alert-time">${timeStr}</div>
+    </div>`;
+      }).join('');
+    }
+
+    function renderZones(zones) {
+      if (!zones || zones.length === 0) return;
+      document.getElementById('zoneGrid').innerHTML = zones.map(z => {
+        const active = z.status === 'active';
+        const color = active ? 'var(--accent-fire)' : 'var(--accent-green)';
+        const btnClass = active ? 'off' : 'on';
+        const btnLabel = active ? 'Deactivate' : 'Activate';
+        return `<div class="zone-tile">
+      <div class="zl">${z.zone_code}</div>
+      <div class="zs" style="color:${color}">${active ? 'ACTIVE' : 'STANDBY'}</div>
+      <button class="${btnClass}" onclick="toggleZone('${z.zone_code}',this)">${btnLabel}</button>
+    </div>`;
+      }).join('');
+    }
+
+    function updateAlertCount(n) {
+      activeIncidentCount = n;
+      document.getElementById('alert-badge').textContent = n;
+      document.getElementById('topbarAlertPill').textContent = n > 0 ? `⚠ ${n} ACTIVE ALERT${n > 1 ? 'S' : ''}` : '✅ ALL CLEAR';
+    }
+
+    function updateSensorTiles(data) {
+      const { smoke_ppm, temperature_c, gas_ppm, humidity_pct } = data;
+      const s = v => v != null ? Math.round(v) : '—';
+      const pct = (v, max) => v != null ? Math.min(100, Math.round(v / max * 100)) + '%' : '0%';
+      if (smoke_ppm != null) { document.getElementById('sv-smoke').textContent = s(smoke_ppm); document.getElementById('sb-smoke').style.width = pct(smoke_ppm, 1000); }
+      if (temperature_c != null) { document.getElementById('sv-temp').textContent = s(temperature_c); document.getElementById('sb-temp').style.width = pct(temperature_c, 200); }
+      if (gas_ppm != null) { document.getElementById('sv-gas').textContent = s(gas_ppm); document.getElementById('sb-gas').style.width = pct(gas_ppm, 1000); }
+      if (humidity_pct != null) { document.getElementById('sv-hum').textContent = s(humidity_pct); document.getElementById('sb-hum').style.width = pct(humidity_pct, 100); }
+    }
+
+    async function loadChartData() {
+      let labels, smokeVals, tempVals, gasVals, humVals;
+
+      try {
+        const res = await apiFetch('/dashboard/chart-data?hours=24');
+        const data = await res.json();
+        if (data.success && data.chartData.length > 0) {
+          labels = data.chartData.map(r => new Date(r.hour).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+          smokeVals = data.chartData.map(r => parseFloat(r.avg_smoke) || 0);
+          tempVals = data.chartData.map(r => parseFloat(r.avg_temp) || 0);
+          gasVals = data.chartData.map(r => parseFloat(r.avg_gas) || 0);
+          humVals = data.chartData.map(r => parseFloat(r.avg_humidity) || 0);
+        }
+      } catch (e) { }
+
+      if (!labels) return; // No data available yet
+
+      if (smokeChart) { smokeChart.data.labels = labels; smokeChart.data.datasets[0].data = smokeVals; smokeChart.update(); }
+      if (tempChart) { tempChart.data.labels = labels; tempChart.data.datasets[0].data = tempVals; tempChart.update(); }
+      if (gasChart) { gasChart.data.labels = labels; gasChart.data.datasets[0].data = gasVals; gasChart.update(); }
+      if (humChart) { humChart.data.labels = labels; humChart.data.datasets[0].data = humVals; humChart.update(); }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DEVICES
+    // ═══════════════════════════════════════════════════════
+    async function loadDevices() {
+      try {
+        const res = await apiFetch('/devices');
+        const data = await res.json();
+        if (data.success) {
+          devicesData = data.devices;
+          renderDevicesTable(data.devices);
+          updateDeviceStats(data.devices);
+          refreshMap1Devices();
+          if (map2Init) addDevicesToMap2(data.devices);
+        }
+      } catch (e) { toast('Failed to load devices', 'error'); }
+    }
+
+    function updateDeviceStats(devices) {
+      document.getElementById('dev-online').textContent = devices.filter(d => d.status === 'online').length;
+      document.getElementById('dev-offline').textContent = devices.filter(d => d.status === 'offline').length;
+      document.getElementById('dev-warn').textContent = devices.filter(d => d.status === 'warning').length;
+      document.getElementById('dev-total').textContent = devices.length;
+    }
+
+    function renderDevicesTable(list) {
+      document.getElementById('devicesTbody').innerHTML = list.map(d => {
+        const sColor = d.smoke_ppm > 500 ? 'var(--accent-fire)' : d.smoke_ppm > 250 ? 'var(--accent-amber)' : 'var(--accent-green)';
+        const tColor = d.temperature_c > 100 ? 'var(--accent-fire)' : d.temperature_c > 50 ? 'var(--accent-amber)' : 'var(--accent-green)';
+        const pCls = d.status === 'online' ? 'pill-on' : d.status === 'warning' ? 'pill-warn' : 'pill-off';
+        const geo = d.inside_geofence ? '<span style="color:var(--accent-green)">✅ INSIDE</span>' : '<span style="color:var(--accent-red)">❌ OUT</span>';
+        const bat = d.battery_pct != null ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-family:var(--font-mono);font-size:11px">${Math.round(d.battery_pct)}%</span><div style="width:40px"><div class="prog"><div class="prog-fill" style="width:${d.battery_pct}%;background:${d.battery_pct < 20 ? 'var(--accent-fire)' : d.battery_pct < 50 ? 'var(--accent-amber)' : 'var(--accent-green)'}"></div></div></div></div>` : '—';
+        const lastSeen = d.seconds_since_seen < 60 ? `${d.seconds_since_seen}s ago` : d.seconds_since_seen < 3600 ? `${Math.floor(d.seconds_since_seen / 60)}m ago` : `${Math.floor(d.seconds_since_seen / 3600)}h ago`;
+        return `<tr>
+      <td><span class="mono">${d.device_code}</span></td>
+      <td>${d.location_label || '—'}</td>
+      <td style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${d.gps_lat ? `${d.gps_lat.toFixed(4)}, ${d.gps_lng.toFixed(4)}` : '—'}</td>
+      <td>${geo}</td>
+      <td style="color:${sColor};font-family:var(--font-mono);font-weight:700">${d.smoke_ppm ?? '—'}</td>
+      <td style="color:${tColor};font-family:var(--font-mono);font-weight:700">${d.temperature_c != null ? d.temperature_c + '°' : '—'}</td>
+      <td>${bat}</td>
+      <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">${lastSeen}</td>
+      <td><span class="pill ${pCls}">${d.status}</span></td>
+      <td><button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="openDeviceConfig('${d.id || d.device_code}')">⚙️ Config</button></td>
+    </tr>`;
+      }).join('');
+    }
+
+    function filterDevices() {
+      const q = document.getElementById('devSearch').value.toLowerCase();
+      const f = document.getElementById('devStatusFilter').value;
+      const filtered = devicesData.filter(d =>
+        (d.device_code.toLowerCase().includes(q) || (d.location_label || '').toLowerCase().includes(q)) &&
+        (!f || d.status === f)
+      );
+      renderDevicesTable(filtered);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INCIDENTS
+    // ═══════════════════════════════════════════════════════
+    async function loadIncidents() {
+      try {
+        const res = await apiFetch('/incidents?limit=100&days=90');
+        const data = await res.json();
+        if (data.success) {
+          incidentsData = data.incidents;
+          renderIncidentsTable(data.incidents);
+          refreshMap1Incidents();
+        }
+
+        const sRes = await apiFetch('/incidents/stats');
+        const sData = await sRes.json();
+        if (sData.success) {
+          const s = sData.stats;
+          document.getElementById('inc-total').textContent = s.total || 0;
+          document.getElementById('inc-month').textContent = s.this_month || 0;
+          document.getElementById('inc-resolved').textContent = s.resolved_count || 0;
+          const avgSecs = parseInt(s.avg_resolution_secs || 0);
+          document.getElementById('inc-avgresp').textContent = avgSecs > 0 ? `${Math.floor(avgSecs / 60)}m ${avgSecs % 60}s` : '—';
+        }
+      } catch (e) { toast('Failed to load incidents', 'error'); }
+    }
+
+
+
+    function renderIncidentsTable(list) {
+      document.getElementById('incidentsTbody').innerHTML = list.map(i => {
+        const stColor = i.status === 'active' ? 'var(--accent-fire)' : i.status === 'monitoring' ? 'var(--accent-amber)' : 'var(--accent-green)';
+        const sprIcon = i.sprinkler_activated ? '💧 ACTIVATED' : 'STANDBY';
+        const sprColor = i.sprinkler_activated ? 'var(--accent-teal)' : 'var(--text-muted)';
+        const dt = new Date(i.detected_at).toLocaleString('en-GB');
+        const canResolve = ['active', 'monitoring'].includes(i.status) && ['admin', 'operator'].includes(currentUser.role);
+        return `<tr onclick="openIncidentModal('${i.id || i.incident_code}')">
+      <td><span class="mono">${i.incident_code}</span></td>
+      <td style="font-size:12px">${dt}</td>
+      <td><span class="mono">${i.device_code}</span></td>
+      <td style="font-size:12px">${i.location_label}</td>
+      <td><span class="sev sev-${i.severity}">${i.severity.toUpperCase()}</span></td>
+      <td style="color:${sprColor};font-size:12px">${sprIcon}</td>
+      <td style="color:${stColor};font-size:12px;font-weight:600">${i.status.toUpperCase()}</td>
+      <td onclick="event.stopPropagation()" style="display:flex;gap:5px;flex-wrap:wrap">
+        ${canResolve ? `<button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="resolveIncident('${i.id || i.incident_code}')">✅ Resolve</button>` : ''}
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="exportIncidentCSV('${i.id || i.incident_code}')">CSV</button>
+      </td>
+    </tr>`;
+      }).join('');
+    }
+
+    function filterIncidents() {
+      const q = document.getElementById('incSearch').value.toLowerCase();
+      const sev = document.getElementById('incSevFilter').value;
+      const stat = document.getElementById('incStatusFilter').value;
+      const filtered = incidentsData.filter(i =>
+        (i.incident_code.toLowerCase().includes(q) || (i.device_code || '').toLowerCase().includes(q) || (i.location_label || '').toLowerCase().includes(q)) &&
+        (!sev || i.severity === sev) && (!stat || i.status === stat)
+      );
+      renderIncidentsTable(filtered);
+    }
+
+    async function resolveIncident(id) {
+      if (!confirm('Mark this incident as resolved?')) return;
+      try {
+        const res = await apiFetch(`/incidents/${id}/resolve`, { method: 'PATCH', body: JSON.stringify({ notes: 'Resolved via dashboard' }) });
+        const data = await res.json();
+        if (data.success) { toast('✅ Incident resolved'); loadIncidents(); loadDashboard(); }
+        else toast(data.message, 'error');
+      } catch (e) { toast('Server error', 'error'); }
+    }
+
+    async function openIncidentModal(id) {
+      const modal = document.getElementById('incModal');
+      modal.classList.add('open');
+
+      let inc, events = [], alerts = [];
+
+      try {
+        const res = await apiFetch(`/incidents/${id}`);
+        const data = await res.json();
+        if (data.success) { inc = data.incident; events = data.events; alerts = data.alerts; }
+      } catch (e) { }
+      if (!inc) { closeModal('incModal'); toast('Failed to load incident details', 'error'); return; }
+
+      document.getElementById('mIncCode').textContent = inc.incident_code;
+
+      const sColor = inc.severity === 'critical' ? 'var(--accent-fire)' : inc.severity === 'warning' ? 'var(--accent-amber)' : 'var(--accent-green)';
+      document.getElementById('mDetailGrid').innerHTML = `
+    <div class="detail-field"><div class="df-label">Date & Time</div><div class="df-val">${new Date(inc.detected_at).toLocaleString('en-GB')}</div></div>
+    <div class="detail-field"><div class="df-label">Device</div><div class="df-val" style="color:var(--accent-teal)">${inc.device_code}</div></div>
+    <div class="detail-field"><div class="df-label">GPS Coordinates</div><div class="df-val">${inc.gps_lat ? `${inc.gps_lat.toFixed(4)}, ${inc.gps_lng.toFixed(4)}` : 'N/A'}</div></div>
+    <div class="detail-field"><div class="df-label">Geofence</div><div class="df-val" style="color:${inc.inside_geofence ? 'var(--accent-green)' : 'var(--accent-red)'}">${inc.inside_geofence ? '✅ INSIDE' : '❌ OUTSIDE'}</div></div>
+    <div class="detail-field"><div class="df-label">Smoke Level</div><div class="df-val" style="color:var(--accent-fire)">${inc.smoke_ppm ?? '—'} ppm</div></div>
+    <div class="detail-field"><div class="df-label">Temperature</div><div class="df-val" style="color:var(--accent-amber)">${inc.temperature_c ?? '—'}°C</div></div>
+    <div class="detail-field"><div class="df-label">Severity</div><div class="df-val"><span class="sev sev-${inc.severity}">${inc.severity.toUpperCase()}</span></div></div>
+    <div class="detail-field"><div class="df-label">Sprinkler</div><div class="df-val" style="color:${inc.sprinkler_activated ? 'var(--accent-teal)' : 'var(--text-muted)'}">${inc.sprinkler_activated ? '💧 ACTIVATED' : 'STANDBY'}</div></div>
+    <div class="detail-field"><div class="df-label">Status</div><div class="df-val" style="color:${sColor}">${inc.status.toUpperCase()}</div></div>
+    <div class="detail-field"><div class="df-label">Location</div><div class="df-val">${inc.location_label}</div></div>
+  `;
+
+      document.getElementById('mTimeline').innerHTML = events.map(e => {
+        const tCls = e._type || e.event_type === 'detected' || e.event_type === 'confirmed' ? 'fire' : e.event_type.includes('sms') || e.event_type.includes('alert') ? 'warn' : '';
+        return `<div class="tl-item ${tCls}"><div class="tl-time">${new Date(e.occurred_at).toLocaleTimeString('en-GB')}</div><div class="tl-label">${e.description}</div></div>`;
+      }).join('');
+
+      const canAct = ['admin', 'operator'].includes(currentUser.role) && ['active', 'monitoring', 'acknowledged'].includes(inc.status);
+      const canAck = canAct && inc.status !== 'acknowledged';
+
+      document.getElementById('mActions').innerHTML = `
+    ${canAck ? `<button class="btn btn-amber" onclick="acknowledgeIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">✋ Acknowledge</button>` : ''}
+    ${canAct ? `<button class="btn btn-fire" onclick="escalateIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">🚨 Escalate</button>` : ''}
+    ${canAct ? `<button class="btn btn-teal" onclick="resolveIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">✅ Resolve</button>` : ''}
+    <button class="btn btn-ghost" onclick="exportIncidentCSV('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}')">⬇ Export CSV</button>
+    <button class="btn btn-ghost" onclick="closeModal('incModal')">Close</button>
+  `;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // GEOFENCE
+    // ═══════════════════════════════════════════════════════
+    async function loadGeofence() {
+      try {
+        const res = await apiFetch('/geofence/active');
+        const data = await res.json();
+        if (data.success && data.geofence) {
+          const g = data.geofence;
+          document.getElementById('geoType').value = g.type;
+          document.getElementById('geoName').value = g.name || 'Main Facility';
+          document.getElementById('geoLat').value = g.center_lat || -13.9626;
+          document.getElementById('geoLng').value = g.center_lng || 33.7741;
+          document.getElementById('geoRadius').value = g.radius_meters || 500;
+          updateGeoTypeUI();
+          updateGeoStatus(g);
+          if (map4Init) applyGeoToMap4(g);
+        }
+      } catch (e) { toast('Failed to load geofence data', 'error'); }
+    }
+
+    function updateGeoStatus(g) {
+      document.getElementById('geoStatus').innerHTML = `
+        <div> Type: <span style="color:var(--accent-teal)">${g.type === 'circle' ? 'Circle (Radius-Based)' : 'Polygon (Custom)'}</span></div>
+          <div>Name: <span style="color:var(--text-primary)">${g.name || '—'}</span></div>
+    ${g.type === 'circle' ? `<div>Center: <span style="color:var(--text-primary)">${g.center_lat?.toFixed(4)}, ${g.center_lng?.toFixed(4)}</span></div>
+    <div>Radius: <span style="color:var(--text-primary)">${g.radius_meters}m</span></div>` : '<div>Polygon: custom shape</div>'
+        }
+      <div>Last Updated: <span style="color:var(--text-primary)">${new Date().toLocaleTimeString()}</span></div>
+      `;
+    }
+
+    function updateGeoTypeUI() {
+      const t = document.getElementById('geoType').value;
+      document.getElementById('geoCircleOpts').style.display = t === 'circle' ? '' : 'none';
+      document.getElementById('geoPolyOpts').style.display = t === 'polygon' ? '' : 'none';
+    }
+
+    async function saveGeofence() {
+      const type = document.getElementById('geoType').value;
+      const body = {
+        name: document.getElementById('geoName').value,
+        type,
+        center_lat: parseFloat(document.getElementById('geoLat').value),
+        center_lng: parseFloat(document.getElementById('geoLng').value),
+        radius_meters: parseFloat(document.getElementById('geoRadius').value),
+      };
+      if (type === 'polygon') { body.polygon_coords = polyPoints; }
+
+      try {
+        const res = await apiFetch('/geofence', { method: 'POST', body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) { toast('✅ Geofence saved'); applyGeoToMap4(data.geofence); updateGeoStatus(data.geofence); }
+        else toast(data.message, 'error');
+      } catch (e) { toast('Error saving geofence', 'error'); }
+    }
+
+    function applyGeoToMap4(g) {
+      if (!map4) return;
+      if (geoLayer) { map4.removeLayer(geoLayer); }
+      if (g.type === 'circle') {
+        geoLayer = L.circle([g.center_lat, g.center_lng], {
+          radius: g.radius_meters, color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .08, dashArray: '6,4', weight: 2
+        }).addTo(map4);
+        map4.setView([g.center_lat, g.center_lng], 15);
+      } else if (g.polygon_coords) {
+        geoLayer = L.polygon(g.polygon_coords.map(c => [c.lat, c.lng]), { color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .08, dashArray: '6,4', weight: 2 }).addTo(map4);
+      }
+    }
+
+    function clearPoly() {
+      polyPoints = [];
+      polyMarkers.forEach(m => { if (map4) map4.removeLayer(m); });
+      polyMarkers = [];
+      if (polyLine && map4) { map4.removeLayer(polyLine); polyLine = null; }
+      document.getElementById('polyCount').textContent = 0;
+      toast('Polygon cleared');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // USERS (Admin)
+    // ═══════════════════════════════════════════════════════
+    async function loadUsers() {
+      try {
+        const res = await apiFetch('/users');
+        const data = await res.json();
+        if (data.success) renderUsers(data.users);
+      } catch (e) { toast('Failed to load users', 'error'); }
+    }
+
+    function renderUsers(users) {
+      document.getElementById('usersTbody').innerHTML = users.map(u => {
+        const canDelete = u.id !== currentUser.id;
+        return `
+        <tr>
+          <td style="font-weight:600">${u.name}</td>
+          <td><span class="mono">${u.email}</span></td>
+          <td><span class="sev ${u.role === 'admin' ? 'sev-critical' : u.role === 'operator' ? 'sev-warning' : 'sev-low'}">${u.role.toUpperCase()}</span></td>
+          <td style="font-family:var(--font-mono);font-size:11px">${u.phone || '—'}</td>
+          <td style="font-size:12px">${u.last_login ? new Date(u.last_login).toLocaleString('en-GB') : 'Never'}</td>
+          <td><span class="pill ${u.is_active ? 'pill-on' : 'pill-off'}">${u.is_active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+          <td style="display:flex;gap:5px">
+            <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="openEditUser('${u.id}')">Edit</button>
+            ${canDelete ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;color:var(--accent-fire)" onclick="confirmDeleteUser('${u.id}', '${u.email}')">Delete</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openAddUser() {
+      document.getElementById('userModalTitle').textContent = 'Add New User';
+      document.getElementById('mUserPassGroup').style.display = 'block';
+      document.getElementById('userSubmitBtn').textContent = 'Create User';
+      document.getElementById('userSubmitBtn').onclick = saveUser;
+
+      // Clear fields
+      ['mUserName', 'mUserEmail', 'mUserPassword', 'mUserPhone'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('mUserRole').value = 'viewer';
+
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    async function saveUser() {
+      const name = document.getElementById('mUserName').value.trim();
+      const email = document.getElementById('mUserEmail').value.trim();
+      const password = document.getElementById('mUserPassword').value;
+      const role = document.getElementById('mUserRole').value;
+      const phone = document.getElementById('mUserPhone').value.trim();
+
+      if (!name || !email || !password) return toast('Please fill all required fields', 'error');
+
+      try {
+        const res = await apiFetch('/users', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, password, role, phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast('✅ User created successfully');
+          closeModal('userModal');
+          loadUsers();
+        } else toast(data.message, 'error');
+      } catch (e) { toast('Error creating user', 'error'); }
+    }
+
+    function confirmDeleteUser(id, email) {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmMsg').innerHTML = `Are you sure you want to delete user <strong style="color:var(--accent-fire)">${email}</strong>?<br/>This action cannot be undone.`;
+      const btn = document.getElementById('confirmBtn');
+      btn.onclick = () => deleteUser(id);
+      modal.classList.add('active');
+    }
+
+    async function deleteUser(id) {
+      try {
+        const res = await apiFetch(`/users/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          toast('✅ User deleted');
+          closeModal('confirmModal');
+          loadUsers();
+        } else toast(data.message, 'error');
+      } catch (e) { toast('Error deleting user', 'error'); }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      document.getElementById(id).classList.remove('open');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MAPS
+    // ═══════════════════════════════════════════════════════
+    const CENTER = [-13.9626, 33.7741];
+    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const tileFilter = 'brightness(0.65) hue-rotate(180deg) saturate(1.6)';
+    let map1Markers = {};
+    let map1IncidentMarkers = [];
+
+    function initMap1() {
+      map1 = L.map('map1', { zoomControl: true, attributionControl: false }).setView(CENTER, 15);
+      L.tileLayer(tileUrl).addTo(map1);
+      map1.getContainer().style.filter = tileFilter;
+      geoCircle = L.circle(CENTER, { radius: 500, color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .07, dashArray: '6,4', weight: 2 }).addTo(map1);
+      refreshMap1Devices();
+      refreshMap1Incidents();
+    }
+
+    function makeMarkerIcon(color) {
+      return L.divIcon({ html: `<div style="width:13px;height:13px;border-radius:50%;background:${color};box-shadow:0 0 10px ${color};border:2px solid #fff" ></div> `, className: '', iconAnchor: [6, 6] });
+    }
+
+    function refreshMap1Devices() {
+      if (!map1) return;
+      Object.values(map1Markers).forEach(m => map1.removeLayer(m));
+      map1Markers = {};
+      devicesData.forEach(d => {
+        if (!d.gps_lat) return;
+        const color = d.status === 'offline' ? '#3d5a70' : d.smoke_ppm > 500 ? '#ff4e1a' : d.smoke_ppm > 250 ? '#ffaa00' : '#22c55e';
+        const marker = L.marker([d.gps_lat, d.gps_lng], { icon: makeMarkerIcon(color) })
+          .addTo(map1)
+          .bindPopup(`<b>${d.device_code}</b><br/>${d.location_label}<br/>Smoke:${d.smoke_ppm}ppm Temp:${d.temperature_c}°C`);
+        map1Markers[d.device_code] = marker;
+      });
+    }
+
+    function refreshMap1Incidents() {
+      if (!map1) return;
+      map1IncidentMarkers.forEach(m => map1.removeLayer(m));
+      map1IncidentMarkers = [];
+      incidentsData.filter(i => i.status !== 'resolved').forEach(i => {
+        if (!i.gps_lat) return;
+        const icon = L.divIcon({ html: '<div style="font-size:18px">🔥</div>', className: '', iconAnchor: [9, 9] });
+        const m = L.marker([i.gps_lat, i.gps_lng], { icon }).addTo(map1).bindPopup(`<b>${i.incident_code}</b><br/>${i.severity.toUpperCase()}`);
+        map1IncidentMarkers.push(m);
+      });
+    }
+
+    function updateDeviceOnMap(data) {
+      if (!map1 || !data.gps_lat) return;
+      const color = data.smoke_ppm > 500 ? '#ff4e1a' : data.smoke_ppm > 250 ? '#ffaa00' : '#22c55e';
+      if (map1Markers[data.deviceCode]) {
+        map1Markers[data.deviceCode].setIcon(makeMarkerIcon(color));
+      }
+    }
+
+    function initMap2() {
+      map2 = L.map('map2', { attributionControl: false }).setView(CENTER, 15);
+      L.tileLayer(tileUrl).addTo(map2);
+      map2.getContainer().style.filter = tileFilter;
+      L.circle(CENTER, { radius: 500, color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .06, dashArray: '5,4', weight: 2 }).addTo(map2);
+      addDevicesToMap2(devicesData);
+      map2Init = true;
+    }
+
+    function addDevicesToMap2(devices) {
+      if (!map2) return;
+      devices.forEach(d => {
+        if (!d.gps_lat) return;
+        const color = d.status === 'offline' ? '#3d5a70' : d.smoke_ppm > 500 ? '#ff4e1a' : d.smoke_ppm > 250 ? '#ffaa00' : '#22c55e';
+        L.marker([d.gps_lat, d.gps_lng], { icon: makeMarkerIcon(color) }).addTo(map2)
+          .bindPopup(`<b> ${d.device_code}</b> <br />${d.location_label || '—'} <br />Smoke:${d.smoke_ppm ?? '—'} ppm`);
+      });
+    }
+
+    function initMap3() {
+      map3 = L.map('map3', { attributionControl: false }).setView(CENTER, 15);
+      L.tileLayer(tileUrl).addTo(map3);
+      map3.getContainer().style.filter = tileFilter;
+      const src = incidentsData;
+      src.forEach(i => {
+        if (!i.gps_lat) return;
+        const color = i.severity === 'critical' ? '#ff4e1a' : i.severity === 'warning' ? '#ffaa00' : '#22c55e';
+        const icon = L.divIcon({ html: `<div style="width:13px;height:13px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};border:2px solid #fff" ></div> `, className: '', iconAnchor: [6, 6] });
+        L.marker([i.gps_lat, i.gps_lng], { icon }).addTo(map3).bindPopup(`<b> ${i.incident_code}</b> `);
+      });
+      map3Init = true;
+    }
+
+    function initMap4() {
+      map4 = L.map('map4', { attributionControl: false }).setView(CENTER, 15);
+      L.tileLayer(tileUrl).addTo(map4);
+      map4.getContainer().style.filter = tileFilter;
+      geoLayer = L.circle(CENTER, { radius: 500, color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .07, dashArray: '6,4', weight: 2 }).addTo(map4);
+      devicesData.forEach(d => {
+        if (!d.gps_lat) return;
+        const color = d.status === 'offline' ? '#3d5a70' : d.smoke_ppm > 500 ? '#ff4e1a' : '#22c55e';
+        L.marker([d.gps_lat, d.gps_lng], { icon: makeMarkerIcon(color) }).addTo(map4).bindPopup(`<b> ${d.device_code}</b> `);
+      });
+      map4.on('click', (e) => {
+        if (document.getElementById('geoType').value === 'polygon') {
+          const p = { lat: e.latlng.lat, lng: e.latlng.lng };
+          polyPoints.push(p);
+          document.getElementById('polyCount').textContent = polyPoints.length;
+          const m = L.circleMarker([p.lat, p.lng], { radius: 5, color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: 1 }).addTo(map4);
+          polyMarkers.push(m);
+          if (polyLine) map4.removeLayer(polyLine);
+          if (polyPoints.length > 1) {
+            polyLine = L.polygon(polyPoints.map(pp => [pp.lat, pp.lng]), { color: '#00d4aa', fillColor: '#00d4aa', fillOpacity: .07, dashArray: '6,4', weight: 2 }).addTo(map4);
+          }
+        }
+      });
+      map4Init = true;
+      loadGeofence();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CHARTS
+    // ═══════════════════════════════════════════════════════
+    function initCharts() {
+      const chartOpts = (color) => ({
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#3d5a70', font: { size: 9 }, maxTicksLimit: 8 } },
+          y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#3d5a70', font: { size: 9 } } }
+        }
+      });
+
+      smokeChart = new Chart(document.getElementById('smokeChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#ff4e1a', backgroundColor: 'rgba(255,78,26,.12)', fill: true, tension: .4, pointRadius: 2, borderWidth: 2 }] },
+        options: chartOpts('#ff4e1a')
+      });
+      tempChart = new Chart(document.getElementById('tempChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#ffaa00', backgroundColor: 'rgba(255,170,0,.10)', fill: true, tension: .4, pointRadius: 2, borderWidth: 2 }] },
+        options: chartOpts('#ffaa00')
+      });
+      gasChart = new Chart(document.getElementById('gasChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.12)', fill: true, tension: .4, pointRadius: 2, borderWidth: 2 }] },
+        options: chartOpts('#22c55e')
+      });
+      humChart = new Chart(document.getElementById('humChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#1e90ff', backgroundColor: 'rgba(30,144,255,.12)', fill: true, tension: .4, pointRadius: 2, borderWidth: 2 }] },
+        options: chartOpts('#1e90ff')
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SPRINKLER CONTROL
+    // ═══════════════════════════════════════════════════════
+    async function toggleZone(zoneCode, btn) {
+      const isActive = btn.classList.contains('off');
+      const action = isActive ? 'deactivate' : 'activate';
+
+      if (socket && socket.connected) {
+        socket.emit('sprinkler:control', { zoneCode, action });
+      } else {
+        try {
+          await apiFetch(`/sprinklers/${zoneCode}/${action}`, {
+            method: 'POST', body: '{}'
+          });
+        } catch (e) { }
+      }
+
+      // Optimistic UI
+      const zs = btn.parentElement.querySelector('.zs');
+      if (isActive) {
+        zs.textContent = 'STANDBY'; zs.style.color = 'var(--accent-green)';
+        btn.textContent = 'Activate'; btn.className = 'on';
+      } else {
+        zs.textContent = 'ACTIVE'; zs.style.color = 'var(--accent-fire)';
+        btn.textContent = 'Deactivate'; btn.className = 'off';
+      }
+      toast(`💧 Zone ${zoneCode} ${isActive ? 'deactivated' : 'activated'}`);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DEVICE REGISTRATION
+    // ═══════════════════════════════════════════════════════
+    function openRegisterDevice() { document.getElementById('regDevModal').classList.add('open'); }
+
+    async function registerDevice() {
+      const code = document.getElementById('rdCode').value.trim();
+      const name = document.getElementById('rdName').value.trim();
+      const loc = document.getElementById('rdLoc').value.trim();
+      const mac = document.getElementById('rdMac').value.trim();
+      const fw = document.getElementById('rdFw').value.trim();
+
+      if (!code) { toast('Device code is required', 'error'); return; }
+
+      try {
+        const res = await apiFetch('/devices', { method: 'POST', body: JSON.stringify({ device_code: code, name, location_label: loc, mac_address: mac, firmware_version: fw }) });
+        const data = await res.json();
+        const resultEl = document.getElementById('rdResult');
+        resultEl.style.display = 'block';
+        if (data.success) {
+          resultEl.style.color = 'var(--accent-teal)';
+          resultEl.textContent = `✅ Device ${data.device.device_code} registered! API Key: ${data.device.api_key}`;
+          loadDevices();
+        } else {
+          resultEl.style.color = 'var(--accent-fire)';
+          resultEl.textContent = '❌ ' + data.message;
+        }
+      } catch (e) { toast('Error registering device', 'error'); }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CONTACT
+    // ═══════════════════════════════════════════════════════
+    async function sendContact() {
+      const name = document.getElementById('cName').value.trim();
+      const email = document.getElementById('cEmail').value.trim();
+      const subject = document.getElementById('cSubject').value;
+      const message = document.getElementById('cMsg').value.trim();
+
+      if (!name || !email || !message) { toast('Please fill all required fields', 'error'); return; }
+
+      try {
+        const res = await fetch(`${API_BASE}/contact`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast(`📨 Message sent! We'll respond to ${email}`);
+          document.getElementById('cName').value = '';
+          document.getElementById('cEmail').value = '';
+          document.getElementById('cMsg').value = '';
+        } else toast(data.message, 'error');
+      } catch (e) { toast('Failed to send message', 'error'); }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // FIRE SIMULATION
+    // ═══════════════════════════════════════════════════════
+    function simFire() {
+      document.getElementById('fire-overlay').classList.add('active');
+      document.getElementById('topbarAlertPill').textContent = '🔴 FIRE DETECTED — CRITICAL';
+      toast('🔥 FIRE SIMULATION — Zone D activated!', 'error');
+      updateSensorTiles({ smoke_ppm: 920, temperature_c: 167, gas_ppm: 680, humidity_pct: 22 });
+      setTimeout(() => {
+        document.getElementById('fire-overlay').classList.remove('active');
+        document.getElementById('topbarAlertPill').textContent = `⚠ ${activeIncidentCount} ACTIVE ALERT${activeIncidentCount !== 1 ? 'S' : ''}`;
+        toast('✅ Simulation ended');
+      }, 8000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // EXPORT
+    // ═══════════════════════════════════════════════════════
+    function exportIncidentCSV(id) {
+      window.open(`${API_BASE}/incidents/${id}/export/csv`, '_blank');
+    }
+
+    function exportAllCSV() {
+      window.open(`${API_BASE}/incidents/export/all`, '_blank');
+    }
+
+    function download(filename, text) {
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(text);
+      a.download = filename;
+      a.click();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════
+    function goTo(page, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (btn) btn.classList.add('active');
+      else {
+        const navBtn = document.querySelector(`.nav-item[onclick*="${page}"]`);
+        if (navBtn) navBtn.classList.add('active');
+      }
+
+      // Lazy-init maps
+      if (page === 'devices' && !map2Init) setTimeout(initMap2, 100);
+      if (page === 'incidents' && !map3Init) setTimeout(initMap3, 100);
+      if (page === 'geofence' && !map4Init) setTimeout(initMap4, 100);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MODAL
+    // ═══════════════════════════════════════════════════════
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function openAddUser() { toast('User registration form — connect backend to enable', 'warn'); }
+
+    // ═══════════════════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════════════════
+    let toastTimer;
+    function toast(msg, type = '') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = `toast show ${type}`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.className = 'toast', 3800);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // NEW ENTERPRISE FEATURES
+    // ═══════════════════════════════════════════════════════
+
+    async function acknowledgeIncident(id) {
+      try {
+        const res = await apiFetch(`/incidents/${id}/acknowledge`, { method: 'PATCH', body: JSON.stringify({ notes: 'Acknowledged via dashboard' }) });
+        if (res.ok) { toast('Incident acknowledged'); loadIncidents(); loadDashboard(); } else toast('Failed to acknowledge', 'error');
+      } catch (e) { toast('Error', 'error'); }
+    }
+
+    async function escalateIncident(id) {
+      try {
+        const res = await apiFetch(`/incidents/${id}/escalate`, { method: 'PATCH', body: JSON.stringify({ notes: 'Escalated via dashboard' }) });
+        if (res.ok) { toast('Incident escalated!'); loadIncidents(); loadDashboard(); } else toast('Failed to escalate', 'error');
+      } catch (e) { toast('Error', 'error'); }
+    }
+
+    async function loadSystemConfig() {
+      try {
+        const res = await apiFetch('/system-config/thresholds');
+        const data = await res.json();
+        if (data.success && data.thresholds) {
+          document.getElementById('sysSmokeW').value = data.thresholds.smoke_warning || 250;
+          document.getElementById('sysSmokeC').value = data.thresholds.smoke_critical || 500;
+          document.getElementById('sysTempW').value = data.thresholds.temp_warning || 50;
+          document.getElementById('sysTempC').value = data.thresholds.temp_critical || 100;
+          document.getElementById('sysGasW').value = data.thresholds.gas_warning || 150;
+          document.getElementById('sysGasC').value = data.thresholds.gas_critical || 300;
+          document.getElementById('sysConfMs').value = data.thresholds.confirm_duration_ms || 5000;
+        }
+      } catch (e) { }
+    }
+
+    async function saveSystemThresholds() {
+      const body = {
+        smoke_warning: parseInt(document.getElementById('sysSmokeW').value),
+        smoke_critical: parseInt(document.getElementById('sysSmokeC').value),
+        temp_warning: parseInt(document.getElementById('sysTempW').value),
+        temp_critical: parseInt(document.getElementById('sysTempC').value),
+        gas_warning: parseInt(document.getElementById('sysGasW').value),
+        gas_critical: parseInt(document.getElementById('sysGasC').value),
+        confirm_duration_ms: parseInt(document.getElementById('sysConfMs').value)
+      };
+      try {
+        const res = await apiFetch('/system-config/thresholds', { method: 'PUT', body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) toast('✅ System configuration saved successfully');
+        else toast('Failed to save configuration', 'error');
+      } catch (e) { toast('Error saving config', 'error'); }
+    }
+
+    async function loadAuditLogs() {
+      try {
+        const res = await apiFetch('/audit-logs');
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('auditTbody').innerHTML = data.logs.map(log =>
+            `<tr>
+          <td style="font-size:12px">${new Date(log.created_at).toLocaleString()}</td>
+          <td>${log.user_name || 'System'}</td>
+          <td><span class="mono">${log.action}</span></td>
+          <td style="font-size:12px">${log.details ? (typeof log.details === 'object' ? JSON.stringify(log.details) : log.details) : ''}</td>
+          <td style="font-size:12px;color:var(--text-muted)">${log.ip_address || ''}</td>
+        </tr>`
+          ).join('');
+        }
+      } catch (e) { }
+    }
+
+    const originalGoTo = goTo;
+    goTo = function (page, btn) {
+      originalGoTo(page, btn);
+      if (page === 'system') loadSystemConfig();
+      if (page === 'audit') loadAuditLogs();
+    };
+
+    function openDeviceConfig(id) {
+      toast('Device configuration API routes not yet exposed in backend UI. Available via endpoints.', 'warn');
+    }
+
+    // Periodically refresh data
+    setInterval(() => { if (authToken) { loadDashboard(); loadDevices(); } }, 30000);
+    setInterval(() => { if (authToken) loadIncidents(); }, 60000);
+  </script>
+</body>
+
+</html>
