@@ -1781,12 +1781,13 @@
         </div>
         <div class="l-field">
           <label>Email Address</label>
-          <input type="email" id="loginEmail" placeholder="admin@sfdaass.io" autocomplete="username" />
+          <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="username" />
         </div>
         <div class="l-field">
           <label>Password</label>
           <div class="password-wrapper">
-            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <input type="password" id="loginPassword" placeholder="Enter your password"
+              autocomplete="current-password" />
             <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
           </div>
         </div>
@@ -1808,7 +1809,7 @@
         </div>
         <div class="l-field">
           <label>Email Address</label>
-          <input type="email" id="forgotEmail" placeholder="your@email.com" />
+          <input type="email" id="forgotEmail" placeholder="Enter your registered email" />
         </div>
         <div id="forgot-status" style="margin-bottom:15px;font-size:13px;display:none"></div>
         <button class="btn-login" id="forgotBtn" onclick="forgotPassword()">SEND RESET LINK</button>
@@ -1829,14 +1830,14 @@
         <div class="l-field">
           <label>New Password</label>
           <div class="password-wrapper">
-            <input type="password" id="newResetPassword" placeholder="••••••••" />
+            <input type="password" id="newResetPassword" placeholder="Enter new Password" />
             <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
           </div>
         </div>
         <div class="l-field">
           <label>Confirm Password</label>
           <div class="password-wrapper">
-            <input type="password" id="confirmResetPassword" placeholder="••••••••" />
+            <input type="password" id="confirmResetPassword" placeholder="Confirm new password" />
             <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
           </div>
         </div>
