@@ -12,6 +12,7 @@ interface TeamMember {
 
 const team: TeamMember[] = [
   {
+<<<<<<< Updated upstream
     name: 'William Wachenjera',
     role: 'Computer Network Engineer & Project Manager(SFDAASS)',
     bio: 'Specializes in embedded systems and IoT architecture. Leading the hardware integration and sensor network design.',
@@ -48,6 +49,61 @@ const team: TeamMember[] = [
     avatar: 'MC'
   },
   
+=======
+    name: 'Alex Johnson',
+    role: 'IoT Engineer & Project Lead',
+    bio: 'Specializes in embedded systems and IoT architecture. Leading the hardware integration and sensor network design.',
+    skills: ['Arduino', 'ESP32', 'MQTT', 'Sensor Integration', 'Hardware Design'],
+    github: 'https://github.com/alexjohnson',
+    linkedin: 'https://linkedin.com/in/alexjohnson',
+    avatar: 'AJ'
+  },
+  {
+    name: 'Sarah Chen',
+    role: 'Backend Developer',
+    bio: 'Expert in server-side development and database management. Building robust APIs and cloud infrastructure.',
+    skills: ['Node.js', 'MongoDB', 'Firebase', 'REST API', 'Cloud Services'],
+    github: 'https://github.com/sarahchen',
+    linkedin: 'https://linkedin.com/in/sarahchen',
+    avatar: 'SC'
+  },
+  {
+    name: 'Michael Rodriguez',
+    role: 'Frontend Developer',
+    bio: 'Passionate about creating intuitive user interfaces. Developing the dashboard and mobile applications.',
+    skills: ['React', 'TypeScript', 'Tailwind CSS', 'UI/UX', 'Responsive Design'],
+    github: 'https://github.com/mrodriguez',
+    linkedin: 'https://linkedin.com/in/mrodriguez',
+    avatar: 'MR'
+  },
+  {
+    name: 'Emily Watson',
+    role: 'Data Scientist',
+    bio: 'Focuses on data analytics and machine learning. Implementing predictive algorithms for fire risk assessment.',
+    skills: ['Python', 'Machine Learning', 'Data Analysis', 'TensorFlow', 'Statistics'],
+    github: 'https://github.com/emilywatson',
+    linkedin: 'https://linkedin.com/in/emilywatson',
+    avatar: 'EW'
+  },
+  {
+    name: 'David Kim',
+    role: 'Systems Integration Specialist',
+    bio: 'Expert in integrating hardware and software systems. Ensuring seamless communication between all components.',
+    skills: ['System Architecture', 'API Integration', 'DevOps', 'Testing', 'Documentation'],
+    github: 'https://github.com/davidkim',
+    linkedin: 'https://linkedin.com/in/davidkim',
+    avatar: 'DK'
+  },
+  {
+    name: 'Lisa Thompson',
+    role: 'UI/UX Designer',
+    bio: 'Designs user-centered interfaces and experiences. Creating intuitive and accessible design systems.',
+    skills: ['Figma', 'User Research', 'Prototyping', 'Design Systems', 'Accessibility'],
+    github: 'https://github.com/lisathompson',
+    linkedin: 'https://linkedin.com/in/lisathompson',
+    avatar: 'LT'
+  },
+>>>>>>> Stashed changes
 ];
 
 const getRoleIcon = (role: string) => {

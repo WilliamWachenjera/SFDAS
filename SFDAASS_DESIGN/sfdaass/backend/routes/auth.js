@@ -60,7 +60,7 @@ router.post('/login', [
     const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
     await query(
-      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW()+INTERVAL $3)',
+      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1,$2,NOW() + ($3)::INTERVAL)',
       [user.id, tokenHash, REFRESH_EXP.replace('d', ' days').replace('h', ' hours')]
     );
 

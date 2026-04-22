@@ -117,8 +117,13 @@ export function Contact() {
                 <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Email</p>
+<<<<<<< Updated upstream
                   <a href="bsc-com-ne-06-22@unima.ac.mw" className="text-sm text-blue-600 hover:underline">
                     bsc-com-ne-06-22@unima.ac.mw
+=======
+                  <a href="mailto:contact@firesafety.com" className="text-sm text-blue-600 hover:underline">
+                    contact@firesafety.com
+>>>>>>> Stashed changes
                   </a>
                 </div>
               </div>
@@ -127,8 +132,13 @@ export function Contact() {
                 <Phone className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Phone</p>
+<<<<<<< Updated upstream
                   <a href="+265880313214" className="text-sm text-blue-600 hover:underline">
                     +26588013214
+=======
+                  <a href="tel:+1234567890" className="text-sm text-blue-600 hover:underline">
+                    +1 (234) 567-890
+>>>>>>> Stashed changes
                   </a>
                 </div>
               </div>
@@ -138,9 +148,15 @@ export function Contact() {
                 <div>
                   <p className="text-sm font-medium">Location</p>
                   <p className="text-sm text-gray-600">
+<<<<<<< Updated upstream
                     University of Malawi<br />
                     P.O Box 280<br />
                     Zomba
+=======
+                    Tech Innovation Hub<br />
+                    123 Safety Street<br />
+                    Innovation City, IC 12345
+>>>>>>> Stashed changes
                   </p>
                 </div>
               </div>
@@ -153,7 +169,11 @@ export function Contact() {
 
             <div className="space-y-2">
               <a
+<<<<<<< Updated upstream
                 href="https://github.com/williamwachenjera"
+=======
+                href="https://github.com/firesafety"
+>>>>>>> Stashed changes
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
@@ -166,7 +186,11 @@ export function Contact() {
               </a>
 
               <a
+<<<<<<< Updated upstream
                 href="https://linkedin.com/williamwachenjera"
+=======
+                href="https://linkedin.com/company/firesafety"
+>>>>>>> Stashed changes
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
