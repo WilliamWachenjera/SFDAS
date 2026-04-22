@@ -165,12 +165,18 @@ function seedDefaults() {
   const adminPass  = process.env.ADMIN_PASSWORD || 'Admin@123';
   const adminName  = process.env.ADMIN_NAME || 'Administrator';
 
-  const existing = get('SELECT id FROM users WHERE email = ?', [adminEmail]);
+  const existing = get('SELECT id, email, name FROM users WHERE role = "admin" LIMIT 1');
   if (!existing) {
     const hash = bcrypt.hashSync(adminPass, 10);
     run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
       [adminName, adminEmail, hash, 'admin']);
     console.log(`[DB] Admin created: ${adminEmail} / ${adminPass}`);
+  } else {
+    // If settings changed in .env, update the existing admin
+    if (existing.email !== adminEmail || existing.name !== adminName) {
+      run('UPDATE users SET email = ?, name = ? WHERE id = ?', [adminEmail, adminName, existing.id]);
+      console.log(`[DB] Admin updated to match .env: ${adminEmail}`);
+    }
   }
 
   // Default geofence (UNIMA Zomba)

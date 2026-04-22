@@ -110,9 +110,9 @@
     }
 
     .login-logo .l-icon {
-      font-size: 48px;
+      font-size: 64px;
       display: block;
-      margin-bottom: 8px
+      margin-bottom: 12px
     }
 
     .login-logo h1 {
@@ -162,6 +162,32 @@
     .l-field input:focus {
       border-color: var(--accent-teal);
       box-shadow: 0 0 0 3px rgba(0, 212, 170, .1)
+    }
+
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .pass-toggle {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color .2s;
+      user-select: none;
+      z-index: 5;
+    }
+
+    .pass-toggle:hover {
+      color: var(--accent-teal);
     }
 
     .l-error {
@@ -340,7 +366,7 @@
     }
 
     .sidebar-logo .logo-icon {
-      font-size: 26px
+      font-size: 32px
     }
 
     .sidebar-logo h1 {
@@ -1748,9 +1774,10 @@
       <!-- LOGIN VIEW -->
       <div id="view-login" class="login-view active">
         <div class="login-logo">
-          <img src="logo.png" alt="SFDAASS Logo" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 8px;" />
-          <h1>SFDAASS</h1>
-          <p>Smart Fire Detection & Suppression System</p>
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
+          <!-- <h1>SFDAASS</h1> -->
+          <p>Smart Fire Detection, Alerting & Automated Suppression System</p>
         </div>
         <div class="l-field">
           <label>Email Address</label>
@@ -1758,7 +1785,10 @@
         </div>
         <div class="l-field">
           <label>Password</label>
-          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+          <div class="password-wrapper">
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
         </div>
         <div class="l-error" id="loginError">Invalid credentials. Please try again.</div>
         <button class="btn-login" id="loginBtn" onclick="doLogin()">ACCESS SYSTEM</button>
@@ -1771,7 +1801,8 @@
       <!-- FORGOT PASSWORD VIEW -->
       <div id="view-forgot" class="login-view">
         <div class="login-logo">
-          <span class="l-icon">🔒</span>
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
           <h1>RESET ACCESS</h1>
           <p>Enter your email to receive a reset link</p>
         </div>
@@ -1790,17 +1821,24 @@
       <!-- RESET PASSWORD VIEW -->
       <div id="view-reset" class="login-view">
         <div class="login-logo">
-          <span class="l-icon">🛡️</span>
+          <img src="logo.png" alt="SFDAASS Logo"
+            style="width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 12px;" />
           <h1>NEW PASSWORD</h1>
           <p>Create a secure new password</p>
         </div>
         <div class="l-field">
           <label>New Password</label>
-          <input type="password" id="newResetPassword" placeholder="••••••••" />
+          <div class="password-wrapper">
+            <input type="password" id="newResetPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
         </div>
         <div class="l-field">
           <label>Confirm Password</label>
-          <input type="password" id="confirmResetPassword" placeholder="••••••••" />
+          <div class="password-wrapper">
+            <input type="password" id="confirmResetPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
         </div>
         <div id="reset-status" style="margin-bottom:15px;font-size:13px;display:none"></div>
         <button class="btn-login" id="resetBtn" onclick="resetPassword()">UPDATE PASSWORD</button>
@@ -1815,8 +1853,9 @@
     <!-- SIDEBAR -->
     <aside id="sidebar">
       <div class="sidebar-logo">
-        <img src="logo.png" alt="SFDAASS" style="width:36px;height:36px;object-fit:contain;display:block;margin-bottom:4px;" />
-        <h1>SFDAASS</h1>
+        <img src="logo.png" alt="SFDAASS"
+          style="width:80px;height:80px;object-fit:contain;display:block;margin-bottom:8px;" />
+        <!-- <h1>SFDAASS</h1> -->
         <p>Fire Safety Platform v1.0</p>
       </div>
       <nav>
@@ -2658,7 +2697,10 @@
         </div>
         <div class="form-group" id="mUserPassGroup">
           <label>Initial Password</label>
-          <input type="password" id="mUserPassword" placeholder="••••••••" />
+          <div class="password-wrapper">
+            <input type="password" id="mUserPassword" placeholder="••••••••" />
+            <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
+          </div>
         </div>
         <div class="form-group">
           <label>User Role</label>
@@ -2755,6 +2797,19 @@
       document.getElementById('view-' + view).classList.add('active');
       // Clear errors
       document.querySelectorAll('.l-error').forEach(e => e.classList.remove('show'));
+    }
+
+    function togglePass(btn) {
+      const input = btn.parentElement.querySelector('input');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '👁️';
+        btn.style.color = 'var(--accent-teal)';
+      } else {
+        input.type = 'password';
+        btn.textContent = '🔒';
+        btn.style.color = 'var(--text-muted)';
+      }
     }
 
     async function forgotPassword() {

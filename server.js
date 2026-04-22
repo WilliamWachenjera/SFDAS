@@ -15,6 +15,7 @@ const rateLimit  = require('express-rate-limit');
 const db         = require('./db/database');
 const logger     = require('./services/logger');
 const { verifyAccessToken } = require('./middleware/auth');
+const { verifyConnection } = require('./services/notifyService');
 
 // ── Everything starts here, after DB is ready ──────────
 async function startServer() {
@@ -118,6 +119,9 @@ async function startServer() {
   // ── Connect MQTT (ESP32 bridge) ──────────────────────
   const { connectMQTT } = require('./services/mqttService');
   connectMQTT(io);
+
+  // ── Verify Email Service ─────────────────────────────
+  await verifyConnection().catch(() => {});
 
   // ── Start HTTP server ────────────────────────────────
   const PORT = process.env.PORT || 5000;
