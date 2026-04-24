@@ -15,8 +15,28 @@ function getTransporter() {
     port: parseInt(process.env.SMTP_PORT) || 587,
     secure: false,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    tls: { rejectUnauthorized: false } // Helps with some server environments
   });
   return transporter;
+}
+
+/**
+ * Verifies if the SMTP transporter is working
+ */
+async function verifyConnection() {
+  const t = getTransporter();
+  if (!t) {
+    logger.warn('📧 Email service not configured (missing SMTP_USER or SMTP_PASS)');
+    return false;
+  }
+  try {
+    await t.verify();
+    logger.info('✅ Email service (SMTP) is ready');
+    return true;
+  } catch (e) {
+    logger.error(`❌ Email service error: ${e.message}`);
+    return false;
+  }
 }
 
 async function sendEmail({ to, subject, text, html }) {
@@ -62,4 +82,4 @@ async function sendSMS(message) {
   }
 }
 
-module.exports = { sendEmail, sendSMS };
+module.exports = { sendEmail, sendSMS, verifyConnection };

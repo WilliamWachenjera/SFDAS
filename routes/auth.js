@@ -3,6 +3,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../services/logger');
 const db = require('../db/database');
 const { signAccessToken, signRefreshToken, verifyRefreshToken, requireAuth, logAudit } = require('../middleware/auth');
 const notifyService = require('../services/notifyService');
@@ -85,20 +86,49 @@ router.post('/forgot-password', async (req, res) => {
   // Always respond success (don't reveal if email exists)
   res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
 
-  if (!user) return;
+  if (!user) {
+    logger.warn(`Password reset requested for non-existent email: ${email}`);
+    return;
+  }
+
+  logger.info(`Attempting to send password reset email to: ${user.email} (ID: ${user.id})`);
 
   const token = uuidv4();
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
   db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [user.id]);
   db.run('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, token, expiresAt]);
 
-  const resetUrl = `http://localhost:${process.env.PORT || 5000}/?resetToken=${token}`;
+  const protocol = req.protocol === 'http' && req.headers['x-forwarded-proto'] ? req.headers['x-forwarded-proto'] : req.protocol;
+  const host = req.get('host');
+  const baseUrl = `${protocol}://${host}`;
+  const resetUrl = `${baseUrl}/?resetToken=${token}`;
+
   await notifyService.sendEmail({
     to: user.email,
     subject: '[SFDAASS] Password Reset Request',
-    text: `Click to reset your password:\n\n${resetUrl}\n\nThis link expires in 1 hour.`,
-    html: `<p>Click to reset your SFDAASS password:</p><a href="${resetUrl}" style="background:#ff4e1a;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">Reset Password</a><p>Expires in 1 hour.</p>`,
-  }).catch(() => {});
+    text: `You requested a password reset for your SFDAASS account. Click the link below to set a new password:\n\n${resetUrl}\n\nThis link expires in 1 hour.`,
+    html: `
+      <div style="background-color:#060a0f; color:#e8f4fd; font-family:sans-serif; padding:40px; border-radius:12px; max-width:600px; margin:0 auto;">
+        <div style="text-align:center; margin-bottom:30px;">
+          <h1 style="color:#ff4e1a; margin:0; letter-spacing:4px; font-size:28px;">SFDAASS</h1>
+          <p style="color:#7a9ab8; font-size:12px; text-transform:uppercase; margin-top:5px; letter-spacing:2px;">Smart Fire Detection & Alerting</p>
+        </div>
+        <div style="background-color:#0c1520; padding:30px; border-radius:8px; border:1px solid #1a3045;">
+          <h2 style="color:#e8f4fd; margin-top:0;">Reset Your Password</h2>
+          <p style="color:#7a9ab8; line-height:1.6;">A password reset was requested for your account. If you did not make this request, you can safely ignore this email.</p>
+          <div style="text-align:center; margin:35px 0;">
+            <a href="${resetUrl}" style="background:linear-gradient(135deg, #ff4e1a, #c03000); color:white; padding:14px 30px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block; font-size:16px;">SECURELY RESET PASSWORD</a>
+          </div>
+          <p style="color:#3d5a70; font-size:12px; text-align:center;">This link will expire in 60 minutes for your security.</p>
+        </div>
+        <div style="text-align:center; margin-top:30px; color:#3d5a70; font-size:11px;">
+          <p>© 2026 SFDAASS — Automated Suppression Systems</p>
+        </div>
+      </div>
+    `,
+  }).catch((err) => {
+    logger.error('Failed to send reset email:', err);
+  });
 });
 
 // POST /api/auth/reset-password
