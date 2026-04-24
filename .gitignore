@@ -5,3 +5,5 @@ SFDAASS_DESIGN/sfdaass/backend/.env
 node_modules/
 logs/
 *.db
+sfdaass.db
+combined.log
