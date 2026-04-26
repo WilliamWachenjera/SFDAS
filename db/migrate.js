@@ -16,6 +16,7 @@ function migrate() {
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'viewer',
     phone TEXT,
+    assigned_devices TEXT DEFAULT '[]',
     is_active INTEGER DEFAULT 1,
     last_login TEXT,
     created_at TEXT DEFAULT (datetime('now')),

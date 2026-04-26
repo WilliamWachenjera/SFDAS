@@ -38,6 +38,36 @@
       --topbar-h: 56px;
     }
 
+    body.light-mode {
+      --bg-deep: #f4f6f8;
+      --bg-panel: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card2: #f0f4f8;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-glow: #cbd5e1;
+    }
+
+    body.light-mode #topbar {
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 10px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .theme-toggle:hover {
+      color: var(--accent-amber);
+    }
+
     *,
     *::before,
     *::after {
@@ -411,7 +441,7 @@
       font-family: var(--font-head);
       font-size: 14px;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: #d1d5db;
       cursor: pointer;
       border: none;
       background: none;
@@ -541,14 +571,16 @@
       margin-left: auto;
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--accent-fire);
       cursor: pointer;
-      font-size: 14px;
-      padding: 2px
+      font-size: 20px;
+      padding: 4px;
+      transition: transform 0.2s;
     }
 
     .logout-btn:hover {
-      color: var(--accent-fire)
+      transform: scale(1.1);
+      color: #ff0000;
     }
 
     /* TOPBAR */
@@ -845,7 +877,7 @@
 
     /* MAP */
     .map-box {
-      height: 320px;
+      height: 400px;
       border-radius: 6px;
       background: #081218
     }
@@ -1792,7 +1824,7 @@
           </div>
         </div>
         <div class="l-error" id="loginError">Invalid credentials. Please try again.</div>
-        <button class="btn-login" id="loginBtn" onclick="doLogin()">ACCESS SYSTEM</button>
+        <button class="btn-login" id="loginBtn" onclick="doLogin()">LOGIN</button>
         <div style="text-align:center;margin-top:20px;font-size:13px">
           <a href="#" style="color:var(--accent-teal);text-decoration:none" onclick="switchLoginView('forgot')">Forgot
             Password?</a>
@@ -1897,6 +1929,7 @@
       <div class="topbar-left">NODE: <span>SFDAASS-CORE-01</span> &nbsp;|&nbsp; UPTIME: <span
           id="uptime">00:00:00</span></div>
       <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
         <div class="conn-indicator">
           <div class="conn-dot disconnected" id="wsConnDot"></div><span id="wsConnLabel">Connecting…</span>
         </div>
@@ -1910,7 +1943,7 @@
       <!-- ═══════════════ DASHBOARD ═══════════════ -->
       <section class="page active" id="page-dashboard">
         <div class="page-header">
-          <h2>🔥 Real-Time Dashboard</h2>
+          <h2>🔥 Real-Time SFDAASS Dashboard</h2>
           <p>Live fire detection, sensor monitoring and system status</p>
           <div class="header-line"></div>
         </div>
@@ -1946,7 +1979,7 @@
           </div>
         </div>
 
-        <div class="g2 mb">
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 14px;" class="mb">
           <div class="card">
             <div class="card-title">🌍 Live Geospatial Map</div>
             <div id="map1" class="map-box"></div>
@@ -2222,7 +2255,7 @@
           <p>Configure and manage protected area boundaries</p>
           <div class="header-line"></div>
         </div>
-        <div class="g2">
+        <div style="display:grid; grid-template-columns: 1fr 2.5fr; gap: 14px;">
           <div>
             <div class="card mb">
               <div class="card-title">⚙ Configuration</div>
@@ -2235,10 +2268,10 @@
               </div>
               <div id="geoCircleOpts">
                 <div class="form-group"><label>Name</label><input id="geoName" value="Main Facility" /></div>
-                <div class="form-group"><label>Center Latitude</label><input type="number" id="geoLat" value="-13.9626"
-                    step="0.0001" /></div>
-                <div class="form-group"><label>Center Longitude</label><input type="number" id="geoLng" value="33.7741"
-                    step="0.0001" /></div>
+                <div class="form-group"><label>Center Latitude</label><input type="number" id="geoLat"
+                    value="-13.254308" step="0.0001" /></div>
+                <div class="form-group"><label>Center Longitude</label><input type="number" id="geoLng"
+                    value="34.301525" step="0.0001" /></div>
                 <div class="form-group"><label>Radius (meters)</label><input type="number" id="geoRadius" value="500"
                     min="50" max="50000" /></div>
               </div>
@@ -2313,7 +2346,7 @@
           <p>Manage global system settings and fire detection thresholds</p>
           <div class="header-line"></div>
         </div>
-        <div class="card" style="max-width:600px">
+        <div class="card">
           <div class="card-title">🔥 Detection Thresholds</div>
           <div class="form-group"><label>Smoke Warning (ppm)</label><input type="number" id="sysSmokeW" /></div>
           <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
@@ -2476,18 +2509,21 @@
               responsive real-time UI.</div>
             <div class="dev-skills"><span class="dev-skill">Leaflet</span><span class="dev-skill">C++</span><span
                 class="dev-skill">Python</span><span class="dev-skill">System Design</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            <div class="dev-links"><a href="https://github.com/WilliamWachenjera" class="dev-link">GitHub</a><a
+                href="https://www.linkedin.com/in/william-wachenjera-a92a39401/" class="dev-link">LinkedIn</a>
             </div>
           </div>
           <div class="dev-card">
             <div class="dev-avatar" style="background:rgba(30,144,255,.15);color:var(--accent-blue)">IP</div>
             <div class="dev-name">Ignacio Phiri</div>
             <div class="dev-role">Backend Developer</div>
-            <div class="dev-bio">Built the Node.js + Express REST API, PostgreSQL schema, Socket.IO real-time events,
+            <div class="dev-bio">Built the Node.js + Express REST API Backend, PostgreSQL schema, Socket.IO real-time
+              events,
               and JWT authentication system.</div>
             <div class="dev-skills"><span class="dev-skill">Node.js</span><span class="dev-skill">PostgreSQL</span><span
                 class="dev-skill">REST API</span><span class="dev-skill">Socket.IO</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            <div class="dev-links"><a href="https://github.com/IPHIRI" target="_blank" class="dev-link">GitHub</a><a
+                href="https://www.linkedin.com/in/Ignacio-Phiri" class="dev-link">LinkedIn</a>
             </div>
           </div>
           <div class="dev-card">
@@ -2498,7 +2534,8 @@
               communication protocols.</div>
             <div class="dev-skills"><span class="dev-skill">AI</span><span class="dev-skill">Arduino</span><span
                 class="dev-skill">ESP32</span><span class="dev-skill">MQTT</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            <div class="dev-links"><a href="https://github.com/NMbuzi" target="_blank" class="dev-link">GitHub</a><a
+                href="https://www.linkedin.com/in/neister-mbuzi-6a4a841ab/" class="dev-link">LinkedIn</a>
             </div>
           </div>
           <div class="dev-card">
@@ -2509,31 +2546,11 @@
               and suppression firmware.</div>
             <div class="dev-skills"><span class="dev-skill">Arduino</span><span class="dev-skill">Sensors</span><span
                 class="dev-skill">GPS</span><span class="dev-skill">Relay</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
+            <div class="dev-links"><a href="https://github.com/mirriechimoyo" target="_blank"
+                class="dev-link">GitHub</a><a href="https://www.linkedin.com/in/mirriam-chimoyo-3b569b296/"
+                class="dev-link">LinkedIn</a>
             </div>
           </div>
-          <!-- <div class="dev-card">
-            <div class="dev-avatar" style="background:rgba(255,170,0,.15);color:var(--accent-amber)">SM</div>
-            <div class="dev-name">Suleiman Mohammed</div>
-            <div class="dev-role">DevOps & Cloud Engineer</div>
-            <div class="dev-bio">Set up cloud infrastructure, CI/CD pipelines, PostgreSQL hosting, and Twilio SMS alert
-              integration.</div>
-            <div class="dev-skills"><span class="dev-skill">Cloud</span><span class="dev-skill">DevOps</span><span
-                class="dev-skill">Twilio</span><span class="dev-skill">Linux</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
-            </div>
-          </div>
-          <div class="dev-card">
-            <div class="dev-avatar" style="background:rgba(167,139,250,.15);color:#a78bfa">AH</div>
-            <div class="dev-name">Amina Hassan</div>
-            <div class="dev-role">QA & Documentation</div>
-            <div class="dev-bio">Responsible for system testing, quality assurance, technical documentation,
-              requirements, and business logic.</div>
-            <div class="dev-skills"><span class="dev-skill">Testing</span><span class="dev-skill">Docs</span><span
-                class="dev-skill">QA</span><span class="dev-skill">Project Mgmt</span></div>
-            <div class="dev-links"><a href="#" class="dev-link">GitHub</a><a href="#" class="dev-link">LinkedIn</a>
-            </div> -->
-          <!-- </div> -->
         </div>
       </section>
 
@@ -2547,8 +2564,9 @@
         <div class="contact-wrap">
           <div class="card">
             <div class="card-title">✉ Send a Message</div>
-            <div class="form-group"><label>Full Name</label><input id="cName" placeholder="Your name" /></div>
-            <div class="form-group"><label>Email</label><input type="email" id="cEmail" placeholder="your@email.com" />
+            <div class="form-group"><label>Full Name</label><input id="cName" placeholder="Enter your name" /></div>
+            <div class="form-group"><label>Email</label><input type="email" id="cEmail"
+                placeholder="Enter your email" />
             </div>
             <div class="form-group"><label>Subject</label>
               <select id="cSubject">
@@ -2570,9 +2588,9 @@
                 📧 Lead: <strong style="color:var(--text-primary)">bsc-com-ne-06-22@unima.ac.mw</strong><br />
                 📧 Backend: <strong style="color:var(--text-primary)">bsc-com-ne-10-21@unima.ac.mw</strong><br />
                 📧 Support: <strong style="color:var(--text-primary)">support@sfdaass.io</strong><br /><br />
-                <a href="#" style="color:var(--accent-teal);text-decoration:none">🔗
-                  github.com/williamwachenjera/SFDAS</a><br />
-                <a href="#" style="color:var(--accent-blue);text-decoration:none">🔗 linkedin.com/company/sfdaass</a>
+                <a href="https://github.com/WilliamWachenjera/SFDAS"
+                  style="color:var(--accent-teal);text-decoration:none">🔗
+                  github.com/WilliamWachenjera/SFDAS</a><br />
               </div>
             </div>
             <div class="card">
@@ -2711,6 +2729,14 @@
             <option value="admin">Administrator (Full Access)</option>
           </select>
         </div>
+        <div class="form-group" id="mUserDevicesGroup" style="display:none">
+          <label>Assigned Devices (Operators only)</label>
+          <select id="mUserDevices" multiple
+            style="width:100%; height:80px; background:var(--bg-deep); color:var(--text-primary); border:1px solid var(--border); border-radius:6px; padding:8px;">
+            <!-- Options populated dynamically -->
+          </select>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Hold Ctrl/Cmd to select multiple</div>
+        </div>
         <div class="form-group">
           <label>Phone Number (Optional)</label>
           <input type="text" id="mUserPhone" placeholder="+265..." />
@@ -2733,6 +2759,37 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
         <button class="btn btn-teal" id="confirmBtn" style="background:var(--accent-fire)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deviceConfigModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Device Configuration</h3>
+        <button class="modal-close" onclick="closeModal('deviceConfigModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:15px">Device Code: <span id="cfgDeviceCode"
+            style="color:var(--text-primary);font-family:var(--font-mono)"></span></div>
+        <div class="g2 mb">
+          <div class="form-group"><label>Smoke Warning (ppm)</label><input type="number" id="cfgSmokeW"
+              placeholder="250" /></div>
+          <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="cfgSmokeC"
+              placeholder="500" /></div>
+          <div class="form-group"><label>Temp Warning (°C)</label><input type="number" id="cfgTempW" placeholder="50" />
+          </div>
+          <div class="form-group"><label>Temp Critical (°C)</label><input type="number" id="cfgTempC"
+              placeholder="100" /></div>
+          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="cfgGasW" placeholder="150" />
+          </div>
+          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="cfgGasC"
+              placeholder="300" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('deviceConfigModal')">Cancel</button>
+        <button class="btn btn-teal" onclick="submitDeviceConfig()">Push to Device</button>
       </div>
     </div>
   </div>
@@ -3164,6 +3221,14 @@
 
 
 
+    function parseDate(d) {
+      if (!d) return new Date();
+      let s = String(d);
+      if (!s.includes('T') && !s.includes('Z')) s = s.replace(' ', 'T') + 'Z';
+      else if (s.includes('T') && !s.includes('Z') && !s.includes('+')) s += 'Z';
+      return new Date(s);
+    }
+
     function renderAlerts(incidents) {
       const el = document.getElementById('alertList');
       if (!incidents || incidents.length === 0) {
@@ -3173,7 +3238,7 @@
       el.innerHTML = incidents.slice(0, 5).map(i => {
         const dotCls = i.severity === 'critical' ? 'critical' : i.severity === 'warning' ? 'warning' : 'low';
         const sevBadge = `<span class="sev sev-${i.severity}">${i.severity.toUpperCase()}</span>`;
-        const dt = new Date(i.detected_at);
+        const dt = parseDate(i.detected_at);
         const timeStr = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
         return `<div class="alert-item" onclick="openIncidentModal('${i.id || i.incident_code}')">
       <div class="alert-dot ${dotCls}"></div>
@@ -3193,10 +3258,11 @@
         const color = active ? 'var(--accent-fire)' : 'var(--accent-green)';
         const btnClass = active ? 'off' : 'on';
         const btnLabel = active ? 'Deactivate' : 'Activate';
+        const disabled = currentUser && currentUser.role === 'viewer' ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '';
         return `<div class="zone-tile">
       <div class="zl">${z.zone_code}</div>
       <div class="zs" style="color:${color}">${active ? 'ACTIVE' : 'STANDBY'}</div>
-      <button class="${btnClass}" onclick="toggleZone('${z.zone_code}',this)">${btnLabel}</button>
+      <button class="${btnClass}" onclick="toggleZone('${z.zone_code}',this)" ${disabled}>${btnLabel}</button>
     </div>`;
       }).join('');
     }
@@ -3224,7 +3290,7 @@
         const res = await apiFetch('/dashboard/chart-data?hours=24');
         const data = await res.json();
         if (data.success && data.chartData.length > 0) {
-          labels = data.chartData.map(r => new Date(r.hour).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+          labels = data.chartData.map(r => parseDate(r.hour).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
           smokeVals = data.chartData.map(r => parseFloat(r.avg_smoke) || 0);
           tempVals = data.chartData.map(r => parseFloat(r.avg_temp) || 0);
           gasVals = data.chartData.map(r => parseFloat(r.avg_gas) || 0);
@@ -3330,7 +3396,7 @@
         const stColor = i.status === 'active' ? 'var(--accent-fire)' : i.status === 'monitoring' ? 'var(--accent-amber)' : 'var(--accent-green)';
         const sprIcon = i.sprinkler_activated ? '💧 ACTIVATED' : 'STANDBY';
         const sprColor = i.sprinkler_activated ? 'var(--accent-teal)' : 'var(--text-muted)';
-        const dt = new Date(i.detected_at).toLocaleString('en-GB');
+        const dt = parseDate(i.detected_at).toLocaleString('en-GB');
         const canResolve = ['active', 'monitoring'].includes(i.status) && ['admin', 'operator'].includes(currentUser.role);
         return `<tr onclick="openIncidentModal('${i.id || i.incident_code}')">
       <td><span class="mono">${i.incident_code}</span></td>
@@ -3386,7 +3452,7 @@
 
       const sColor = inc.severity === 'critical' ? 'var(--accent-fire)' : inc.severity === 'warning' ? 'var(--accent-amber)' : 'var(--accent-green)';
       document.getElementById('mDetailGrid').innerHTML = `
-    <div class="detail-field"><div class="df-label">Date & Time</div><div class="df-val">${new Date(inc.detected_at).toLocaleString('en-GB')}</div></div>
+    <div class="detail-field"><div class="df-label">Date & Time</div><div class="df-val">${parseDate(inc.detected_at).toLocaleString('en-GB')}</div></div>
     <div class="detail-field"><div class="df-label">Device</div><div class="df-val" style="color:var(--accent-teal)">${inc.device_code}</div></div>
     <div class="detail-field"><div class="df-label">GPS Coordinates</div><div class="df-val">${inc.gps_lat ? `${inc.gps_lat.toFixed(4)}, ${inc.gps_lng.toFixed(4)}` : 'N/A'}</div></div>
     <div class="detail-field"><div class="df-label">Geofence</div><div class="df-val" style="color:${inc.inside_geofence ? 'var(--accent-green)' : 'var(--accent-red)'}">${inc.inside_geofence ? '✅ INSIDE' : '❌ OUTSIDE'}</div></div>
@@ -3400,7 +3466,7 @@
 
       document.getElementById('mTimeline').innerHTML = events.map(e => {
         const tCls = e._type || e.event_type === 'detected' || e.event_type === 'confirmed' ? 'fire' : e.event_type.includes('sms') || e.event_type.includes('alert') ? 'warn' : '';
-        return `<div class="tl-item ${tCls}"><div class="tl-time">${new Date(e.occurred_at).toLocaleTimeString('en-GB')}</div><div class="tl-label">${e.description}</div></div>`;
+        return `<div class="tl-item ${tCls}"><div class="tl-time">${parseDate(e.occurred_at).toLocaleTimeString('en-GB')}</div><div class="tl-label">${e.description}</div></div>`;
       }).join('');
 
       const canAct = ['admin', 'operator'].includes(currentUser.role) && ['active', 'monitoring', 'acknowledged'].includes(inc.status);
@@ -3426,8 +3492,8 @@
           const g = data.geofence;
           document.getElementById('geoType').value = g.type;
           document.getElementById('geoName').value = g.name || 'Main Facility';
-          document.getElementById('geoLat').value = g.center_lat || -13.9626;
-          document.getElementById('geoLng').value = g.center_lng || 33.7741;
+          document.getElementById('geoLat').value = g.center_lat || -15.38855;
+          document.getElementById('geoLng').value = g.center_lng || 35.33542;
           document.getElementById('geoRadius').value = g.radius_meters || 500;
           updateGeoTypeUI();
           updateGeoStatus(g);
@@ -3514,7 +3580,7 @@
           <td><span class="mono">${u.email}</span></td>
           <td><span class="sev ${u.role === 'admin' ? 'sev-critical' : u.role === 'operator' ? 'sev-warning' : 'sev-low'}">${u.role.toUpperCase()}</span></td>
           <td style="font-family:var(--font-mono);font-size:11px">${u.phone || '—'}</td>
-          <td style="font-size:12px">${u.last_login ? new Date(u.last_login).toLocaleString('en-GB') : 'Never'}</td>
+          <td style="font-size:12px">${u.last_login ? parseDate(u.last_login).toLocaleString('en-GB') : 'Never'}</td>
           <td><span class="pill ${u.is_active ? 'pill-on' : 'pill-off'}">${u.is_active ? 'ACTIVE' : 'INACTIVE'}</span></td>
           <td style="display:flex;gap:5px">
             <button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="openEditUser('${u.id}')">Edit</button>
@@ -3533,6 +3599,14 @@
       // Clear fields
       ['mUserName', 'mUserEmail', 'mUserPassword', 'mUserPhone'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('mUserRole').value = 'viewer';
+      document.getElementById('mUserDevicesGroup').style.display = 'none';
+
+      document.getElementById('mUserRole').onchange = (e) => {
+        document.getElementById('mUserDevicesGroup').style.display = e.target.value === 'operator' ? 'block' : 'none';
+      };
+
+      const select = document.getElementById('mUserDevices');
+      if (select) select.innerHTML = devicesData.map(d => `<option value="${d.device_code}">${d.name} (${d.device_code})</option>`).join('');
 
       document.getElementById('userModal').classList.add('active');
     }
@@ -3543,13 +3617,15 @@
       const password = document.getElementById('mUserPassword').value;
       const role = document.getElementById('mUserRole').value;
       const phone = document.getElementById('mUserPhone').value.trim();
+      const select = document.getElementById('mUserDevices');
+      const assigned_devices = Array.from(select.selectedOptions).map(o => o.value);
 
       if (!name || !email || !password) return toast('Please fill all required fields', 'error');
 
       try {
         const res = await apiFetch('/users', {
           method: 'POST',
-          body: JSON.stringify({ name, email, password, role, phone })
+          body: JSON.stringify({ name, email, password, role, phone, assigned_devices })
         });
         const data = await res.json();
         if (data.success) {
@@ -3588,8 +3664,8 @@
     // ═══════════════════════════════════════════════════════
     // MAPS
     // ═══════════════════════════════════════════════════════
-    const CENTER = [-13.9626, 33.7741];
-    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const CENTER = [-15.38855, 35.33542];
+    const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
     const tileFilter = 'brightness(0.65) hue-rotate(180deg) saturate(1.6)';
     let map1Markers = {};
     let map1IncidentMarkers = [];
@@ -3740,6 +3816,10 @@
     // SPRINKLER CONTROL
     // ═══════════════════════════════════════════════════════
     async function toggleZone(zoneCode, btn) {
+      if (currentUser && currentUser.role === 'viewer') {
+        toast('Permission denied: Viewers cannot control sprinklers', 'error');
+        return;
+      }
       const isActive = btn.classList.contains('off');
       const action = isActive ? 'deactivate' : 'activate';
 
@@ -3874,12 +3954,6 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // MODAL
-    // ═══════════════════════════════════════════════════════
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-    function openAddUser() { toast('User registration form — connect backend to enable', 'warn'); }
-
-    // ═══════════════════════════════════════════════════════
     // TOAST
     // ═══════════════════════════════════════════════════════
     let toastTimer;
@@ -3950,7 +4024,7 @@
         if (data.success) {
           document.getElementById('auditTbody').innerHTML = data.logs.map(log =>
             `<tr>
-          <td style="font-size:12px">${new Date(log.created_at).toLocaleString()}</td>
+          <td style="font-size:12px">${parseDate(log.created_at).toLocaleString()}</td>
           <td>${log.user_name || 'System'}</td>
           <td><span class="mono">${log.action}</span></td>
           <td style="font-size:12px">${log.details ? (typeof log.details === 'object' ? JSON.stringify(log.details) : log.details) : ''}</td>
@@ -3968,8 +4042,44 @@
       if (page === 'audit') loadAuditLogs();
     };
 
+    let currentConfigDevice = null;
     function openDeviceConfig(id) {
-      toast('Device configuration API routes not yet exposed in backend UI. Available via endpoints.', 'warn');
+      currentConfigDevice = id;
+      document.getElementById('cfgDeviceCode').textContent = id;
+      document.getElementById('deviceConfigModal').classList.add('active');
+    }
+
+    async function submitDeviceConfig() {
+      const body = {
+        smoke_warning: parseInt(document.getElementById('cfgSmokeW').value) || 250,
+        smoke_critical: parseInt(document.getElementById('cfgSmokeC').value) || 500,
+        temp_warning: parseInt(document.getElementById('cfgTempW').value) || 50,
+        temp_critical: parseInt(document.getElementById('cfgTempC').value) || 100,
+        gas_warning: parseInt(document.getElementById('cfgGasW').value) || 150,
+        gas_critical: parseInt(document.getElementById('cfgGasC').value) || 300,
+      };
+      try {
+        const res = await apiFetch(`/devices/${currentConfigDevice}/config`, { method: 'POST', body: JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) {
+          toast('✅ Config pushed to device');
+          closeModal('deviceConfigModal');
+        } else {
+          toast(data.message || 'Failed to push config', 'error');
+        }
+      } catch (e) {
+        toast('Error pushing device config', 'error');
+      }
+    }
+
+    function toggleTheme() {
+      const isLightMode = document.body.classList.toggle('light-mode');
+      document.querySelector('.theme-toggle').textContent = isLightMode ? '☀️' : '🌙';
+      const mapFilter = isLightMode ? 'none' : tileFilter;
+      if (typeof map1 !== 'undefined' && map1) map1.getContainer().style.filter = mapFilter;
+      if (typeof map2 !== 'undefined' && map2) map2.getContainer().style.filter = mapFilter;
+      if (typeof map3 !== 'undefined' && map3) map3.getContainer().style.filter = mapFilter;
+      if (typeof map4 !== 'undefined' && map4) map4.getContainer().style.filter = mapFilter;
     }
 
     // Periodically refresh data

@@ -11,7 +11,23 @@ router.get('/', requireAuth, (req, res) => {
   db.run(`UPDATE devices SET seconds_since_seen = CAST((julianday('now') - julianday(last_seen)) * 86400 AS INTEGER) WHERE last_seen IS NOT NULL`);
   db.run(`UPDATE devices SET status = 'offline' WHERE seconds_since_seen > 120 AND status != 'offline'`);
 
-  const devices = db.all('SELECT * FROM devices ORDER BY last_seen DESC');
+  let query = 'SELECT * FROM devices ORDER BY last_seen DESC';
+  let params = [];
+
+  if (req.user.role === 'operator') {
+    const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
+    let allowed = [];
+    try { allowed = JSON.parse(user.assigned_devices || '[]'); } catch (e) {}
+
+    if (allowed.length === 0) {
+      return res.json({ success: true, devices: [] });
+    }
+    const placeholders = allowed.map(() => '?').join(',');
+    query = `SELECT * FROM devices WHERE device_code IN (${placeholders}) ORDER BY last_seen DESC`;
+    params = allowed;
+  }
+
+  const devices = db.all(query, params);
   res.json({ success: true, devices });
 });
 
@@ -75,10 +91,20 @@ router.post('/:deviceCode/sprinkler', requireOperator, (req, res) => {
 
 // POST /api/devices/:deviceCode/config — Push config to ESP32
 router.post('/:deviceCode/config', requireOperator, (req, res) => {
+  if (req.user.role === 'operator') {
+    const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
+    let allowed = [];
+    try { allowed = JSON.parse(user.assigned_devices || '[]'); } catch (e) {}
+    if (!allowed.includes(req.params.deviceCode)) {
+      return res.status(403).json({ success: false, message: 'Not authorized to configure this device' });
+    }
+  }
+
   const mqttClient = require('../services/mqttService').getClient();
   if (mqttClient?.connected) {
     mqttClient.publish(`sfdaass/config/${req.params.deviceCode}`, JSON.stringify(req.body));
   }
+  logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'device_config_push', details: { deviceCode: req.params.deviceCode, payload: req.body }, ip: req.ip });
   res.json({ success: true, message: 'Config pushed to device' });
 });
 
