@@ -877,10 +877,11 @@
 
     /* MAP */
     .map-box {
-      height: 400px;
+      height: 600px;
       border-radius: 6px;
       background: #081218
     }
+
 
     /* ALERT LIST */
     .alert-list {
@@ -1120,6 +1121,17 @@
       font-size: 12px;
       color: var(--accent-teal)
     }
+
+    .clickable {
+      cursor: pointer;
+      text-decoration: underline;
+      transition: opacity 0.2s;
+    }
+
+    .clickable:hover {
+      opacity: 0.7;
+    }
+
 
     .pill {
       display: inline-block;
@@ -2368,10 +2380,12 @@
         </div>
         <div class="card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <select id="auditUserFilter" onchange="loadAuditLogs()" style="padding:6px; background:var(--bg-deep); color:var(--text-primary); border:1px solid var(--border); border-radius:4px;">
+            <select id="auditUserFilter" onchange="loadAuditLogs()"
+              style="padding:6px; background:var(--bg-deep); color:var(--text-primary); border:1px solid var(--border); border-radius:4px;">
               <option value="">All Users</option>
             </select>
-            <button class="btn btn-ghost" style="color:var(--accent-fire); font-size:12px;" onclick="clearAuditLogs()">Clear Logs</button>
+            <button class="btn btn-ghost" style="color:var(--accent-fire); font-size:12px;"
+              onclick="clearAuditLogs()">Clear Logs</button>
           </div>
           <div style="overflow-x:auto">
             <table class="data-table">
@@ -2653,6 +2667,11 @@
       <div class="form-group"><label>Location</label><input id="rdLoc" placeholder="Building 5, Floor 2" /></div>
       <div class="form-group"><label>MAC Address</label><input id="rdMac" placeholder="AA:BB:CC:DD:EE:FF" /></div>
       <div class="form-group"><label>Firmware</label><input id="rdFw" value="1.0.0" /></div>
+      <div style="display:flex;gap:15px">
+        <div class="form-group"><label>Latitude (Optional)</label><input type="number" id="rdLat" step="any" placeholder="-15.3833" /></div>
+        <div class="form-group"><label>Longitude (Optional)</label><input type="number" id="rdLng" step="any" placeholder="35.3333" /></div>
+      </div>
+
       <div style="display:flex;gap:9px">
         <button class="btn btn-teal" onclick="registerDevice()">Register</button>
         <button class="btn btn-ghost" onclick="closeModal('regDevModal')">Cancel</button>
@@ -2715,16 +2734,16 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Full Name</label>
-          <input type="text" id="mUserName" placeholder="John Doe" />
+          <input type="text" id="mUserName" placeholder="Enter new user's name" />
         </div>
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" id="mUserEmail" placeholder="john@sfdaass.io" />
+          <input type="email" id="mUserEmail" placeholder="Enter new user's email" />
         </div>
         <div class="form-group" id="mUserPassGroup">
           <label>Initial Password</label>
           <div class="password-wrapper">
-            <input type="password" id="mUserPassword" placeholder="••••••••" />
+            <input type="password" id="mUserPassword" placeholder="Enter new user's password" />
             <button type="button" class="pass-toggle" onclick="togglePass(this)">🔒</button>
           </div>
         </div>
@@ -2751,7 +2770,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button>
-                <button class="btn btn-teal" id="userSubmitBtn" type="button" onclick="saveUser()">Create User</button>
+        <button class="btn btn-teal" id="userSubmitBtn" type="button" onclick="saveUser()">Create User</button>
       </div>
     </div>
   </div>
@@ -2792,7 +2811,8 @@
           </div>
           <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="cfgGasC"
               placeholder="300" /></div>
-          <div class="form-group"><label>Humidity Warning (%)</label><input type="number" id="cfgHumW" placeholder="70" />
+          <div class="form-group"><label>Humidity Warning (%)</label><input type="number" id="cfgHumW"
+              placeholder="70" />
           </div>
           <div class="form-group"><label>Humidity Critical (%)</label><input type="number" id="cfgHumC"
               placeholder="90" /></div>
@@ -3046,13 +3066,19 @@
       document.getElementById('userRole').textContent = u.role.toUpperCase();
       const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
       document.getElementById('userInitials').textContent = initials;
-      
-      // Setup contact email
+
+      // Setup contact form
       const cEmail = document.getElementById('cEmail');
+      const cName = document.getElementById('cName');
       if (cEmail) {
         cEmail.value = u.email;
         cEmail.disabled = true;
       }
+      if (cName) {
+        cName.value = u.name;
+        cName.disabled = true;
+      }
+
 
       // Show admin nav
       if (u.role === 'admin') {
@@ -3361,9 +3387,9 @@
         const bat = d.battery_pct != null ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-family:var(--font-mono);font-size:11px">${Math.round(d.battery_pct)}%</span><div style="width:40px"><div class="prog"><div class="prog-fill" style="width:${d.battery_pct}%;background:${d.battery_pct < 20 ? 'var(--accent-fire)' : d.battery_pct < 50 ? 'var(--accent-amber)' : 'var(--accent-green)'}"></div></div></div></div>` : '—';
         const lastSeen = d.seconds_since_seen < 60 ? `${d.seconds_since_seen}s ago` : d.seconds_since_seen < 3600 ? `${Math.floor(d.seconds_since_seen / 60)}m ago` : `${Math.floor(d.seconds_since_seen / 3600)}h ago`;
         return `<tr>
-      <td><span class="mono">${d.device_code}</span></td>
+      <td><span class="mono clickable" onclick="goToDeviceOnMap(${d.gps_lat}, ${d.gps_lng}, '${d.device_code}')" title="View on Map">${d.device_code}</span></td>
       <td>${d.location_label || '—'}</td>
-      <td style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${d.gps_lat ? `${d.gps_lat.toFixed(4)}, ${d.gps_lng.toFixed(4)}` : '—'}</td>
+      <td style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${d.gps_lat ? `${parseFloat(d.gps_lat).toFixed(4)}, ${parseFloat(d.gps_lng).toFixed(4)}` : '—'}</td>
       <td>${geo}</td>
       <td style="color:${sColor};font-family:var(--font-mono);font-weight:700">${d.smoke_ppm ?? '—'}</td>
       <td style="color:${tColor};font-family:var(--font-mono);font-weight:700">${d.temperature_c != null ? d.temperature_c + '°' : '—'}</td>
@@ -3375,6 +3401,8 @@
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--accent-fire)" onclick="deleteDevice('${d.id || d.device_code}')">Delete</button>
       </td>
     </tr>`;
+
+
       }).join('');
     }
 
@@ -3771,7 +3799,8 @@
     // ═══════════════════════════════════════════════════════
     // MAPS
     // ═══════════════════════════════════════════════════════
-    const CENTER = [-15.38855, 35.33542];
+    const CENTER = [-15.3833, 35.3333]; // UNIMA Zomba
+
     const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
     const tileFilter = 'brightness(0.65) hue-rotate(180deg) saturate(1.6)';
     let map1Markers = {};
@@ -3823,6 +3852,28 @@
         map1Markers[data.deviceCode].setIcon(makeMarkerIcon(color));
       }
     }
+
+    function goToDeviceOnMap(lat, lng, code) {
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) { 
+        toast('No location data for this device', 'warn'); 
+        return; 
+      }
+      goTo('dashboard');
+      if (map1) {
+        setTimeout(() => {
+          map1.setView([lat, lng], 18);
+          if (map1Markers[code]) {
+            map1Markers[code].openPopup();
+          } else {
+            // Marker might not be there if we just registered it, refresh
+            refreshMap1Devices();
+            if (map1Markers[code]) map1Markers[code].openPopup();
+          }
+        }, 300);
+      }
+    }
+
+
 
     function initMap2() {
       map2 = L.map('map2', { attributionControl: false }).setView(CENTER, 15);
@@ -3963,11 +4014,25 @@
       const loc = document.getElementById('rdLoc').value.trim();
       const mac = document.getElementById('rdMac').value.trim();
       const fw = document.getElementById('rdFw').value.trim();
+      const lat = document.getElementById('rdLat').value.trim();
+      const lng = document.getElementById('rdLng').value.trim();
 
       if (!code) { toast('Device code is required', 'error'); return; }
 
       try {
-        const res = await apiFetch('/devices', { method: 'POST', body: JSON.stringify({ device_code: code, name, location_label: loc, mac_address: mac, firmware_version: fw }) });
+        const res = await apiFetch('/devices', { 
+          method: 'POST', 
+          body: JSON.stringify({ 
+            device_code: code, 
+            name, 
+            location_label: loc, 
+            mac_address: mac, 
+            firmware_version: fw,
+            gps_lat: lat ? parseFloat(lat) : null,
+            gps_lng: lng ? parseFloat(lng) : null
+          }) 
+        });
+
         const data = await res.json();
         const resultEl = document.getElementById('rdResult');
         resultEl.style.display = 'block';

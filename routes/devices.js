@@ -40,7 +40,7 @@ router.get('/:id', requireAuth, (req, res) => {
 
 // POST /api/devices — Register new device
 router.post('/', requireOperator, (req, res) => {
-  const { device_code, name, location_label, mac_address, firmware_version } = req.body;
+  const { device_code, name, location_label, mac_address, firmware_version, gps_lat, gps_lng } = req.body;
   if (!device_code) return res.status(400).json({ success: false, message: 'device_code required' });
 
   const existing = db.get('SELECT id FROM devices WHERE device_code = ?', [device_code]);
@@ -48,9 +48,10 @@ router.post('/', requireOperator, (req, res) => {
 
   const apiKey = uuidv4();
   const result = db.run(
-    'INSERT INTO devices (device_code, name, location_label, mac_address, firmware_version, api_key, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [device_code, name || device_code, location_label || '', mac_address || '', firmware_version || '1.0.0', apiKey, 'offline']
+    'INSERT INTO devices (device_code, name, location_label, mac_address, firmware_version, api_key, status, gps_lat, gps_lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [device_code, name || device_code, location_label || '', mac_address || '', firmware_version || '1.0.0', apiKey, 'offline', gps_lat || null, gps_lng || null]
   );
+
 
   logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'device_registered', details: { device_code }, ip: req.ip });
 
