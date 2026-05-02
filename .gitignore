@@ -6,3 +6,4 @@ node_modules/
 logs/
 *.db
 logs/combined.log
+sfdaass.db
