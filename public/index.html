@@ -3387,7 +3387,7 @@
         const bat = d.battery_pct != null ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-family:var(--font-mono);font-size:11px">${Math.round(d.battery_pct)}%</span><div style="width:40px"><div class="prog"><div class="prog-fill" style="width:${d.battery_pct}%;background:${d.battery_pct < 20 ? 'var(--accent-fire)' : d.battery_pct < 50 ? 'var(--accent-amber)' : 'var(--accent-green)'}"></div></div></div></div>` : '—';
         const lastSeen = d.seconds_since_seen < 60 ? `${d.seconds_since_seen}s ago` : d.seconds_since_seen < 3600 ? `${Math.floor(d.seconds_since_seen / 60)}m ago` : `${Math.floor(d.seconds_since_seen / 3600)}h ago`;
         return `<tr>
-      <td><span class="mono clickable" onclick="goToDeviceOnMap(${d.gps_lat}, ${d.gps_lng}, '${d.device_code}')" title="View on Map">${d.device_code}</span></td>
+      <td><span class="mono clickable" onclick="goToDeviceOnMap('${d.device_code}')" title="View on Map">${d.device_code}</span></td>
       <td>${d.location_label || '—'}</td>
       <td style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted)">${d.gps_lat ? `${parseFloat(d.gps_lat).toFixed(4)}, ${parseFloat(d.gps_lng).toFixed(4)}` : '—'}</td>
       <td>${geo}</td>
@@ -3853,25 +3853,32 @@
       }
     }
 
-    function goToDeviceOnMap(lat, lng, code) {
-      if (!lat || !lng || isNaN(lat) || isNaN(lng)) { 
-        toast('No location data for this device', 'warn'); 
-        return; 
+    function goToDeviceOnMap(code) {
+      const d = devicesData.find(x => x.device_code === code);
+      if (!d || !d.gps_lat || !d.gps_lng) {
+        toast(`No location data for device ${code}`, 'warn');
+        return;
       }
+      
+      const lat = parseFloat(d.gps_lat);
+      const lng = parseFloat(d.gps_lng);
+      
       goTo('dashboard');
+      
       if (map1) {
         setTimeout(() => {
           map1.setView([lat, lng], 18);
           if (map1Markers[code]) {
             map1Markers[code].openPopup();
           } else {
-            // Marker might not be there if we just registered it, refresh
+            // Re-render markers if missing
             refreshMap1Devices();
             if (map1Markers[code]) map1Markers[code].openPopup();
           }
-        }, 300);
+        }, 350);
       }
     }
+
 
 
 

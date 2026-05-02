@@ -120,3 +120,24 @@
     at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
     at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
     at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+[23:50:47] [31merror[39m: undefined
+[23:50:49] [31merror[39m: undefined
+[23:50:50] [31merror[39m: undefined
+[23:50:50] [31merror[39m: undefined
+[23:50:54] [31merror[39m: undefined
+[23:51:22] [31merror[39m: undefined
+[23:51:22] [31merror[39m: undefined
+[23:51:23] [31merror[39m: undefined
+[23:51:23] [31merror[39m: undefined
+[23:51:37] [31merror[39m: undefined
+[23:51:37] [31merror[39m: undefined
+[00:00:28] [31merror[39m: undefined
+[00:00:29] [31merror[39m: undefined
+[00:00:29] [31merror[39m: undefined
+[00:00:30] [31merror[39m: undefined
+[00:00:30] [31merror[39m: undefined
+[00:00:30] [31merror[39m: undefined
+[00:00:31] [31merror[39m: undefined
+[00:00:31] [31merror[39m: undefined
+[00:00:31] [31merror[39m: undefined
+[00:00:31] [31merror[39m: undefined
