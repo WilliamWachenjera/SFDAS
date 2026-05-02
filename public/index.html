@@ -2367,6 +2367,12 @@
           <div class="header-line"></div>
         </div>
         <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <select id="auditUserFilter" onchange="loadAuditLogs()" style="padding:6px; background:var(--bg-deep); color:var(--text-primary); border:1px solid var(--border); border-radius:4px;">
+              <option value="">All Users</option>
+            </select>
+            <button class="btn btn-ghost" style="color:var(--accent-fire); font-size:12px;" onclick="clearAuditLogs()">Clear Logs</button>
+          </div>
           <div style="overflow-x:auto">
             <table class="data-table">
               <thead>
@@ -2376,11 +2382,12 @@
                   <th>Action</th>
                   <th>Details</th>
                   <th>IP Address</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="auditTbody">
                 <tr>
-                  <td colspan="5" style="text-align:center;padding:20px">
+                  <td colspan="6" style="text-align:center;padding:20px">
                     <div class="spinner"></div>
                   </td>
                 </tr>
@@ -2744,7 +2751,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button>
-        <button class="btn btn-teal" id="userSubmitBtn" onclick="saveUser()">Create User</button>
+                <button class="btn btn-teal" id="userSubmitBtn" type="button" onclick="saveUser()">Create User</button>
       </div>
     </div>
   </div>
@@ -2785,6 +2792,10 @@
           </div>
           <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="cfgGasC"
               placeholder="300" /></div>
+          <div class="form-group"><label>Humidity Warning (%)</label><input type="number" id="cfgHumW" placeholder="70" />
+          </div>
+          <div class="form-group"><label>Humidity Critical (%)</label><input type="number" id="cfgHumC"
+              placeholder="90" /></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2813,7 +2824,7 @@
     let map2Init = false, map3Init = false, map4Init = false;
     let geoCircle = null, geoLayer = null;
     let polyPoints = [], polyMarkers = [], polyLine = null;
-    let devicesData = [], incidentsData = [];
+    let devicesData = [], incidentsData = [], usersData = [];
     let uptimeSecs = 0;
     let activeIncidentCount = 0;
 
@@ -3035,6 +3046,13 @@
       document.getElementById('userRole').textContent = u.role.toUpperCase();
       const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
       document.getElementById('userInitials').textContent = initials;
+      
+      // Setup contact email
+      const cEmail = document.getElementById('cEmail');
+      if (cEmail) {
+        cEmail.value = u.email;
+        cEmail.disabled = true;
+      }
 
       // Show admin nav
       if (u.role === 'admin') {
@@ -3061,9 +3079,13 @@
     async function apiFetch(path, options = {}) {
       const headers = {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...(options.headers || {}),
       };
+
       const res = await fetch(API_BASE + path, { ...options, headers });
 
       if (res.status === 401) {
@@ -3348,7 +3370,10 @@
       <td>${bat}</td>
       <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">${lastSeen}</td>
       <td><span class="pill ${pCls}">${d.status}</span></td>
-      <td><button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="openDeviceConfig('${d.id || d.device_code}')">⚙️ Config</button></td>
+      <td style="display:flex;gap:5px;">
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="openDeviceConfig('${d.id || d.device_code}')">⚙️ Config</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--accent-fire)" onclick="deleteDevice('${d.id || d.device_code}')">Delete</button>
+      </td>
     </tr>`;
       }).join('');
     }
@@ -3361,6 +3386,22 @@
         (!f || d.status === f)
       );
       renderDevicesTable(filtered);
+    }
+
+    async function deleteDevice(id) {
+      if (!confirm('Are you sure you want to delete this device? This action cannot be undone.')) return;
+      try {
+        const res = await apiFetch(`/devices/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          toast('✅ Device deleted');
+          loadDevices();
+        } else {
+          toast(data.message || 'Failed to delete device', 'error');
+        }
+      } catch (e) {
+        toast('Error deleting device', 'error');
+      }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -3567,11 +3608,20 @@
       try {
         const res = await apiFetch('/users');
         const data = await res.json();
-        if (data.success) renderUsers(data.users);
+        if (data.success) {
+          usersData = data.users;
+          renderUsers(usersData);
+        }
       } catch (e) { toast('Failed to load users', 'error'); }
     }
 
     function renderUsers(users) {
+      const filter = document.getElementById('auditUserFilter');
+      if (filter) {
+        const curr = filter.value;
+        filter.innerHTML = '<option value="">All Users</option>' + users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+        filter.value = curr;
+      }
       document.getElementById('usersTbody').innerHTML = users.map(u => {
         const canDelete = u.id !== currentUser.id;
         return `
@@ -3594,7 +3644,7 @@
       document.getElementById('userModalTitle').textContent = 'Add New User';
       document.getElementById('mUserPassGroup').style.display = 'block';
       document.getElementById('userSubmitBtn').textContent = 'Create User';
-      document.getElementById('userSubmitBtn').onclick = saveUser;
+      document.getElementById('userSubmitBtn').onclick = () => saveUser();
 
       // Clear fields
       ['mUserName', 'mUserEmail', 'mUserPassword', 'mUserPhone'].forEach(id => document.getElementById(id).value = '');
@@ -3609,6 +3659,63 @@
       if (select) select.innerHTML = devicesData.map(d => `<option value="${d.device_code}">${d.name} (${d.device_code})</option>`).join('');
 
       document.getElementById('userModal').classList.add('active');
+    }
+
+    let currentEditUserId = null;
+
+    function openEditUser(id) {
+      const u = usersData.find(user => user.id == id);
+      if (!u) return;
+      currentEditUserId = id;
+      document.getElementById('userModalTitle').textContent = 'Edit User';
+      document.getElementById('mUserPassGroup').style.display = 'none';
+      document.getElementById('userSubmitBtn').textContent = 'Update User';
+      document.getElementById('userSubmitBtn').onclick = () => saveEditedUser(id);
+
+      document.getElementById('mUserName').value = u.name || '';
+      document.getElementById('mUserEmail').value = u.email || '';
+      document.getElementById('mUserPhone').value = u.phone || '';
+      document.getElementById('mUserRole').value = u.role || 'viewer';
+      document.getElementById('mUserDevicesGroup').style.display = u.role === 'operator' ? 'block' : 'none';
+
+      document.getElementById('mUserRole').onchange = (e) => {
+        document.getElementById('mUserDevicesGroup').style.display = e.target.value === 'operator' ? 'block' : 'none';
+      };
+
+      const select = document.getElementById('mUserDevices');
+      if (select) {
+        select.innerHTML = devicesData.map(d => `<option value="${d.device_code}">${d.name || d.device_code}</option>`).join('');
+        const assigned = u.assigned_devices ? JSON.parse(u.assigned_devices) : [];
+        Array.from(select.options).forEach(opt => {
+          if (assigned.includes(opt.value)) opt.selected = true;
+        });
+      }
+
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    async function saveEditedUser(id) {
+      const name = document.getElementById('mUserName').value.trim();
+      const email = document.getElementById('mUserEmail').value.trim();
+      const role = document.getElementById('mUserRole').value;
+      const phone = document.getElementById('mUserPhone').value.trim();
+      const select = document.getElementById('mUserDevices');
+      const assigned_devices = Array.from(select.selectedOptions).map(o => o.value);
+
+      if (!name || !email) return toast('Please fill all required fields', 'error');
+
+      try {
+        const res = await apiFetch(`/users/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name, email, role, phone, assigned_devices })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast('✅ User updated successfully');
+          closeModal('userModal');
+          loadUsers();
+        } else toast(data.message, 'error');
+      } catch (e) { toast('Error updating user', 'error'); }
     }
 
     async function saveUser() {
@@ -3880,7 +3987,7 @@
     // ═══════════════════════════════════════════════════════
     async function sendContact() {
       const name = document.getElementById('cName').value.trim();
-      const email = document.getElementById('cEmail').value.trim();
+      const email = (window.currentUser && window.currentUser.email) ? window.currentUser.email : document.getElementById('cEmail').value.trim();
       const subject = document.getElementById('cSubject').value;
       const message = document.getElementById('cMsg').value.trim();
 
@@ -3895,8 +4002,11 @@
         if (data.success) {
           toast(`📨 Message sent! We'll respond to ${email}`);
           document.getElementById('cName').value = '';
-          document.getElementById('cEmail').value = '';
+          const cEmail = document.getElementById('cEmail');
+          cEmail.value = window.currentUser ? window.currentUser.email : '';
+          cEmail.disabled = !!window.currentUser;
           document.getElementById('cMsg').value = '';
+
         } else toast(data.message, 'error');
       } catch (e) { toast('Failed to send message', 'error'); }
     }
@@ -4019,7 +4129,8 @@
 
     async function loadAuditLogs() {
       try {
-        const res = await apiFetch('/audit-logs');
+        const filterUserId = document.getElementById('auditUserFilter')?.value;
+        const res = await apiFetch(`/audit-logs${filterUserId ? `?userId=${filterUserId}` : ''}`);
         const data = await res.json();
         if (data.success) {
           document.getElementById('auditTbody').innerHTML = data.logs.map(log =>
@@ -4029,10 +4140,27 @@
           <td><span class="mono">${log.action}</span></td>
           <td style="font-size:12px">${log.details ? (typeof log.details === 'object' ? JSON.stringify(log.details) : log.details) : ''}</td>
           <td style="font-size:12px;color:var(--text-muted)">${log.ip_address || ''}</td>
+          <td><button class="btn btn-ghost" style="font-size:11px;padding:3px 9px;color:var(--accent-fire)" onclick="deleteAuditLog('${log.id}')">Delete</button></td>
         </tr>`
           ).join('');
         }
       } catch (e) { }
+    }
+
+    async function clearAuditLogs() {
+      if (!confirm('Are you sure you want to clear all audit logs?')) return;
+      try {
+        const res = await apiFetch('/audit-logs', { method: 'DELETE' });
+        if ((await res.json()).success) { toast('Logs cleared'); loadAuditLogs(); }
+      } catch (e) { toast('Error clearing logs', 'error'); }
+    }
+
+    async function deleteAuditLog(id) {
+      if (!confirm('Delete this log entry?')) return;
+      try {
+        const res = await apiFetch(`/audit-logs/${id}`, { method: 'DELETE' });
+        if ((await res.json()).success) { toast('Log deleted'); loadAuditLogs(); }
+      } catch (e) { toast('Error deleting log', 'error'); }
     }
 
     const originalGoTo = goTo;
@@ -4057,6 +4185,8 @@
         temp_critical: parseInt(document.getElementById('cfgTempC').value) || 100,
         gas_warning: parseInt(document.getElementById('cfgGasW').value) || 150,
         gas_critical: parseInt(document.getElementById('cfgGasC').value) || 300,
+        humidity_warning: parseInt(document.getElementById('cfgHumW').value) || 70,
+        humidity_critical: parseInt(document.getElementById('cfgHumC').value) || 90,
       };
       try {
         const res = await apiFetch(`/devices/${currentConfigDevice}/config`, { method: 'POST', body: JSON.stringify(body) });

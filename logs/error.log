@@ -1,0 +1,122 @@
+[17:26:05] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[17:32:05] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[17:33:33] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[17:37:58] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[17:39:00] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[17:43:16] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[18:37:04] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[18:38:50] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[18:38:52] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[18:38:52] [31merror[39m: Error: table users has no column named assigned_devices
+    at e.handleError (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:90:192)
+    at e.tb (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:88:454)
+    at e.run (C:\Users\comadmin\Desktop\SFDAS\node_modules\sql.js\dist\sql-wasm.js:87:209)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:29:9)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\users.js:22:21
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:42:5
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at requireAdmin (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:40:3)
+[18:56:08] [31merror[39m: Email error: No recipients defined
+[20:35:01] [31merror[39m: Error: UNKNOWN: unknown error, open 'C:\Users\comadmin\Desktop\SFDAS\sfdaass.db'
+    at Object.openSync (node:fs:562:18)
+    at Object.writeFileSync (node:fs:2440:35)
+    at saveDb (C:\Users\comadmin\Desktop\SFDAS\db\database.js:25:6)
+    at Object.run (C:\Users\comadmin\Desktop\SFDAS\db\database.js:32:3)
+    at C:\Users\comadmin\Desktop\SFDAS\routes\devices.js:11:6
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)
+    at requireAuth (C:\Users\comadmin\Desktop\SFDAS\middleware\auth.js:33:5)
+    at Layer.handle [as handle_request] (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\comadmin\Desktop\SFDAS\node_modules\express\lib\router\route.js:149:13)

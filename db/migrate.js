@@ -2,7 +2,7 @@
 // Called synchronously from server.js after db.init() completes
 
 require('dotenv').config();
-const { run, get } = require('./database');
+const { run, get, all } = require('./database');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
@@ -22,6 +22,14 @@ function migrate() {
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   )`);
+
+  // Ensure assigned_devices column exists for older schemas
+  const userCols = all('PRAGMA table_info(users)');
+  if (!userCols.find(c => c.name === 'assigned_devices')) {
+    console.log('[DB] Adding missing column: users.assigned_devices');
+    run('ALTER TABLE users ADD COLUMN assigned_devices TEXT DEFAULT "[]"');
+  }
+
 
   run(`CREATE TABLE IF NOT EXISTS refresh_tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

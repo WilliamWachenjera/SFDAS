@@ -47,15 +47,24 @@ router.post('/', requireAdmin, (req, res) => {
   res.status(201).json({ success: true, user: userRecord });
 });
 
-router.patch('/:id', requireAdmin, (req, res) => {
-  const { name, role, phone, is_active } = req.body;
+router.put('/:id', requireAdmin, (req, res) => {
+  const { name, role, phone, is_active, assigned_devices } = req.body;
+  const devicesStr = Array.isArray(assigned_devices) ? JSON.stringify(assigned_devices) : null;
+  
   db.run(
-    'UPDATE users SET name = COALESCE(?, name), role = COALESCE(?, role), phone = COALESCE(?, phone), is_active = COALESCE(?, is_active) WHERE id = ?',
-    [name, role, phone, is_active, req.params.id]
+    `UPDATE users SET 
+      name = COALESCE(?, name), 
+      role = COALESCE(?, role), 
+      phone = COALESCE(?, phone), 
+      is_active = COALESCE(?, is_active),
+      assigned_devices = COALESCE(?, assigned_devices)
+     WHERE id = ?`,
+    [name, role, phone, is_active, devicesStr, req.params.id]
   );
   logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_updated', details: { targetId: req.params.id }, ip: req.ip });
   res.json({ success: true });
 });
+
 
 router.delete('/:id', requireAdmin, (req, res) => {
   if (parseInt(req.params.id) === req.user.id) return res.status(400).json({ success: false, message: 'Cannot delete yourself' });

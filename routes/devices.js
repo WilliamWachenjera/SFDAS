@@ -68,6 +68,16 @@ router.patch('/:id', requireOperator, (req, res) => {
   res.json({ success: true });
 });
 
+// DELETE /api/devices/:id
+router.delete('/:id', requireAdmin, (req, res) => {
+  const device = db.get('SELECT device_code FROM devices WHERE id = ? OR device_code = ?', [req.params.id, req.params.id]);
+  if (!device) return res.status(404).json({ success: false, message: 'Device not found' });
+  db.run('DELETE FROM devices WHERE id = ? OR device_code = ?', [req.params.id, req.params.id]);
+  db.run('DELETE FROM sensor_readings WHERE device_code = ?', [device.device_code]);
+  logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'device_deleted', details: { device_code: device.device_code }, ip: req.ip });
+  res.json({ success: true });
+});
+
 // GET /api/devices/:id/readings?hours=24
 router.get('/:id/readings', requireAuth, (req, res) => {
   const hours = parseInt(req.query.hours) || 24;
