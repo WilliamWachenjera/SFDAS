@@ -44,3 +44,119 @@
 [17:05:07] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
 [17:05:15] [32minfo[39m: Socket connected: admin@sfdaass.io
 [17:05:28] [32minfo[39m: Socket disconnected: admin@sfdaass.io
+[11:36:57] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[11:36:57] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[11:36:57] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[11:36:57] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:36:57] [33mwarn[39m: MQTT offline
+[11:37:00] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:03] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:06] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:09] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:12] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:16] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:19] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:22] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:25] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:28] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:31] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:34] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:37] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:40] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:43] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:46] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:49] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:52] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:55] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:37:58] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:01] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:04] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:07] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:10] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:13] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:16] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:19] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:22] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:25] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:28] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:31] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:34] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:37] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:40] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:43] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:46] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:49] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:52] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:55] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:38:58] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:01] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:04] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:07] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:10] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:13] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:16] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:19] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:22] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:25] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:28] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:31] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:34] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:37] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:40] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:43] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:46] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:49] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:52] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:53] [32minfo[39m: Socket connected: admin@sfdaass.io
+[11:39:55] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:39:58] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:01] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:04] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:07] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:10] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:13] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:16] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:19] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:22] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:25] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:28] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:31] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:34] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:37] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:40] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:43] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:47] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:50] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:53] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:56] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:40:59] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:02] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:05] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:08] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:11] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:14] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:17] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:20] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:23] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:26] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:29] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:32] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:35] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:38] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:41] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:44] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:47] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:50] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:53] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:56] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:41:59] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:42:02] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:42:18] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[11:42:18] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[11:42:18] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[11:42:18] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:42:18] [33mwarn[39m: MQTT offline
+[11:42:18] [32minfo[39m: Socket connected: admin@sfdaass.io
+[11:42:21] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
