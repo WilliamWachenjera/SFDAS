@@ -512,16 +512,27 @@
 
     .logout-btn {
       margin-left: auto;
-      background: none;
-      border: none;
-      color: var(--text-muted);
+      background: rgba(255, 78, 26, 0.1);
+      border: 1px solid rgba(255, 78, 26, 0.3);
+      border-radius: 50%;
+      color: var(--accent-fire);
       cursor: pointer;
-      font-size: 14px;
-      padding: 2px
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(255, 78, 26, 0.1);
     }
 
     .logout-btn:hover {
-      color: var(--accent-fire)
+      background: var(--accent-fire);
+      color: #fff;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 78, 26, 0.6);
+      border-color: var(--accent-fire);
     }
 
     /* TOPBAR */
