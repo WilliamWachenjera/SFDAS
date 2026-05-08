@@ -141,3 +141,5 @@
 [00:00:31] [31merror[39m: undefined
 [00:00:31] [31merror[39m: undefined
 [00:00:31] [31merror[39m: undefined
+[12:41:11] [31merror[39m: ❌ Email service error: getaddrinfo ENOTFOUND smtp.gmail.com
+[12:43:02] [31merror[39m: ❌ Email service error: getaddrinfo ENOTFOUND smtp.gmail.com
