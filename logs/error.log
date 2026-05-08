@@ -143,3 +143,26 @@
 [00:00:31] [31merror[39m: undefined
 [12:41:11] [31merror[39m: ❌ Email service error: getaddrinfo ENOTFOUND smtp.gmail.com
 [12:43:02] [31merror[39m: ❌ Email service error: getaddrinfo ENOTFOUND smtp.gmail.com
+[11:51:26] [31merror[39m: undefined
+[11:51:30] [31merror[39m: undefined
+[11:51:32] [31merror[39m: undefined
+[12:21:57] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:21:57] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:02] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:02] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:07] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:07] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:12] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:12] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:17] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:17] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:22] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:22] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:27] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:27] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:32] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:32] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:37] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:37] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established

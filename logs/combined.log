@@ -22491,3 +22491,88 @@
 [12:56:41] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
 [12:56:44] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
 [12:56:47] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[11:43:45] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[11:43:48] [32minfo[39m: ✅ Email service (SMTP) is ready
+[11:43:48] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[11:43:48] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[11:43:48] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[11:44:46] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[11:47:12] [32minfo[39m: 📧 Email sent: [SFDAASS] Account Created
+[11:47:19] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[11:47:23] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[11:49:12] [32minfo[39m: 📧 Email sent: [SFDAASS] Account Created
+[11:49:21] [32minfo[39m: Socket connected: bsc-com-ne-10-21@unima.ac.mw
+[11:49:23] [32minfo[39m: Socket disconnected: bsc-com-ne-10-21@unima.ac.mw
+[11:50:18] [32minfo[39m: Socket connected: bsc-com-ne-23-22@unima.ac.mw
+[11:51:26] [31merror[39m: undefined
+[11:51:30] [31merror[39m: undefined
+[11:51:32] [31merror[39m: undefined
+[11:51:37] [32minfo[39m: Socket disconnected: bsc-com-ne-23-22@unima.ac.mw
+[11:51:38] [32minfo[39m: Socket connected: bsc-com-ne-23-22@unima.ac.mw
+[11:52:47] [32minfo[39m: 📧 Email sent: [SFDAASS] Account Created
+[11:52:48] [32minfo[39m: Socket connected: bsc-com-ne-23-22@unima.ac.mw
+[11:52:52] [32minfo[39m: Socket disconnected: bsc-com-ne-23-22@unima.ac.mw
+[11:53:19] [32minfo[39m: Socket connected: wachenjera06@gmail.com
+[12:06:23] [33mwarn[39m: MQTT offline
+[12:06:26] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:29] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:32] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:35] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:38] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:41] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:44] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:47] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:50] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:53] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:56] [33mwarn[39m: ⚠ MQTT error: connect ECONNREFUSED 127.0.0.1:1883 — system running without MQTT
+[12:06:59] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[12:08:14] [32minfo[39m: Socket disconnected: bsc-com-ne-23-22@unima.ac.mw
+[12:21:56] [32minfo[39m: [MQTT] Connecting to HiveMQ at mqtts://127.0.0.1:1883 …
+[12:21:57] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:21:57] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:21:57] [33mwarn[39m: [MQTT] Offline — will retry
+[12:21:57] [33mwarn[39m: [MQTT] Connection closed
+[12:21:59] [32minfo[39m: ✅ Email service (SMTP) is ready
+[12:21:59] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[12:21:59] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[12:21:59] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[12:22:00] [32minfo[39m: Socket connected: wachenjera06@gmail.com
+[12:22:02] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:02] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:02] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:02] [33mwarn[39m: [MQTT] Connection closed
+[12:22:03] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[12:22:07] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:07] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:07] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:07] [33mwarn[39m: [MQTT] Connection closed
+[12:22:12] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:12] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:12] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:12] [33mwarn[39m: [MQTT] Connection closed
+[12:22:17] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:17] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:17] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:17] [33mwarn[39m: [MQTT] Connection closed
+[12:22:22] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:22] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:22] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:22] [33mwarn[39m: [MQTT] Connection closed
+[12:22:27] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:27] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:27] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:27] [33mwarn[39m: [MQTT] Connection closed
+[12:22:32] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:32] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:32] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:32] [33mwarn[39m: [MQTT] Connection closed
+[12:22:37] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:37] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:37] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:37] [33mwarn[39m: [MQTT] Connection closed
+[12:22:42] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[12:22:42] [33mwarn[39m: [MQTT] Connection closed
