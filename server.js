@@ -88,12 +88,35 @@ async function startServer() {
   io.on('connection', (socket) => {
     logger.info(`Socket connected: ${socket.user.email}`);
 
+    // Filter data for operators
+    const isOperator = socket.user.role === 'operator';
+    let assigned = [];
+    if (isOperator) {
+      const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [socket.user.id]);
+      assigned = JSON.parse(user.assigned_devices || '[]');
+      
+      if (assigned.length === 0) {
+        return socket.emit('init:state', { activeIncidents: [], devices: [], sprinklerZones: [] });
+      }
+    }
+
     // Send initial state to newly connected client
+    const placeholders = assigned.map(() => '?').join(',');
+    const deviceFilter = isOperator ? ` AND i.device_code IN (${placeholders})` : '';
+    
     const activeIncidents = db.all(
-      `SELECT * FROM incidents WHERE status IN ('active','monitoring','acknowledged') ORDER BY detected_at DESC LIMIT 10`
+      `SELECT i.* FROM incidents i WHERE i.status IN ('active','monitoring','acknowledged')${deviceFilter} ORDER BY i.detected_at DESC LIMIT 10`,
+      isOperator ? assigned : []
     );
-    const devices       = db.all('SELECT * FROM devices ORDER BY last_seen DESC');
-    const sprinklerZones = db.all('SELECT * FROM sprinkler_zones');
+    
+    const devices = isOperator 
+      ? db.all(`SELECT * FROM devices WHERE device_code IN (${placeholders}) ORDER BY last_seen DESC`, assigned)
+      : db.all('SELECT * FROM devices ORDER BY last_seen DESC');
+
+    const sprinklerZones = isOperator
+      ? db.all(`SELECT sz.* FROM sprinkler_zones sz JOIN devices d ON sz.device_id = d.id WHERE d.device_code IN (${placeholders})`, assigned)
+      : db.all('SELECT * FROM sprinkler_zones');
+
     socket.emit('init:state', { activeIncidents, devices, sprinklerZones });
 
     // Sprinkler control from dashboard buttons

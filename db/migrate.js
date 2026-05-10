@@ -70,9 +70,11 @@ function migrate() {
     battery_pct REAL,
     flame_detected INTEGER DEFAULT 0,
     inside_geofence INTEGER DEFAULT 1,
-    seconds_since_seen INTEGER DEFAULT 9999,
     last_seen TEXT,
     geofence_id INTEGER,
+    owner_name TEXT,
+    owner_email TEXT,
+    owner_phone TEXT,
     registered_at TEXT DEFAULT (datetime('now'))
   )`);
 
@@ -174,7 +176,7 @@ function seedDefaults() {
   const adminPass  = process.env.ADMIN_PASSWORD || 'Admin@123';
   const adminName  = process.env.ADMIN_NAME || 'Administrator';
 
-  const existing = get('SELECT id, email, name FROM users WHERE role = "admin" LIMIT 1');
+  const existing = get("SELECT id, email, name FROM users WHERE role = 'admin' LIMIT 1");
   if (!existing) {
     const hash = bcrypt.hashSync(adminPass, 10);
     run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
@@ -191,7 +193,7 @@ function seedDefaults() {
   // Default geofence (UNIMA Zomba)
   const geo = get('SELECT id FROM geofences WHERE is_active = 1');
   if (!geo) {
-    run('INSERT INTO geofences (name, type, center_lat, center_lng, radius_meters) VALUES (?, ?, ?, ?, ?)',
+    run("INSERT INTO geofences (name, type, center_lat, center_lng, radius_meters) VALUES (?, ?, ?, ?, ?)",
       ['UNIMA Campus', 'circle', -15.3833, 35.3333, 500]);
   }
 
