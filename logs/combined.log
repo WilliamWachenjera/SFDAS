@@ -25299,3 +25299,23 @@
 [15:03:24] [32minfo[39m: ✅ Email service (SMTP) is ready
 [15:03:24] [32minfo[39m: ✅ Email service (SMTP) is ready
 [15:03:24] [32minfo[39m: ✅ Email service (SMTP) is ready
+[15:03:29] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[15:11:24] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[15:11:25] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[15:14:21] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[15:14:22] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[15:15:11] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[15:15:11] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[15:36:18] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[15:36:19] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
+[15:36:28] [32minfo[39m: Socket disconnected: bsc-com-ne-06-22@unima.ac.mw
+[15:36:49] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[15:37:01] [32minfo[39m: ✅ Email service (SMTP) is ready
+[15:37:54] [32minfo[39m: Socket disconnected: wachenjera06@gmail.com
+[15:39:27] [32minfo[39m: ✅ MQTT connected to mqtt://127.0.0.1:1883
+[15:39:39] [32minfo[39m: ✅ Email service (SMTP) is ready
+[15:39:39] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[15:39:39] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[15:39:39] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[15:40:05] [32minfo[39m: Socket connected: bsc-com-ne-06-22@unima.ac.mw
