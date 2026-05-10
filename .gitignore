@@ -1,10 +1,13 @@
 
 .env
-SFDAASS.env
 SFDAASS_DESIGN/sfdaass/backend/.env
 node_modules/
 logs/
 *.db
 logs/combined.log
 sfdaass.db
-logs/
+*.log
+*.db-shm
+*.db-wal
+
+
