@@ -166,3 +166,86 @@
 [12:22:37] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
 [12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
 [12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
+[14:16:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:16:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:36] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:56] [31merror[39m: [MQTT] Error: connack timeout
+[14:32:37] [31merror[39m: [MQTT] Error: 
+[14:33:04] [31merror[39m: [MQTT] Error: 
+[14:33:31] [31merror[39m: [MQTT] Error: 
+[14:33:57] [31merror[39m: [MQTT] Error: 
+[14:34:24] [31merror[39m: [MQTT] Error: 
+[14:34:51] [31merror[39m: [MQTT] Error: 
+[14:35:17] [31merror[39m: [MQTT] Error: 
+[14:35:44] [31merror[39m: [MQTT] Error: 
+[14:36:11] [31merror[39m: [MQTT] Error: 
+[14:36:38] [31merror[39m: [MQTT] Error: 
+[14:37:04] [31merror[39m: [MQTT] Error: 
+[14:37:31] [31merror[39m: [MQTT] Error: 
+[14:37:58] [31merror[39m: [MQTT] Error: 
+[14:38:24] [31merror[39m: [MQTT] Error: 
+[14:38:51] [31merror[39m: [MQTT] Error: 
+[14:39:18] [31merror[39m: [MQTT] Error: 
+[14:39:44] [31merror[39m: [MQTT] Error: 
+[14:40:11] [31merror[39m: [MQTT] Error: 
+[14:40:38] [31merror[39m: [MQTT] Error: 
+[14:41:27] [31merror[39m: [MQTT] Error: 
+[14:41:54] [31merror[39m: [MQTT] Error: 
+[14:42:20] [31merror[39m: [MQTT] Error: 
+[14:42:47] [31merror[39m: [MQTT] Error: 
+[14:43:14] [31merror[39m: [MQTT] Error: 
+[14:43:40] [31merror[39m: [MQTT] Error: 
+[14:44:07] [31merror[39m: [MQTT] Error: 
+[14:47:34] [31merror[39m: [MQTT] Error: AggregateError
+[14:47:34] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:48:06] [31merror[39m: [MQTT] Error: AggregateError
+[14:48:06] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:48:37] [31merror[39m: [MQTT] Error: AggregateError
+[14:48:37] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:49:09] [31merror[39m: [MQTT] Error: AggregateError
+[14:49:09] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:49:28] [31merror[39m: [MQTT] Error: AggregateError
+[14:49:28] [31merror[39m: [MQTT] Error Code: ETIMEDOUT

@@ -22576,3 +22576,330 @@
 [12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
 [12:22:42] [31merror[39m: [MQTT] Error: Client network socket disconnected before secure TLS connection was established
 [12:22:42] [33mwarn[39m: [MQTT] Connection closed
+[14:16:17] [32minfo[39m: [MQTT] Connecting to HiveMQ at mqtts://069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883 …
+[14:16:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:16:34] [33mwarn[39m: [MQTT] Offline — will retry
+[14:16:34] [33mwarn[39m: [MQTT] Connection closed
+[14:16:39] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:16:43] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:16:43] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:16:43] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:16:43] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:16:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:16:54] [33mwarn[39m: [MQTT] Connection closed
+[14:16:59] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:17:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:14] [33mwarn[39m: [MQTT] Connection closed
+[14:17:19] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:17:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:34] [33mwarn[39m: [MQTT] Connection closed
+[14:17:39] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:17:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:17:54] [33mwarn[39m: [MQTT] Connection closed
+[14:17:59] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:18:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:14] [33mwarn[39m: [MQTT] Connection closed
+[14:18:19] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:18:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:34] [33mwarn[39m: [MQTT] Connection closed
+[14:18:39] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:18:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:18:54] [33mwarn[39m: [MQTT] Connection closed
+[14:18:59] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:19:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:14] [33mwarn[39m: [MQTT] Connection closed
+[14:19:19] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:19:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:34] [33mwarn[39m: [MQTT] Connection closed
+[14:19:39] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:19:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:19:54] [33mwarn[39m: [MQTT] Connection closed
+[14:19:59] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:20:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:14] [33mwarn[39m: [MQTT] Connection closed
+[14:20:19] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:20:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:34] [33mwarn[39m: [MQTT] Connection closed
+[14:20:39] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:20:54] [31merror[39m: [MQTT] Error: connack timeout
+[14:20:54] [33mwarn[39m: [MQTT] Connection closed
+[14:20:59] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:21:14] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:14] [33mwarn[39m: [MQTT] Connection closed
+[14:21:19] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:21:34] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:34] [33mwarn[39m: [MQTT] Connection closed
+[14:21:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:21:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:21:55] [33mwarn[39m: [MQTT] Connection closed
+[14:22:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:22:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:15] [33mwarn[39m: [MQTT] Connection closed
+[14:22:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:22:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:35] [33mwarn[39m: [MQTT] Connection closed
+[14:22:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:22:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:22:55] [33mwarn[39m: [MQTT] Connection closed
+[14:23:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:23:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:15] [33mwarn[39m: [MQTT] Connection closed
+[14:23:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:23:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:35] [33mwarn[39m: [MQTT] Connection closed
+[14:23:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:23:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:23:55] [33mwarn[39m: [MQTT] Connection closed
+[14:24:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:24:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:15] [33mwarn[39m: [MQTT] Connection closed
+[14:24:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:24:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:35] [33mwarn[39m: [MQTT] Connection closed
+[14:24:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:24:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:24:55] [33mwarn[39m: [MQTT] Connection closed
+[14:25:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:25:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:15] [33mwarn[39m: [MQTT] Connection closed
+[14:25:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:25:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:35] [33mwarn[39m: [MQTT] Connection closed
+[14:25:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:25:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:25:55] [33mwarn[39m: [MQTT] Connection closed
+[14:26:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:26:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:15] [33mwarn[39m: [MQTT] Connection closed
+[14:26:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:26:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:35] [33mwarn[39m: [MQTT] Connection closed
+[14:26:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:26:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:26:55] [33mwarn[39m: [MQTT] Connection closed
+[14:27:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:27:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:15] [33mwarn[39m: [MQTT] Connection closed
+[14:27:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:27:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:35] [33mwarn[39m: [MQTT] Connection closed
+[14:27:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:27:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:27:55] [33mwarn[39m: [MQTT] Connection closed
+[14:28:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:28:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:15] [33mwarn[39m: [MQTT] Connection closed
+[14:28:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:28:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:35] [33mwarn[39m: [MQTT] Connection closed
+[14:28:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:28:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:28:55] [33mwarn[39m: [MQTT] Connection closed
+[14:29:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:29:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:15] [33mwarn[39m: [MQTT] Connection closed
+[14:29:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:29:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:35] [33mwarn[39m: [MQTT] Connection closed
+[14:29:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:29:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:29:55] [33mwarn[39m: [MQTT] Connection closed
+[14:30:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:30:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:15] [33mwarn[39m: [MQTT] Connection closed
+[14:30:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:30:35] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:35] [33mwarn[39m: [MQTT] Connection closed
+[14:30:40] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:30:55] [31merror[39m: [MQTT] Error: connack timeout
+[14:30:55] [33mwarn[39m: [MQTT] Connection closed
+[14:31:00] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:31:15] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:15] [33mwarn[39m: [MQTT] Connection closed
+[14:31:20] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:31:36] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:36] [33mwarn[39m: [MQTT] Connection closed
+[14:31:41] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:31:56] [31merror[39m: [MQTT] Error: connack timeout
+[14:31:56] [33mwarn[39m: [MQTT] Connection closed
+[14:32:01] [32minfo[39m: [MQTT] Reconnecting to HiveMQ…
+[14:32:15] [32minfo[39m: [MQTT] Connecting to HiveMQ Cloud → 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883
+[14:32:18] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:32:18] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:32:18] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:32:18] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:32:37] [31merror[39m: [MQTT] Error: 
+[14:32:37] [33mwarn[39m: [MQTT] MQTT Offline
+[14:32:37] [33mwarn[39m: [MQTT] Connection closed
+[14:32:42] [33mwarn[39m: [MQTT] Reconnecting...
+[14:33:04] [31merror[39m: [MQTT] Error: 
+[14:33:04] [33mwarn[39m: [MQTT] Connection closed
+[14:33:09] [33mwarn[39m: [MQTT] Reconnecting...
+[14:33:31] [31merror[39m: [MQTT] Error: 
+[14:33:31] [33mwarn[39m: [MQTT] Connection closed
+[14:33:36] [33mwarn[39m: [MQTT] Reconnecting...
+[14:33:57] [31merror[39m: [MQTT] Error: 
+[14:33:57] [33mwarn[39m: [MQTT] Connection closed
+[14:34:02] [33mwarn[39m: [MQTT] Reconnecting...
+[14:34:24] [31merror[39m: [MQTT] Error: 
+[14:34:24] [33mwarn[39m: [MQTT] Connection closed
+[14:34:29] [33mwarn[39m: [MQTT] Reconnecting...
+[14:34:51] [31merror[39m: [MQTT] Error: 
+[14:34:51] [33mwarn[39m: [MQTT] Connection closed
+[14:34:56] [33mwarn[39m: [MQTT] Reconnecting...
+[14:35:17] [31merror[39m: [MQTT] Error: 
+[14:35:17] [33mwarn[39m: [MQTT] Connection closed
+[14:35:22] [33mwarn[39m: [MQTT] Reconnecting...
+[14:35:44] [31merror[39m: [MQTT] Error: 
+[14:35:44] [33mwarn[39m: [MQTT] Connection closed
+[14:35:49] [33mwarn[39m: [MQTT] Reconnecting...
+[14:36:11] [31merror[39m: [MQTT] Error: 
+[14:36:11] [33mwarn[39m: [MQTT] Connection closed
+[14:36:16] [33mwarn[39m: [MQTT] Reconnecting...
+[14:36:38] [31merror[39m: [MQTT] Error: 
+[14:36:38] [33mwarn[39m: [MQTT] Connection closed
+[14:36:43] [33mwarn[39m: [MQTT] Reconnecting...
+[14:37:04] [31merror[39m: [MQTT] Error: 
+[14:37:04] [33mwarn[39m: [MQTT] Connection closed
+[14:37:09] [33mwarn[39m: [MQTT] Reconnecting...
+[14:37:31] [31merror[39m: [MQTT] Error: 
+[14:37:31] [33mwarn[39m: [MQTT] Connection closed
+[14:37:36] [33mwarn[39m: [MQTT] Reconnecting...
+[14:37:58] [31merror[39m: [MQTT] Error: 
+[14:37:58] [33mwarn[39m: [MQTT] Connection closed
+[14:38:03] [33mwarn[39m: [MQTT] Reconnecting...
+[14:38:24] [31merror[39m: [MQTT] Error: 
+[14:38:24] [33mwarn[39m: [MQTT] Connection closed
+[14:38:29] [33mwarn[39m: [MQTT] Reconnecting...
+[14:38:51] [31merror[39m: [MQTT] Error: 
+[14:38:51] [33mwarn[39m: [MQTT] Connection closed
+[14:38:56] [33mwarn[39m: [MQTT] Reconnecting...
+[14:39:18] [31merror[39m: [MQTT] Error: 
+[14:39:18] [33mwarn[39m: [MQTT] Connection closed
+[14:39:23] [33mwarn[39m: [MQTT] Reconnecting...
+[14:39:44] [31merror[39m: [MQTT] Error: 
+[14:39:44] [33mwarn[39m: [MQTT] Connection closed
+[14:39:49] [33mwarn[39m: [MQTT] Reconnecting...
+[14:40:11] [31merror[39m: [MQTT] Error: 
+[14:40:11] [33mwarn[39m: [MQTT] Connection closed
+[14:40:16] [33mwarn[39m: [MQTT] Reconnecting...
+[14:40:38] [31merror[39m: [MQTT] Error: 
+[14:40:38] [33mwarn[39m: [MQTT] Connection closed
+[14:40:43] [33mwarn[39m: [MQTT] Reconnecting...
+[14:41:05] [32minfo[39m: [MQTT] Connecting to HiveMQ Cloud → 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883
+[14:41:07] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:41:07] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:41:07] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:41:07] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:41:27] [31merror[39m: [MQTT] Error: 
+[14:41:27] [33mwarn[39m: [MQTT] MQTT Offline
+[14:41:27] [33mwarn[39m: [MQTT] Connection closed
+[14:41:32] [33mwarn[39m: [MQTT] Reconnecting...
+[14:41:54] [31merror[39m: [MQTT] Error: 
+[14:41:54] [33mwarn[39m: [MQTT] Connection closed
+[14:41:59] [33mwarn[39m: [MQTT] Reconnecting...
+[14:42:20] [31merror[39m: [MQTT] Error: 
+[14:42:20] [33mwarn[39m: [MQTT] Connection closed
+[14:42:25] [33mwarn[39m: [MQTT] Reconnecting...
+[14:42:47] [31merror[39m: [MQTT] Error: 
+[14:42:47] [33mwarn[39m: [MQTT] Connection closed
+[14:42:52] [33mwarn[39m: [MQTT] Reconnecting...
+[14:43:14] [31merror[39m: [MQTT] Error: 
+[14:43:14] [33mwarn[39m: [MQTT] Connection closed
+[14:43:19] [33mwarn[39m: [MQTT] Reconnecting...
+[14:43:40] [31merror[39m: [MQTT] Error: 
+[14:43:40] [33mwarn[39m: [MQTT] Connection closed
+[14:43:45] [33mwarn[39m: [MQTT] Reconnecting...
+[14:44:07] [31merror[39m: [MQTT] Error: 
+[14:44:07] [33mwarn[39m: [MQTT] Connection closed
+[14:47:11] [32minfo[39m: [MQTT] Host: 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud
+[14:47:11] [32minfo[39m: [MQTT] Port: 8883
+[14:47:11] [32minfo[39m: [MQTT] Username: sfdaass_device
+[14:47:11] [32minfo[39m: [MQTT] Password length: 12
+[14:47:11] [32minfo[39m: [MQTT] Attempting connection → tls://069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883
+[14:47:19] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:47:19] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:47:19] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:47:19] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:47:34] [31merror[39m: [MQTT] Error: AggregateError
+[14:47:34] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:47:34] [33mwarn[39m: [MQTT] 📴 MQTT Offline
+[14:47:34] [33mwarn[39m: [MQTT] Connection closed
+[14:47:44] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:48:06] [31merror[39m: [MQTT] Error: AggregateError
+[14:48:06] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:48:06] [33mwarn[39m: [MQTT] Connection closed
+[14:48:16] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:48:37] [31merror[39m: [MQTT] Error: AggregateError
+[14:48:37] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:48:37] [33mwarn[39m: [MQTT] Connection closed
+[14:48:47] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:49:09] [31merror[39m: [MQTT] Error: AggregateError
+[14:49:09] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:49:09] [33mwarn[39m: [MQTT] Connection closed
+[14:49:19] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:49:28] [31merror[39m: [MQTT] Error: AggregateError
+[14:49:28] [31merror[39m: [MQTT] Error Code: ETIMEDOUT
+[14:49:28] [33mwarn[39m: [MQTT] Connection closed
+[14:49:39] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:49:40] [32minfo[39m: 🎉 ✅ SUCCESSFULLY CONNECTED TO HIVEMQ CLOUD!
+[14:49:41] [32minfo[39m: [MQTT] Subscribed → sfdaass/sensors/#
+[14:49:41] [32minfo[39m: [MQTT] Subscribed → sfdaass/alert/#
+[14:49:41] [32minfo[39m: [MQTT] Subscribed → sfdaass/status/#
+[14:49:41] [32minfo[39m: [MQTT] Subscribed → sfdaass/gps/#
+[14:49:59] [32minfo[39m: [MQTT] Host: 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud
+[14:49:59] [32minfo[39m: [MQTT] Port: 8883
+[14:49:59] [32minfo[39m: [MQTT] Username: sfdaass_device
+[14:49:59] [32minfo[39m: [MQTT] Password length: 12
+[14:49:59] [32minfo[39m: [MQTT] Attempting connection → tls://069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883
+[14:50:02] [32minfo[39m: 🎉 ✅ SUCCESSFULLY CONNECTED TO HIVEMQ CLOUD!
+[14:50:02] [32minfo[39m: [MQTT] Subscribed → sfdaass/sensors/#
+[14:50:02] [32minfo[39m: [MQTT] Subscribed → sfdaass/alert/#
+[14:50:02] [32minfo[39m: [MQTT] Subscribed → sfdaass/status/#
+[14:50:02] [32minfo[39m: [MQTT] Subscribed → sfdaass/gps/#
+[14:50:02] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:50:02] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:50:02] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:50:02] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:51:34] [32minfo[39m: [MQTT] Host: 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud
+[14:51:34] [32minfo[39m: [MQTT] Port: 8884
+[14:51:34] [32minfo[39m: [MQTT] Username: sfdaass_device
+[14:51:34] [32minfo[39m: [MQTT] Password length: 12
+[14:51:34] [32minfo[39m: [MQTT] Attempting connection → tls://069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8884
+[14:51:43] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:51:43] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:51:43] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:51:43] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
+[14:51:47] [33mwarn[39m: [MQTT] 📴 MQTT Offline
+[14:51:47] [33mwarn[39m: [MQTT] Connection closed
+[14:51:57] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:52:08] [33mwarn[39m: [MQTT] Connection closed
+[14:52:18] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:52:30] [33mwarn[39m: [MQTT] Connection closed
+[14:52:40] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:52:51] [33mwarn[39m: [MQTT] Connection closed
+[14:53:01] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:53:13] [33mwarn[39m: [MQTT] Connection closed
+[14:53:23] [33mwarn[39m: [MQTT] 🔄 Reconnecting to HiveMQ...
+[14:53:34] [33mwarn[39m: [MQTT] Connection closed
+[14:53:45] [32minfo[39m: [MQTT] Host: 069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud
+[14:53:45] [32minfo[39m: [MQTT] Port: 8883
+[14:53:45] [32minfo[39m: [MQTT] Username: sfdaass_device
+[14:53:45] [32minfo[39m: [MQTT] Password length: 12
+[14:53:45] [32minfo[39m: [MQTT] Attempting connection → tls://069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud:8883
+[14:53:47] [32minfo[39m: 🎉 ✅ SUCCESSFULLY CONNECTED TO HIVEMQ CLOUD!
+[14:53:47] [32minfo[39m: [MQTT] Subscribed → sfdaass/sensors/#
+[14:53:47] [32minfo[39m: [MQTT] Subscribed → sfdaass/alert/#
+[14:53:47] [32minfo[39m: [MQTT] Subscribed → sfdaass/status/#
+[14:53:47] [32minfo[39m: [MQTT] Subscribed → sfdaass/gps/#
+[14:53:48] [32minfo[39m: ✅ Email service (SMTP) is ready
+[14:53:48] [32minfo[39m: 
+🔥 SFDAASS Server running on http://localhost:5000
+[14:53:48] [32minfo[39m: 📊 Dashboard:  http://localhost:5000
+[14:53:48] [32minfo[39m: 🔌 API Base:   http://localhost:5000/api
