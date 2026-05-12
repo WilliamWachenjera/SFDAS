@@ -20,7 +20,7 @@ router.post('/login', async (req, res) => {
   if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
   // Update last login
-  db.run('UPDATE users SET last_login = datetime("now") WHERE id = ?', [user.id]);
+  db.run("UPDATE users SET last_login = datetime('now') WHERE id = ?", [user.id]);
 
   const payload = { id: user.id, email: user.email, role: user.role, name: user.name };
   const accessToken = signAccessToken(payload);
@@ -56,7 +56,7 @@ router.post('/refresh', (req, res) => {
   try {
     const payload = verifyRefreshToken(refreshToken);
     const stored = db.get(
-      'SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > datetime("now")',
+      "SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > datetime('now')",
       [refreshToken]
     );
     if (!stored) return res.status(401).json({ success: false, message: 'Refresh token expired or invalid' });
@@ -138,7 +138,7 @@ router.post('/reset-password', (req, res) => {
   if (newPassword.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
 
   const record = db.get(
-    'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > datetime("now") AND used = 0',
+    "SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > datetime('now') AND used = 0",
     [token]
   );
   if (!record) return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
@@ -148,6 +148,13 @@ router.post('/reset-password', (req, res) => {
   db.run('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token]);
 
   res.json({ success: true, message: 'Password updated successfully' });
+});
+
+// GET /api/auth/verify
+router.get('/verify', requireAuth, (req, res) => {
+  const user = db.get('SELECT id, name, email, role, phone, is_active FROM users WHERE id = ?', [req.user.id]);
+  if (!user || !user.is_active) return res.status(401).json({ success: false, message: 'User no longer active' });
+  res.json({ success: true, user });
 });
 
 // GET /api/auth/me

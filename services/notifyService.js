@@ -63,14 +63,22 @@ async function sendEmail({ to, subject, text, html }) {
 }
 
 // ── SMS via Twilio ─────────────────────────────────────
-async function sendSMS(message) {
+async function sendSMS(message, toPhone = null) {
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
     logger.warn('Twilio not configured — SMS skipped');
     return false;
   }
   try {
     const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    const numbers = (process.env.ALERT_PHONE_NUMBERS || '').split(',').map(n => n.trim()).filter(Boolean);
+    let numbers = [];
+    if (toPhone) {
+      numbers = [toPhone];
+    } else {
+      numbers = (process.env.ALERT_PHONE_NUMBERS || '').split(',').map(n => n.trim()).filter(Boolean);
+    }
+    
+    if (!numbers.length) return false;
+
     await Promise.all(numbers.map(to =>
       twilio.messages.create({ body: message, from: process.env.TWILIO_FROM_NUMBER, to })
     ));

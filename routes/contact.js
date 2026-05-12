@@ -7,7 +7,7 @@ router.post('/', async (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ success: false, message: 'Name, email and message required' });
 
-  const admin = db.get('SELECT email FROM users WHERE role = "admin" LIMIT 1');
+  const admin = db.get("SELECT email FROM users WHERE role = 'admin' LIMIT 1");
   const targetEmail = admin ? admin.email : (process.env.ADMIN_EMAIL || 'admin@sfdaass.io');
 
   notifyService.sendEmail({
