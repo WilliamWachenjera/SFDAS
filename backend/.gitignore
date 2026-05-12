@@ -1,1 +1,3 @@
 logs/
+./sfdaass.db-*
+./logs/combined.log

@@ -1,59 +1,57 @@
-// db/database.js — sql.js, pure JS, no build tools needed
+// db/database.js — better-sqlite3 version
 require('dotenv').config();
 const path = require('path');
 const fs   = require('fs');
-const DB_PATH = path.resolve(process.env.SQLITE_PATH || './sfdaass.db');
+const Database = require('better-sqlite3');
 
-let rawDb = null;
+const DB_PATH = path.resolve(__dirname, '..', process.env.SQLITE_PATH || 'sfdaass.db');
+
+let db = null;
 
 async function init() {
-  if (rawDb) return;
-  const initSqlJs = require('sql.js');
-  const SQL = await initSqlJs();
-  if (fs.existsSync(DB_PATH)) {
-    rawDb = new SQL.Database(fs.readFileSync(DB_PATH));
-    console.log('[DB] Loaded: ' + DB_PATH);
-  } else {
-    rawDb = new SQL.Database();
-    console.log('[DB] Created: ' + DB_PATH);
+  if (db) return;
+  
+  // Ensure directory exists
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-  rawDb.run('PRAGMA foreign_keys = ON;');
-}
 
-function saveDb() {
-  if (!rawDb) return;
-  fs.writeFileSync(DB_PATH, Buffer.from(rawDb.export()));
+  db = new Database(DB_PATH, { 
+    // verbose: console.log 
+  });
+  
+  db.pragma('foreign_keys = ON');
+  db.pragma('journal_mode = WAL'); // Better for concurrent access
+  
+  console.log('[DB] Connected: ' + DB_PATH);
 }
 
 function run(sql, params = []) {
-  rawDb.run(sql, params);
-  const r = rawDb.exec('SELECT last_insert_rowid() as id, changes() as c');
-  const row = r[0] ? r[0].values[0] : [null, 0];
-  saveDb();
-  return { lastID: row[0], changes: row[1] };
+  const stmt = db.prepare(sql);
+  const info = stmt.run(params);
+  return { lastID: info.lastInsertRowid, changes: info.changes };
 }
 
 function get(sql, params = []) {
-  const stmt = rawDb.prepare(sql);
-  stmt.bind(params);
-  const found = stmt.step();
-  const row = found ? stmt.getAsObject() : undefined;
-  stmt.free();
-  return row;
+  const stmt = db.prepare(sql);
+  return stmt.get(params);
 }
 
 function all(sql, params = []) {
   try {
-    const stmt = rawDb.prepare(sql);
-    stmt.bind(params);
-    const rows = [];
-    while (stmt.step()) rows.push(stmt.getAsObject());
-    stmt.free();
-    return rows;
+    const stmt = db.prepare(sql);
+    return stmt.all(params);
   } catch (e) {
     console.error('[DB] all() error:', e.message);
     return [];
   }
 }
 
+// Dummy saveDb for backward compatibility if needed, but better-sqlite3 persists automatically
+function saveDb() {
+  // Not needed with better-sqlite3
+}
+
 module.exports = { init, run, get, all, saveDb };
+

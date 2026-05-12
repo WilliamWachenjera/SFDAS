@@ -74,7 +74,7 @@ async function handleSensorData(deviceCode, payload, io) {
   let device = db.get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
   if (!device) {
     db.run(
-      'INSERT INTO devices (device_code, name, location_label, status, gps_lat, gps_lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, last_seen, seconds_since_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), 0)',
+      "INSERT INTO devices (device_code, name, location_label, status, gps_lat, gps_lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, last_seen, seconds_since_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 0)",
       [deviceCode, deviceCode, `Device ${deviceCode}`, 'online', lat, lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected ? 1 : 0]
     );
     device = db.get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
@@ -156,20 +156,34 @@ async function handleSensorData(deviceCode, payload, io) {
   logger.warn(`🔥 FIRE INCIDENT: ${incidentCode} | Device: ${deviceCode} | Severity: ${severity}`);
 
   // Send notifications
-  const alertMsg = `🔥 FIRE ALERT [${severity.toUpperCase()}]\nDevice: ${deviceCode} — ${device.location_label || 'Unknown'}\nSmoke: ${smoke_ppm}ppm | Temp: ${temperature_c}°C | Flame: ${flame_detected ? 'YES' : 'NO'}\nGPS: ${lat}, ${lng}\nIncident: ${incidentCode}`;
+  const alertMsg = `🔥 FIRE ALERT [${severity.toUpperCase()}]\nDevice: ${deviceCode} — ${device.location_label || 'Unknown'}\nSmoke: ${smoke_ppm}ppm | Temp: ${temperature_c}°C | Flame: ${flame_detected ? 'YES' : 'NO'}\nGPS: ${lat || device.gps_lat}, ${lng || device.gps_lng}\nIncident: ${incidentCode}`;
 
+  // Global SMS
   notifyService.sendSMS(alertMsg).then(ok => {
     if (ok) db.run('UPDATE incidents SET sms_sent = 1 WHERE id = ?', [incidentId]);
-    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'sms_sent', 'SMS alert sent']);
+    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'sms_sent', 'SMS alert sent to Global Admins']);
   }).catch(() => {});
 
+  // Owner SMS
+  if (device.owner_phone) {
+    notifyService.sendSMS(`⚠️ URGENT: ${alertMsg}`, device.owner_phone).catch(() => {});
+  }
+
+  // Global & Owner Email
+  const emailRecipients = (process.env.ALERT_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+  if (device.owner_email) emailRecipients.push(device.owner_email);
+
   notifyService.sendEmail({
+    to: emailRecipients,
     subject: `[SFDAASS] ${incidentCode} — ${severity.toUpperCase()} Fire Alert`,
     text: alertMsg,
-    html: `<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px;font-family:sans-serif"><h2>🔥 FIRE ALERT — ${severity.toUpperCase()}</h2></div><pre style="padding:12px;background:#fff3f3;border-radius:4px">${alertMsg}</pre>`,
+    html: `<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px;font-family:sans-serif"><h2>🔥 FIRE ALERT — ${severity.toUpperCase()}</h2></div>
+           <p>Location: <strong>${device.location_label}</strong></p>
+           <pre style="padding:12px;background:#fff3f3;border-radius:4px">${alertMsg}</pre>
+           ${device.owner_name ? `<p>Responsible Person: ${device.owner_name}</p>` : ''}`,
   }).then(ok => {
     if (ok) db.run('UPDATE incidents SET email_sent = 1 WHERE id = ?', [incidentId]);
-    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'email_sent', 'Email alert sent']);
+    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'email_sent', 'Email alerts dispatched']);
   }).catch(() => {});
 }
 
