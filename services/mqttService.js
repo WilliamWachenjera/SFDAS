@@ -3,7 +3,7 @@ require('dotenv').config();
 const mqtt = require('mqtt');
 const { v4: uuidv4 } = require('uuid');
 
-// Lazy load
+// Lazy load dependencies to avoid circular issues
 let _db, _notify, _logger;
 const db = () => _db || (_db = require('../db/database'));
 const notify = () => _notify || (_notify = require('./notifyService'));
@@ -11,30 +11,15 @@ const log = () => _logger || (_logger = require('./logger'));
 
 let client = null;
 
-// =============================================================
-// KEEP ALL YOUR HELPER FUNCTIONS HERE
-// =============================================================
-// (haversine, pointInPolygon, checkGeofence, getThresholds, getSeverity,
-//  handleSensorData, handleStatus, handleGPS, etc.)
-// 
-// ←←← PASTE ALL YOUR EXISTING HELPER FUNCTIONS BELOW THIS LINE ←←←
-// (I didn't change them, so keep them as they are)
-
-
-
-// =============================================================
-// FIXED + VERBOSE HIVEMQ CLOUD CONNECTION
-// =============================================================
-function connectMQTT(io) {
-  const host     = process.env.MQTT_HOST?.trim();
-  const port     = parseInt(process.env.MQTT_PORT) || 8883;
-  const username = process.env.MQTT_USERNAME?.trim();
-  const password = process.env.MQTT_PASSWORD?.trim();
-
-  log().info(`[MQTT] Host: ${host}`);
-  log().info(`[MQTT] Port: ${port}`);
-  log().info(`[MQTT] Username: ${username || 'MISSING'}`);
-  log().info(`[MQTT] Password length: ${password ? password.length : 0}`);
+// ── Haversine distance in meters ──────────────────────
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = d => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 function pointInPolygon(lat, lng, polygon) {
   let inside = false;
@@ -51,8 +36,24 @@ function pointInPolygon(lat, lng, polygon) {
   return inside;
 }
 
+function checkGeofence(lat, lng) {
+  const geo = db().get('SELECT * FROM geofences WHERE is_active = 1 LIMIT 1');
+  if (!geo || !lat || !lng) return null;
+  if (geo.type === 'circle') {
+    const dist = haversine(lat, lng, geo.center_lat, geo.center_lng);
+    return dist <= geo.radius_meters;
+  }
+  if (geo.type === 'polygon' && geo.polygon_coords) {
+    try {
+      const poly = JSON.parse(geo.polygon_coords);
+      return pointInPolygon(lat, lng, poly);
+    } catch (e) { return null; }
+  }
+  return null;
+}
+
 function getThresholds() {
-  const rows = db.all('SELECT key, value FROM system_config');
+  const rows = db().all('SELECT key, value FROM system_config');
   const t = {};
   rows.forEach(r => { t[r.key] = parseFloat(r.value); });
   return t;
@@ -72,15 +73,15 @@ async function handleSensorData(deviceCode, payload, io) {
   const { smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, lat, lng } = data;
 
   // Update / upsert device
-  let device = db.get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
+  let device = db().get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
   if (!device) {
-    db.run(
+    db().run(
       "INSERT INTO devices (device_code, name, location_label, status, gps_lat, gps_lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, last_seen, seconds_since_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 0)",
       [deviceCode, deviceCode, `Device ${deviceCode}`, 'online', lat, lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected ? 1 : 0]
     );
-    device = db.get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
+    device = db().get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
   } else {
-    db.run(
+    db().run(
       `UPDATE devices SET status = 'online', gps_lat = COALESCE(?, gps_lat), gps_lng = COALESCE(?, gps_lng),
        smoke_ppm = COALESCE(?, smoke_ppm), temperature_c = COALESCE(?, temperature_c), gas_ppm = COALESCE(?, gas_ppm),
        humidity_pct = COALESCE(?, humidity_pct), battery_pct = COALESCE(?, battery_pct),
@@ -88,11 +89,11 @@ async function handleSensorData(deviceCode, payload, io) {
        WHERE device_code = ?`,
       [lat, lng, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected ? 1 : 0, deviceCode]
     );
-    device = db.get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
+    device = db().get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
   }
 
   // Save time-series reading
-  db.run(
+  db().run(
     'INSERT INTO sensor_readings (device_id, device_code, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, gps_lat, gps_lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [device.id, deviceCode, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected ? 1 : 0, lat || device.gps_lat, lng || device.gps_lng]
   );
@@ -113,7 +114,7 @@ async function handleSensorData(deviceCode, payload, io) {
   if (!isFire) return;
 
   // Don't create duplicate active incidents for same device
-  const existing = db.get(
+  const existing = db().get(
     `SELECT id FROM incidents WHERE device_code = ? AND status IN ('active','monitoring','acknowledged')`,
     [deviceCode]
   );
@@ -124,7 +125,7 @@ async function handleSensorData(deviceCode, payload, io) {
   const incidentCode = `INC-${new Date().getFullYear()}-${uuidv4().replace(/-/g, '').substring(0, 6).toUpperCase()}`;
 
   // Create incident
-  const result = db.run(
+  const result = db().run(
     `INSERT INTO incidents (incident_code, device_id, device_code, location_label, severity, status, smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected, gps_lat, gps_lng, inside_geofence)
      VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
     [incidentCode, device.id, deviceCode, device.location_label, severity,
@@ -135,7 +136,7 @@ async function handleSensorData(deviceCode, payload, io) {
   const incidentId = result.lastID;
 
   // Add timeline event
-  db.run(
+  db().run(
     'INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)',
     [incidentId, 'detected', `Fire condition detected: Smoke=${smoke_ppm}ppm, Temp=${temperature_c}°C, Flame=${flame_detected}`]
   );
@@ -143,38 +144,38 @@ async function handleSensorData(deviceCode, payload, io) {
   // Auto-activate sprinkler for critical
   if (severity === 'critical') {
     client?.publish(`sfdaass/sprinkler/${deviceCode}`, JSON.stringify({ activate: true, incident: incidentCode }));
-    db.run(`UPDATE incidents SET sprinkler_activated = 1 WHERE id = ?`, [incidentId]);
-    db.run(`UPDATE devices SET sprinkler_active = 1 WHERE device_code = ?`, [deviceCode]);
-    db.run("INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)",
+    db().run(`UPDATE incidents SET sprinkler_activated = 1 WHERE id = ?`, [incidentId]);
+    db().run(`UPDATE devices SET sprinkler_active = 1 WHERE device_code = ?`, [deviceCode]);
+    db().run("INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)",
       [incidentId, 'sprinkler_activated', 'Automatic sprinkler activation triggered']);
-    logger.warn(`💧 Sprinkler activated for ${deviceCode} — ${incidentCode}`);
+    log().warn(`💧 Sprinkler activated for ${deviceCode} — ${incidentCode}`);
   }
 
-  const incident = db.get('SELECT * FROM incidents WHERE id = ?', [incidentId]);
+  const incident = db().get('SELECT * FROM incidents WHERE id = ?', [incidentId]);
 
   // Push to all connected dashboards
   io?.emit('incident:created', incident);
-  logger.warn(`🔥 FIRE INCIDENT: ${incidentCode} | Device: ${deviceCode} | Severity: ${severity}`);
+  log().warn(`🔥 FIRE INCIDENT: ${incidentCode} | Device: ${deviceCode} | Severity: ${severity}`);
 
   // Send notifications
   const alertMsg = `🔥 FIRE ALERT [${severity.toUpperCase()}]\nDevice: ${deviceCode} — ${device.location_label || 'Unknown'}\nSmoke: ${smoke_ppm}ppm | Temp: ${temperature_c}°C | Flame: ${flame_detected ? 'YES' : 'NO'}\nGPS: ${lat || device.gps_lat}, ${lng || device.gps_lng}\nIncident: ${incidentCode}`;
 
   // Global SMS
-  notifyService.sendSMS(alertMsg).then(ok => {
-    if (ok) db.run('UPDATE incidents SET sms_sent = 1 WHERE id = ?', [incidentId]);
-    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'sms_sent', 'SMS alert sent to Global Admins']);
+  notify().sendSMS(alertMsg).then(ok => {
+    if (ok) db().run('UPDATE incidents SET sms_sent = 1 WHERE id = ?', [incidentId]);
+    if (ok) db().run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'sms_sent', 'SMS alert sent to Global Admins']);
   }).catch(() => {});
 
   // Owner SMS
   if (device.owner_phone) {
-    notifyService.sendSMS(`⚠️ URGENT: ${alertMsg}`, device.owner_phone).catch(() => {});
+    notify().sendSMS(`⚠️ URGENT: ${alertMsg}`, device.owner_phone).catch(() => {});
   }
 
   // Global & Owner Email
   const emailRecipients = (process.env.ALERT_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
   if (device.owner_email) emailRecipients.push(device.owner_email);
 
-  notifyService.sendEmail({
+  notify().sendEmail({
     to: emailRecipients,
     subject: `[SFDAASS] ${incidentCode} — ${severity.toUpperCase()} Fire Alert`,
     text: alertMsg,
@@ -183,8 +184,8 @@ async function handleSensorData(deviceCode, payload, io) {
            <pre style="padding:12px;background:#fff3f3;border-radius:4px">${alertMsg}</pre>
            ${device.owner_name ? `<p>Responsible Person: ${device.owner_name}</p>` : ''}`,
   }).then(ok => {
-    if (ok) db.run('UPDATE incidents SET email_sent = 1 WHERE id = ?', [incidentId]);
-    if (ok) db.run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'email_sent', 'Email alerts dispatched']);
+    if (ok) db().run('UPDATE incidents SET email_sent = 1 WHERE id = ?', [incidentId]);
+    if (ok) db().run('INSERT INTO incident_events (incident_id, event_type, description) VALUES (?, ?, ?)', [incidentId, 'email_sent', 'Email alerts dispatched']);
   }).catch(() => {});
 }
 
@@ -192,48 +193,49 @@ async function handleSensorData(deviceCode, payload, io) {
 function handleStatus(deviceCode, payload) {
   try {
     const data = JSON.parse(payload);
-    db.run(`UPDATE devices SET status = ?, last_seen = datetime('now'), seconds_since_seen = 0 WHERE device_code = ?`,
+    db().run(`UPDATE devices SET status = ?, last_seen = datetime('now'), seconds_since_seen = 0 WHERE device_code = ?`,
       [data.status || 'online', deviceCode]);
     global.io?.emit('device:status', { deviceCode, status: data.status || 'online' });
   } catch (e) {}
 }
 
+function handleGPS(deviceCode, payload, io) {
+  try {
+    const { lat, lng } = JSON.parse(payload);
+    db().run('UPDATE devices SET gps_lat = ?, gps_lng = ? WHERE device_code = ?', [lat, lng, deviceCode]);
+    io?.emit('gps:update', { deviceCode, lat, lng });
+  } catch (e) {}
+}
+
 // ── Connect MQTT ───────────────────────────────────────
 function connectMQTT(io) {
-  const host = process.env.MQTT_HOST || 'localhost';
-  const port = process.env.MQTT_PORT || 1883;
-  const useTls = process.env.MQTT_USE_TLS === 'true';
-  const protocol = useTls ? 'mqtts' : 'mqtt';
-
-  const brokerUrl = `${protocol}://${host}:${port}`;
-
-  client = mqtt.connect(brokerUrl, {
-    clientId: `sfdaass-backend-${Date.now()}`,
-    username: process.env.MQTT_USERNAME || undefined,
-    password: process.env.MQTT_PASSWORD || undefined,
-    reconnectPeriod: 3000,
-    connectTimeout: 10000,
-    rejectUnauthorized: false, // For cloud brokers like HiveMQ that use TLS
-  });
-
+  const host     = process.env.MQTT_HOST?.trim();
+  const port     = parseInt(process.env.MQTT_PORT) || 8883;
+  const username = process.env.MQTT_USERNAME?.trim();
+  const password = process.env.MQTT_PASSWORD?.trim();
 
   if (!host || !username || !password) {
     log().error('[MQTT] ❌ Missing MQTT credentials in .env file');
     return null;
   }
 
+  log().info(`[MQTT] Host: ${host}`);
+  log().info(`[MQTT] Port: ${port}`);
+  log().info(`[MQTT] Username: ${username}`);
+
   const options = {
     clientId: `sfdaass-backend-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
     username,
     password,
-    rejectUnauthorized: false,        // Critical for HiveMQ Cloud free tier
+    rejectUnauthorized: false,        // HiveMQ Cloud sometimes requires this for free tier
     reconnectPeriod: 10000,
     connectTimeout: 45000,
     keepalive: 60,
     clean: true,
+    protocolVersion: 4
   };
 
-  const brokerUrl = `tls://${host}:${port}`;
+  const brokerUrl = `mqtts://${host}:${port}`;
   log().info(`[MQTT] Attempting connection → ${brokerUrl}`);
 
   client = mqtt.connect(brokerUrl, options);
@@ -265,16 +267,13 @@ function connectMQTT(io) {
     if (err.message?.includes('authorized') || err.message?.includes('Not authorized')) {
       log().error('❌ Wrong username or password! Check your .env');
     }
-    if (err.message?.includes('certificate') || err.code === 'CERT_HAS_EXPIRED') {
-      log().error('⚠ TLS Certificate issue - rejectUnauthorized is already disabled');
-    }
   });
 
   client.on('reconnect', () => log().warn('[MQTT] 🔄 Reconnecting to HiveMQ...'));
   client.on('offline', () => log().warn('[MQTT] 📴 MQTT Offline'));
   client.on('close', () => log().warn('[MQTT] Connection closed'));
 
-  // ── Message Handler (unchanged) ───────────────────────
+  // ── Message Handler ───────────────────────────────────
   client.on('message', (topic, message) => {
     const payload = message.toString();
     log().debug(`[MQTT] ← ${topic} | ${payload.slice(0, 100)}...`);
@@ -291,7 +290,7 @@ function connectMQTT(io) {
         handleSensorData(deviceCode, payload, io);
         break;
       case 'status':
-        handleStatus(deviceCode, payload, io);
+        handleStatus(deviceCode, payload);
         break;
       case 'gps':
         handleGPS(deviceCode, payload, io);
@@ -299,10 +298,17 @@ function connectMQTT(io) {
     }
   });
 
+  // System heartbeat every 30s
+  setInterval(() => {
+    const connectedClients = io?.engine?.clientsCount || 0;
+    io?.emit('system:heartbeat', { connectedClients, ts: new Date().toISOString() });
+    // Mark stale devices offline
+    db().run(`UPDATE devices SET status = 'offline' WHERE last_seen < datetime('now', '-120 seconds') AND status != 'offline'`);
+  }, 30000);
+
   return client;
 }
 
 function getClient() { return client; }
 
-module.exports = { connectMQTT, getClient }; 
-}
+module.exports = { connectMQTT, getClient };
