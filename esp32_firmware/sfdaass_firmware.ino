@@ -19,6 +19,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
@@ -30,11 +31,11 @@
 // ─────────────────────────────────────────────────────
 const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-const char* MQTT_HOST     = "192.168.1.100";   // Your PC/server IP
-const int   MQTT_PORT     = 1883;
-const char* DEVICE_CODE   = "ESP32-001";        // Unique per device
-const char* MQTT_USER     = "";                 // Leave blank if no auth
-const char* MQTT_PASS     = "";
+const char* MQTT_HOST     = "069d5c04bf7347f8b2239ffe32a64225.s1.eu.hivemq.cloud"; 
+const int   MQTT_PORT     = 8883; // Standard for TLS
+const char* DEVICE_CODE   = "ESP32-001";
+const char* MQTT_USER     = "sfdaass_device";
+const char* MQTT_PASS     = "sfdaass@2026";
 
 // ─────────────────────────────────────────────────────
 // PIN DEFINITIONS
@@ -63,7 +64,7 @@ int   CONFIRM_MS     = 5000;   // Must exceed threshold for this long
 // ─────────────────────────────────────────────────────
 // OBJECTS
 // ─────────────────────────────────────────────────────
-WiFiClient      wifiClient;
+WiFiClientSecure wifiClient;
 PubSubClient    mqttClient(wifiClient);
 DHT             dht(DHT_PIN, DHT_TYPE);
 TinyGPSPlus     gps;
@@ -152,9 +153,10 @@ void connectWiFi() {
 // MQTT CONNECT
 // ─────────────────────────────────────────────────────
 void connectMQTT() {
+  wifiClient.setInsecure(); // Skip certificate validation for convenience
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCallback(onMqttMessage);
-  mqttClient.setKeepAlive(30);
+  mqttClient.setKeepAlive(60);
 
   String clientId = String("esp32-") + DEVICE_CODE;
 
