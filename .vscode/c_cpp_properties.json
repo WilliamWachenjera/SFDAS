@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Arduino",
+            "compilerPath": "C:\\Users\\comadmin\\AppData\\Local\\Arduino15\\packages\\esp32\\tools\\xtensa-esp32-elf-gcc\\1.22.0-80-g6c4433a-5.2.0\\bin\\xtensa-esp32-elf-gcc.exe",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "forcedInclude": [
+                "${workspaceFolder}/esp32_firmware/sfdaass_firmware.ino"
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++11"
+        }
+    ],
+    "version": 4
+}

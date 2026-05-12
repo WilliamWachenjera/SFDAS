@@ -199,7 +199,12 @@ function handleStatus(deviceCode, payload) {
 
 // ── Connect MQTT ───────────────────────────────────────
 function connectMQTT(io) {
-  const brokerUrl = `mqtt://${process.env.MQTT_HOST || 'localhost'}:${process.env.MQTT_PORT || 1883}`;
+  const host = process.env.MQTT_HOST || 'localhost';
+  const port = process.env.MQTT_PORT || 1883;
+  const useTls = process.env.MQTT_USE_TLS === 'true';
+  const protocol = useTls ? 'mqtts' : 'mqtt';
+
+  const brokerUrl = `${protocol}://${host}:${port}`;
 
   client = mqtt.connect(brokerUrl, {
     clientId: `sfdaass-backend-${Date.now()}`,
@@ -207,6 +212,7 @@ function connectMQTT(io) {
     password: process.env.MQTT_PASSWORD || undefined,
     reconnectPeriod: 3000,
     connectTimeout: 10000,
+    rejectUnauthorized: false, // For cloud brokers like HiveMQ that use TLS
   });
 
   client.on('connect', () => {
