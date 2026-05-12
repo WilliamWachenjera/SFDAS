@@ -21,7 +21,7 @@ let client = null;
 // (I didn't change them, so keep them as they are)
 
 
-<<<<<<< HEAD
+
 // =============================================================
 // FIXED + VERBOSE HIVEMQ CLOUD CONNECTION
 // =============================================================
@@ -35,7 +35,7 @@ function connectMQTT(io) {
   log().info(`[MQTT] Port: ${port}`);
   log().info(`[MQTT] Username: ${username || 'MISSING'}`);
   log().info(`[MQTT] Password length: ${password ? password.length : 0}`);
-=======
+
 function pointInPolygon(lat, lng, polygon) {
   let inside = false;
   const n = polygon.length;
@@ -215,7 +215,7 @@ function connectMQTT(io) {
     connectTimeout: 10000,
     rejectUnauthorized: false, // For cloud brokers like HiveMQ that use TLS
   });
->>>>>>> 2ba0100b7b544844b636bdbadfd4501c57bf993e
+
 
   if (!host || !username || !password) {
     log().error('[MQTT] ❌ Missing MQTT credentials in .env file');
@@ -304,4 +304,5 @@ function connectMQTT(io) {
 
 function getClient() { return client; }
 
-module.exports = { connectMQTT, getClient };
+module.exports = { connectMQTT, getClient }; 
+}
