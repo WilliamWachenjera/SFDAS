@@ -2058,7 +2058,7 @@
 
         <div class="g2 mb">
           <div class="card">
-            <div class="card-title">🛢 Gas Level (ppm) — Hourly Average</div>
+            <div class="card-title">🔥 Fire Detection Status — Hourly Frequency</div>
             <div class="chart-wrap"><canvas id="gasChart"></canvas></div>
           </div>
           <div class="card">
@@ -2087,9 +2087,9 @@
               </div>
             </div>
             <div class="s-tile">
-              <div class="sl">Gas (CO/LPG)</div>
-              <div class="sv" id="sv-gas" style="color:var(--accent-green)">—</div>
-              <div class="su">ppm</div>
+              <div class="sl">Fire Status</div>
+              <div class="sv" id="sv-gas" style="color:var(--accent-fire)">CLEAR</div>
+              <div class="su">Flame Sensor</div>
               <div class="sbar">
                 <div class="sfill" id="sb-gas" style="background:var(--accent-green);width:0%"></div>
               </div>
@@ -2396,8 +2396,8 @@
           <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
           <div class="form-group"><label>Temperature Warning (°C)</label><input type="number" id="sysTempW" /></div>
           <div class="form-group"><label>Temperature Critical (°C)</label><input type="number" id="sysTempC" /></div>
-          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="sysGasW" /></div>
-          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="sysGasC" /></div>
+          <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW" disabled /></div>
+          <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC" disabled /></div>
           <div class="form-group"><label>Confirmation Duration (ms)</label><input type="number" id="sysConfMs" /></div>
           <button class="btn btn-teal" onclick="saveSystemThresholds()">💾 Save Settings</button>
         </div>
@@ -3384,12 +3384,22 @@
     }
 
     function updateSensorTiles(data) {
-      const { smoke_ppm, temperature_c, gas_ppm, humidity_pct } = data;
+      const { smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected } = data;
       const s = v => v != null ? Math.round(v) : '—';
       const pct = (v, max) => v != null ? Math.min(100, Math.round(v / max * 100)) + '%' : '0%';
       if (smoke_ppm != null) { document.getElementById('sv-smoke').textContent = s(smoke_ppm); document.getElementById('sb-smoke').style.width = pct(smoke_ppm, 1000); }
       if (temperature_c != null) { document.getElementById('sv-temp').textContent = s(temperature_c); document.getElementById('sb-temp').style.width = pct(temperature_c, 200); }
-      if (gas_ppm != null) { document.getElementById('sv-gas').textContent = s(gas_ppm); document.getElementById('sb-gas').style.width = pct(gas_ppm, 1000); }
+      
+      const flameEl = document.getElementById('sv-gas');
+      const flameBar = document.getElementById('sb-gas');
+      if (flame_detected != null) {
+        const isFire = !!flame_detected;
+        flameEl.textContent = isFire ? 'FIRE!' : 'CLEAR';
+        flameEl.style.color = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
+        flameBar.style.width = isFire ? '100%' : '0%';
+        flameBar.style.background = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
+      }
+      
       if (humidity_pct != null) { document.getElementById('sv-hum').textContent = s(humidity_pct); document.getElementById('sb-hum').style.width = pct(humidity_pct, 100); }
     }
 

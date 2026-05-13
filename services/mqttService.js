@@ -96,8 +96,46 @@ async function handleSensorData(deviceCode, payload, io) {
       [lat, lng, deviceCode]);
   }
 
-  // Save reading + fire logic (you can expand this later)
-  io?.emit('sensor:reading', { deviceCode, smoke_ppm, temperature_c, ...data });
+  // 1. Save reading to sensor_readings history
+  db().run(
+    `INSERT INTO sensor_readings (device_id, device_code, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, gps_lat, gps_lng)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [device?.id || null, deviceCode, smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, lat, lng]
+  );
+
+  // 2. Fire Detection Logic
+  const thresholds = getThresholds();
+  const insideGeofence = checkGeofence(lat, lng);
+  const severity = getSeverity(smoke_ppm, temperature_c, gas_ppm, flame_detected, thresholds);
+
+  if (severity === 'critical' || severity === 'warning') {
+    // Check if there's already an active incident for this device to avoid spamming
+    const existingIncident = db().get(
+      "SELECT id FROM incidents WHERE device_code = ? AND status IN ('active', 'monitoring', 'acknowledged') LIMIT 1",
+      [deviceCode]
+    );
+
+    if (!existingIncident) {
+      const incidentCode = `INC-${Date.now().toString().slice(-6)}`;
+      db().run(
+        `INSERT INTO incidents (incident_code, device_id, device_code, location_label, severity, status, smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected, gps_lat, gps_lng, inside_geofence)
+         VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          incidentCode, device?.id || null, deviceCode, device?.location_label || 'Unknown', 
+          severity, smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected, lat, lng, insideGeofence ? 1 : 0
+        ]
+      );
+      
+      const newIncident = db().get('SELECT * FROM incidents WHERE incident_code = ?', [incidentCode]);
+      io?.emit('incident:created', newIncident);
+      
+      // Notify (SMS/Email)
+      notify().sendAlert(newIncident);
+    }
+  }
+
+  // 3. Broadcast real-time reading
+  io?.emit('sensor:reading', { deviceCode, smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected, battery_pct, lat, lng });
 }
 
 function handleStatus(deviceCode, payload, io) {

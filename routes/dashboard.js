@@ -90,7 +90,7 @@ router.get('/chart-data', requireAuth, (req, res) => {
       strftime('%Y-%m-%dT%H:00:00', recorded_at) as hour,
       ROUND(AVG(smoke_ppm), 1) as avg_smoke,
       ROUND(AVG(temperature_c), 1) as avg_temp,
-      ROUND(AVG(gas_ppm), 1) as avg_gas,
+      ROUND(AVG(flame_detected) * 100, 1) as avg_gas,
       ROUND(AVG(humidity_pct), 1) as avg_humidity
     FROM sensor_readings
     WHERE recorded_at >= datetime('now', '-${hours} hours')${deviceFilter}

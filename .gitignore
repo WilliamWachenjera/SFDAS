@@ -3,7 +3,6 @@ node_modules/
 *.log
 logs/
 *.db
-<<<<<<< HEAD
 *.db-shm
 *.db-wal
 *.bak
@@ -13,7 +12,4 @@ bin/
 obj/
 dist/
 build/
-=======
-*.bak
-package-lock.json
->>>>>>> ed6efdb677cf2a31e3150c52385a9c51f8bc6e93
+scratch/
