@@ -121,6 +121,19 @@ async function startServer() {
 
     // Sprinkler control from dashboard buttons
     socket.on('sprinkler:control', ({ zoneCode, action }) => {
+      const isOperator = socket.user.role === 'operator';
+      const zone = db.get('SELECT sz.*, d.device_code FROM sprinkler_zones sz LEFT JOIN devices d ON sz.device_id = d.id WHERE sz.zone_code = ?', [zoneCode]);
+      if (!zone) return;
+
+      if (isOperator) {
+        const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [socket.user.id]);
+        const assigned = JSON.parse(user.assigned_devices || '[]');
+        if (!zone.device_code || !assigned.includes(zone.device_code)) {
+          logger.warn(`Unauthorized sprinkler control attempt by operator ${socket.user.email} on zone ${zoneCode}`);
+          return;
+        }
+      }
+
       const newStatus = action === 'activate' ? 'active' : 'standby';
       db.run('UPDATE sprinkler_zones SET status = ? WHERE zone_code = ?', [newStatus, zoneCode]);
 

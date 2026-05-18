@@ -223,6 +223,14 @@ router.patch('/:id/resolve', requireOperator, (req, res) => {
   const inc = db.get('SELECT * FROM incidents WHERE id = ? OR incident_code = ?', [req.params.id, req.params.id]);
   if (!inc) return res.status(404).json({ success: false, message: 'Not found' });
 
+  if (req.user.role === 'operator') {
+    const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
+    const assigned = JSON.parse(user.assigned_devices || '[]');
+    if (!inc.device_code || !assigned.includes(inc.device_code)) {
+      return res.status(403).json({ success: false, message: "Access denied: You are not assigned to this device's incidents." });
+    }
+  }
+
   const resolveSecs = Math.round((Date.now() - new Date(inc.detected_at).getTime()) / 1000);
   db.run(
     `UPDATE incidents SET status = 'resolved', resolved_by = ?, resolved_at = datetime('now'), resolution_secs = ?, notes = COALESCE(?, notes) WHERE id = ?`,
@@ -244,6 +252,14 @@ router.patch('/:id/acknowledge', requireOperator, (req, res) => {
   const inc = db.get('SELECT * FROM incidents WHERE id = ? OR incident_code = ?', [req.params.id, req.params.id]);
   if (!inc) return res.status(404).json({ success: false, message: 'Not found' });
 
+  if (req.user.role === 'operator') {
+    const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
+    const assigned = JSON.parse(user.assigned_devices || '[]');
+    if (!inc.device_code || !assigned.includes(inc.device_code)) {
+      return res.status(403).json({ success: false, message: "Access denied: You are not assigned to this device's incidents." });
+    }
+  }
+
   db.run(
     `UPDATE incidents SET status = 'acknowledged', acknowledged_by = ?, acknowledged_at = datetime('now') WHERE id = ?`,
     [req.user.id, inc.id]
@@ -260,6 +276,14 @@ router.patch('/:id/acknowledge', requireOperator, (req, res) => {
 router.patch('/:id/escalate', requireOperator, (req, res) => {
   const inc = db.get('SELECT * FROM incidents WHERE id = ? OR incident_code = ?', [req.params.id, req.params.id]);
   if (!inc) return res.status(404).json({ success: false, message: 'Not found' });
+
+  if (req.user.role === 'operator') {
+    const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
+    const assigned = JSON.parse(user.assigned_devices || '[]');
+    if (!inc.device_code || !assigned.includes(inc.device_code)) {
+      return res.status(403).json({ success: false, message: "Access denied: You are not assigned to this device's incidents." });
+    }
+  }
 
   db.run(`UPDATE incidents SET severity = 'critical', status = 'active' WHERE id = ?`, [inc.id]);
   db.run(
