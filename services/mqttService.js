@@ -81,7 +81,13 @@ async function handleSensorData(deviceCode, payload, io) {
   let data;
   try { data = JSON.parse(payload); } catch (_) { return; }
 
-  const { smoke_ppm, temperature_c, gas_ppm, humidity_pct, battery_pct, flame_detected, lat, lng } = data;
+  const smoke_ppm = data.smoke_ppm ?? data.smoke;
+  const temperature_c = data.temperature_c ?? data.temp;
+  const gas_ppm = data.gas_ppm ?? data.gas;
+  const humidity_pct = data.humidity_pct ?? data.humidity;
+  const battery_pct = data.battery_pct ?? data.battery;
+  const flame_detected = data.flame_detected ?? data.flame;
+  const { lat, lng } = data;
 
   // Upsert device
   let device = db().get('SELECT * FROM devices WHERE device_code = ?', [deviceCode]);
@@ -172,7 +178,8 @@ function connectMQTT(io) {
     return null;
   }
 
-  const brokerUrl = `tls://${host}:${port}`;
+  const protocol = process.env.MQTT_USE_TLS === 'true' ? 'mqtts' : 'mqtt';
+  const brokerUrl = `${protocol}://${host}:${port}`;
   log().info(`[MQTT] Attempting connection → ${brokerUrl}`);
 
   const options = {
