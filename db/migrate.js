@@ -14,7 +14,7 @@ function migrate() {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'viewer',
+    role TEXT DEFAULT 'operator',
     phone TEXT,
     assigned_devices TEXT DEFAULT '[]',
     is_active INTEGER DEFAULT 1,
