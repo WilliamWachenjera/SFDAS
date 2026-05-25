@@ -1,57 +1,78 @@
-// db/database.js — better-sqlite3 version
+// db/database.js
+// PostgreSQL + PostGIS version
+// Replaces the sql.js SQLite version entirely.
+// All queries now use $1/$2 placeholders (PostgreSQL style).
+
 require('dotenv').config();
-const path = require('path');
-const fs   = require('fs');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
-const DB_PATH = path.resolve(__dirname, '..', process.env.SQLITE_PATH || 'sfdaass.db');
+let pool = null;
 
-let db = null;
-
+// ── Create the connection pool ─────────────────────────
 async function init() {
-  if (db) return;
-  
-  // Ensure directory exists
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  if (pool) return; // already initialised
 
-  db = new Database(DB_PATH, { 
-    // verbose: console.log 
+  pool = new Pool({
+    host:     process.env.DB_HOST     || 'localhost',
+    port:     parseInt(process.env.DB_PORT) || 5432,
+    database: process.env.DB_NAME     || 'sfdaass',
+    user:     process.env.DB_USER     || 'postgres',
+    password: process.env.DB_PASS     || '',
+    max:      10,           // max connections in pool
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
   });
-  
-  db.pragma('foreign_keys = ON');
-  db.pragma('journal_mode = WAL'); // Better for concurrent access
-  
-  console.log('[DB] Connected: ' + DB_PATH);
+
+  // Test the connection
+  const client = await pool.connect();
+  console.log('[DB] ✅ Connected to PostgreSQL');
+
+  // Enable PostGIS extension
+  await client.query('CREATE EXTENSION IF NOT EXISTS postgis;');
+  console.log('[DB] ✅ PostGIS extension enabled');
+
+  client.release();
 }
 
-function run(sql, params = []) {
-  const stmt = db.prepare(sql);
-  const info = stmt.run(params);
-  return { lastID: info.lastInsertRowid, changes: info.changes };
+// ── query() — raw PostgreSQL query, returns full result ─
+async function query(sql, params = []) {
+  if (!pool) throw new Error('DB not initialised. Call db.init() first.');
+  return pool.query(sql, params);
 }
 
-function get(sql, params = []) {
-  const stmt = db.prepare(sql);
-  return stmt.get(params);
+// ── run() — execute INSERT/UPDATE/DELETE ──────────────
+// Returns { lastID, changes } to stay compatible with old API
+async function run(sql, params = []) {
+  // Convert SQLite ? placeholders to PostgreSQL $1 $2 style
+  const pgSql = toPostgres(sql);
+  const res = await pool.query(pgSql, params);
+  // For INSERT ... RETURNING id, grab the id
+  const lastID = res.rows[0]?.id ?? null;
+  return { lastID, changes: res.rowCount };
 }
 
-function all(sql, params = []) {
-  try {
-    const stmt = db.prepare(sql);
-    return stmt.all(params);
-  } catch (e) {
-    console.error('[DB] all() error:', e.message);
-    return [];
-  }
+// ── get() — return single row or undefined ─────────────
+async function get(sql, params = []) {
+  const pgSql = toPostgres(sql);
+  const res = await pool.query(pgSql, params);
+  return res.rows[0];
 }
 
-// Dummy saveDb for backward compatibility if needed, but better-sqlite3 persists automatically
-function saveDb() {
-  // Not needed with better-sqlite3
+// ── all() — return array of rows ──────────────────────
+async function all(sql, params = []) {
+  const pgSql = toPostgres(sql);
+  const res = await pool.query(pgSql, params);
+  return res.rows;
 }
 
-module.exports = { init, run, get, all, saveDb };
+// ── Convert SQLite ? params to PostgreSQL $1 $2 ───────
+// This lets old query strings mostly work with minor edits.
+function toPostgres(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
 
+// ── getPool() — for advanced use (transactions etc.) ──
+function getPool() { return pool; }
+
+module.exports = { init, query, run, get, all, getPool };
