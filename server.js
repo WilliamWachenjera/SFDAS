@@ -110,25 +110,7 @@ async function startServer() {
 
     socket.emit('init:state', { activeIncidents, devices, sprinklerZones });
 
-<<<<<<< HEAD
     socket.on('sprinkler:control', async ({ zoneCode, action }) => {
-=======
-    // Sprinkler control from dashboard buttons
-    socket.on('sprinkler:control', ({ zoneCode, action }) => {
-      const isOperator = socket.user.role === 'operator';
-      const zone = db.get('SELECT sz.*, d.device_code FROM sprinkler_zones sz LEFT JOIN devices d ON sz.device_id = d.id WHERE sz.zone_code = ?', [zoneCode]);
-      if (!zone) return;
-
-      if (isOperator) {
-        const user = db.get('SELECT assigned_devices FROM users WHERE id = ?', [socket.user.id]);
-        const assigned = JSON.parse(user.assigned_devices || '[]');
-        if (!zone.device_code || !assigned.includes(zone.device_code)) {
-          logger.warn(`Unauthorized sprinkler control attempt by operator ${socket.user.email} on zone ${zoneCode}`);
-          return;
-        }
-      }
-
->>>>>>> 21df124098a1a0d97f63d07d7d1f6388728a2783
       const newStatus = action === 'activate' ? 'active' : 'standby';
       await db.query('UPDATE sprinkler_zones SET status = $1 WHERE zone_code = $2', [newStatus, zoneCode]);
       const mqttClient = require('./services/mqttService').getClient();
