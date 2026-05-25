@@ -90,4 +90,49 @@ async function sendSMS(message, toPhone = null) {
   }
 }
 
-module.exports = { sendEmail, sendSMS, verifyConnection };
+async function sendAlert(incident) {
+  const isCritical = incident.severity === 'critical';
+  const alertSubject = `[SFDAASS] ${isCritical ? '🚨 CRITICAL' : '⚠️ WARNING'}: Fire Incident ${incident.incident_code}`;
+  const alertText = `
+ALERT: SFDAASS Fire Detection System
+-----------------------------------
+Incident: ${incident.incident_code}
+Severity: ${incident.severity.toUpperCase()}
+Location: ${incident.location_label || 'Unknown'}
+Sensors: Smoke:${incident.smoke_ppm}ppm, Temp:${incident.temperature_c}°C
+Flame Detected: ${incident.flame_detected ? 'YES' : 'NO'}
+
+Status: ${incident.status.toUpperCase()}
+Time: ${new Date(incident.detected_at || Date.now()).toLocaleString()}
+
+Please check the dashboard immediately.
+  `.trim();
+
+  // Send Email
+  await sendEmail({
+    subject: alertSubject,
+    text: alertText,
+    html: `
+      <div style="background-color:#060a0f; color:#e8f4fd; font-family:sans-serif; padding:40px; border-radius:12px; max-width:600px; margin:0 auto; border: 1px solid ${isCritical ? '#ff4e1a' : '#ffaa00'};">
+        <h2 style="color:${isCritical ? '#ff4e1a' : '#ffaa00'}; margin-top:0;">${isCritical ? '🚨 CRITICAL FIRE ALERT' : '⚠️ FIRE WARNING'}</h2>
+        <p>A new incident has been detected by the system.</p>
+        <div style="background-color:#0c1520; padding:20px; border-radius:8px; border:1px solid #1a3045;">
+          <p><strong>Incident:</strong> ${incident.incident_code}</p>
+          <p><strong>Location:</strong> ${incident.location_label || 'Unknown'}</p>
+          <p><strong>Severity:</strong> <span style="color:${isCritical ? '#ff4e1a' : '#ffaa00'}; font-weight:bold;">${incident.severity.toUpperCase()}</span></p>
+          <p><strong>Smoke:</strong> ${incident.smoke_ppm} ppm</p>
+          <p><strong>Temperature:</strong> ${incident.temperature_c} °C</p>
+          <p><strong>Flame Sensor:</strong> ${incident.flame_detected ? '<span style="color:#ff4e1a">DETECTED</span>' : 'Clear'}</p>
+        </div>
+        <p style="margin-top:20px; font-size:14px; color:#7a9ab8;">This is an automated alert from your SFDAASS monitoring system.</p>
+      </div>
+    `
+  });
+
+  // Send SMS (only for critical)
+  if (isCritical) {
+    await sendSMS(`[SFDAASS] CRITICAL FIRE at ${incident.location_label || 'Unknown'}. Smoke: ${incident.smoke_ppm}ppm, Temp: ${incident.temperature_c}C. Check Dashboard NOW.`);
+  }
+}
+
+module.exports = { sendEmail, sendSMS, verifyConnection, sendAlert };

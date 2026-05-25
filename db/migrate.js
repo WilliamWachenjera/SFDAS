@@ -19,8 +19,24 @@ const { v4: uuidv4 } = require('uuid');
 async function migrate() {
   console.log('[DB] Running PostgreSQL + PostGIS migrations...');
 
+<<<<<<< HEAD
   // ── PostGIS must be enabled (done in db.init(), but safe to repeat)
   await query('CREATE EXTENSION IF NOT EXISTS postgis;');
+=======
+  run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'operator',
+    phone TEXT,
+    assigned_devices TEXT DEFAULT '[]',
+    is_active INTEGER DEFAULT 1,
+    last_login TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  )`);
+>>>>>>> 21df124098a1a0d97f63d07d7d1f6388728a2783
 
   // ── USERS ───────────────────────────────────────────────────────
   await query(`

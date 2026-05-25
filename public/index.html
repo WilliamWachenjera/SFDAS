@@ -990,7 +990,7 @@
     /* SENSOR TILES */
     .sensor-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px
     }
 
@@ -2058,7 +2058,7 @@
 
         <div class="g2 mb">
           <div class="card">
-            <div class="card-title">🛢 Gas Level (ppm) — Hourly Average</div>
+            <div class="card-title">🔥 Fire Detection Status — Hourly Frequency</div>
             <div class="chart-wrap"><canvas id="gasChart"></canvas></div>
           </div>
           <div class="card">
@@ -2087,11 +2087,19 @@
               </div>
             </div>
             <div class="s-tile">
-              <div class="sl">Gas (CO/LPG)</div>
-              <div class="sv" id="sv-gas" style="color:var(--accent-green)">—</div>
+              <div class="sl">MQ-2 Gas (CO/LPG)</div>
+              <div class="sv" id="sv-gas" style="color:var(--accent-amber)">—</div>
               <div class="su">ppm</div>
               <div class="sbar">
-                <div class="sfill" id="sb-gas" style="background:var(--accent-green);width:0%"></div>
+                <div class="sfill" id="sb-gas" style="background:var(--accent-amber);width:0%"></div>
+              </div>
+            </div>
+            <div class="s-tile">
+              <div class="sl">Fire Status</div>
+              <div class="sv" id="sv-flame" style="color:var(--accent-fire)">CLEAR</div>
+              <div class="su">Flame Sensor</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-flame" style="background:var(--accent-green);width:0%"></div>
               </div>
             </div>
             <div class="s-tile">
@@ -2396,8 +2404,8 @@
           <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
           <div class="form-group"><label>Temperature Warning (°C)</label><input type="number" id="sysTempW" /></div>
           <div class="form-group"><label>Temperature Critical (°C)</label><input type="number" id="sysTempC" /></div>
-          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="sysGasW" /></div>
-          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="sysGasC" /></div>
+          <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW" disabled /></div>
+          <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC" disabled /></div>
           <div class="form-group"><label>Confirmation Duration (ms)</label><input type="number" id="sysConfMs" /></div>
           <button class="btn btn-teal" onclick="saveSystemThresholds()">💾 Save Settings</button>
         </div>
@@ -2535,7 +2543,7 @@
             <div class="cap-item">
               <div class="cap-icon">🔐</div>
               <div class="cap-label">Role-Based Auth</div>
-              <div class="cap-desc">JWT tokens, refresh rotation, admin/operator/viewer</div>
+              <div class="cap-desc">JWT tokens, refresh rotation, admin/operator</div>
             </div>
             <div class="cap-item">
               <div class="cap-icon">⚡</div>
@@ -2794,7 +2802,6 @@
         <div class="form-group">
           <label>User Role</label>
           <select id="mUserRole">
-            <option value="viewer">Viewer (Read-only)</option>
             <option value="operator">Operator (Action-oriented)</option>
             <option value="admin">Administrator (Full Access)</option>
           </select>
@@ -3368,7 +3375,15 @@
         const color = active ? 'var(--accent-fire)' : 'var(--accent-green)';
         const btnClass = active ? 'off' : 'on';
         const btnLabel = active ? 'Deactivate' : 'Activate';
-        const disabled = currentUser && currentUser.role === 'viewer' ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '';
+        let disabled = '';
+        if (currentUser) {
+          if (currentUser.role === 'operator') {
+            const assigned = currentUser.assigned_devices || [];
+            if (!z.device_code || !assigned.includes(z.device_code)) {
+              disabled = 'disabled style="opacity:0.5;cursor:not-allowed;"';
+            }
+          }
+        }
         return `<div class="zone-tile">
       <div class="zl">${z.zone_code}</div>
       <div class="zs" style="color:${color}">${active ? 'ACTIVE' : 'STANDBY'}</div>
@@ -3384,12 +3399,23 @@
     }
 
     function updateSensorTiles(data) {
-      const { smoke_ppm, temperature_c, gas_ppm, humidity_pct } = data;
+      const { smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected } = data;
       const s = v => v != null ? Math.round(v) : '—';
       const pct = (v, max) => v != null ? Math.min(100, Math.round(v / max * 100)) + '%' : '0%';
       if (smoke_ppm != null) { document.getElementById('sv-smoke').textContent = s(smoke_ppm); document.getElementById('sb-smoke').style.width = pct(smoke_ppm, 1000); }
       if (temperature_c != null) { document.getElementById('sv-temp').textContent = s(temperature_c); document.getElementById('sb-temp').style.width = pct(temperature_c, 200); }
       if (gas_ppm != null) { document.getElementById('sv-gas').textContent = s(gas_ppm); document.getElementById('sb-gas').style.width = pct(gas_ppm, 1000); }
+      
+      const flameEl = document.getElementById('sv-flame');
+      const flameBar = document.getElementById('sb-flame');
+      if (flame_detected != null) {
+        const isFire = !!flame_detected;
+        flameEl.textContent = isFire ? 'FIRE!' : 'CLEAR';
+        flameEl.style.color = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
+        flameBar.style.width = isFire ? '100%' : '0%';
+        flameBar.style.background = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
+      }
+      
       if (humidity_pct != null) { document.getElementById('sv-hum').textContent = s(humidity_pct); document.getElementById('sb-hum').style.width = pct(humidity_pct, 100); }
     }
 
@@ -3528,7 +3554,13 @@
         const sprIcon = i.sprinkler_activated ? '💧 ACTIVATED' : 'STANDBY';
         const sprColor = i.sprinkler_activated ? 'var(--accent-teal)' : 'var(--text-muted)';
         const dt = parseDate(i.detected_at).toLocaleString('en-GB');
-        const canResolve = ['active', 'monitoring'].includes(i.status) && ['admin', 'operator'].includes(currentUser.role);
+        let canResolve = ['active', 'monitoring'].includes(i.status) && ['admin', 'operator'].includes(currentUser.role);
+        if (currentUser && currentUser.role === 'operator') {
+          const assigned = currentUser.assigned_devices || [];
+          if (!i.device_code || !assigned.includes(i.device_code)) {
+            canResolve = false;
+          }
+        }
         return `<tr onclick="openIncidentModal('${i.id || i.incident_code}')">
       <td><span class="mono">${i.incident_code}</span></td>
       <td style="font-size:12px">${dt}</td>
@@ -3600,7 +3632,13 @@
         return `<div class="tl-item ${tCls}"><div class="tl-time">${parseDate(e.occurred_at).toLocaleTimeString('en-GB')}</div><div class="tl-label">${e.description}</div></div>`;
       }).join('');
 
-      const canAct = ['admin', 'operator'].includes(currentUser.role) && ['active', 'monitoring', 'acknowledged'].includes(inc.status);
+      let canAct = ['admin', 'operator'].includes(currentUser.role) && ['active', 'monitoring', 'acknowledged'].includes(inc.status);
+      if (currentUser && currentUser.role === 'operator') {
+        const assigned = currentUser.assigned_devices || [];
+        if (!inc.device_code || !assigned.includes(inc.device_code)) {
+          canAct = false;
+        }
+      }
       const canAck = canAct && inc.status !== 'acknowledged';
 
       document.getElementById('mActions').innerHTML = `
@@ -3738,8 +3776,8 @@
 
       // Clear fields
       ['mUserName', 'mUserEmail', 'mUserPassword', 'mUserPhone'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('mUserRole').value = 'viewer';
-      document.getElementById('mUserDevicesGroup').style.display = 'none';
+      document.getElementById('mUserRole').value = 'operator';
+      document.getElementById('mUserDevicesGroup').style.display = 'block';
 
       document.getElementById('mUserRole').onchange = (e) => {
         document.getElementById('mUserDevicesGroup').style.display = e.target.value === 'operator' ? 'block' : 'none';
@@ -3765,7 +3803,7 @@
       document.getElementById('mUserName').value = u.name || '';
       document.getElementById('mUserEmail').value = u.email || '';
       document.getElementById('mUserPhone').value = u.phone || '';
-      document.getElementById('mUserRole').value = u.role || 'viewer';
+      document.getElementById('mUserRole').value = u.role || 'operator';
       document.getElementById('mUserDevicesGroup').style.display = u.role === 'operator' ? 'block' : 'none';
 
       document.getElementById('mUserRole').onchange = (e) => {
@@ -4043,9 +4081,13 @@
     // SPRINKLER CONTROL
     // ═══════════════════════════════════════════════════════
     async function toggleZone(zoneCode, btn) {
-      if (currentUser && currentUser.role === 'viewer') {
-        toast('Permission denied: Viewers cannot control sprinklers', 'error');
-        return;
+      if (currentUser && currentUser.role === 'operator') {
+        const zone = (window.sprinklerZones || []).find(z => z.zone_code === zoneCode);
+        const assigned = currentUser.assigned_devices || [];
+        if (!zone || !zone.device_code || !assigned.includes(zone.device_code)) {
+          toast("Permission denied: You are not assigned to this zone's device.", 'error');
+          return;
+        }
       }
       const isActive = btn.classList.contains('off');
       const action = isActive ? 'deactivate' : 'activate';

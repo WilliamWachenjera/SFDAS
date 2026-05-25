@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
     success: true,
     accessToken,
     refreshToken,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, assigned_devices: JSON.parse(user.assigned_devices || '[]') },
   });
 });
 
@@ -152,15 +152,15 @@ router.post('/reset-password', (req, res) => {
 
 // GET /api/auth/verify
 router.get('/verify', requireAuth, (req, res) => {
-  const user = db.get('SELECT id, name, email, role, phone, is_active FROM users WHERE id = ?', [req.user.id]);
+  const user = db.get('SELECT id, name, email, role, phone, is_active, assigned_devices FROM users WHERE id = ?', [req.user.id]);
   if (!user || !user.is_active) return res.status(401).json({ success: false, message: 'User no longer active' });
-  res.json({ success: true, user });
+  res.json({ success: true, user: { ...user, assigned_devices: JSON.parse(user.assigned_devices || '[]') } });
 });
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req, res) => {
-  const user = db.get('SELECT id, name, email, role, phone, created_at FROM users WHERE id = ?', [req.user.id]);
-  res.json({ success: true, user });
+  const user = db.get('SELECT id, name, email, role, phone, created_at, assigned_devices FROM users WHERE id = ?', [req.user.id]);
+  res.json({ success: true, user: { ...user, assigned_devices: JSON.parse(user.assigned_devices || '[]') } });
 });
 
 module.exports = router;

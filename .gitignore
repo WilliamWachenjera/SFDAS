@@ -1,13 +1,17 @@
-
-.env
-SFDAASS_DESIGN/sfdaass/backend/.env
 node_modules/
+.env
+*.log
 logs/
 *.db
-logs/combined.log
-sfdaass.db
-*.log
 *.db-shm
 *.db-wal
-
+*.bak
+package-lock.json
+.vscode/
+bin/
+obj/
+dist/
+build/
+scratch/
+revert.patch
 

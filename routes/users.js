@@ -21,7 +21,7 @@ router.post('/', requireAdmin, (req, res) => {
   const devicesStr = Array.isArray(assigned_devices) ? JSON.stringify(assigned_devices) : '[]';
   const result = db.run(
     'INSERT INTO users (name, email, password_hash, role, phone, assigned_devices) VALUES (?, ?, ?, ?, ?, ?)',
-    [name, email.toLowerCase(), hash, role || 'viewer', phone || null, devicesStr]
+    [name, email.toLowerCase(), hash, role || 'operator', phone || null, devicesStr]
   );
   logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_created', details: { email }, ip: req.ip });
   
@@ -30,12 +30,12 @@ router.post('/', requireAdmin, (req, res) => {
   notifyService.sendEmail({
     to: email.toLowerCase(),
     subject: '[SFDAASS] Account Created',
-    text: `Hello ${name},\n\nYour account has been created on the SFDAASS platform.\n\nRole: ${role || 'viewer'}\nEmail: ${email.toLowerCase()}\nPassword: ${password}\n\nPlease login and change your password as soon as possible.\n\nBest regards,\nSFDAASS Team`,
+    text: `Hello ${name},\n\nYour account has been created on the SFDAASS platform.\n\nRole: ${role || 'operator'}\nEmail: ${email.toLowerCase()}\nPassword: ${password}\n\nPlease login and change your password as soon as possible.\n\nBest regards,\nSFDAASS Team`,
     html: `
       <div style="background-color:#060a0f; color:#e8f4fd; font-family:sans-serif; padding:40px; border-radius:12px; max-width:600px; margin:0 auto;">
         <h2 style="color:#00d4aa;">Welcome to SFDAASS, ${name}!</h2>
         <p>Your account has been successfully created.</p>
-        <p><strong>Role:</strong> ${role || 'viewer'}<br>
+        <p><strong>Role:</strong> ${role || 'operator'}<br>
         <strong>Email:</strong> ${email.toLowerCase()}<br>
         <strong>Password:</strong> ${password}</p>
         <p>Please log in and change your password as soon as possible.</p>

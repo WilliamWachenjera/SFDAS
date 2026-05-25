@@ -20,11 +20,7 @@ const log    = () => _logger || (_logger = require('./logger'));
 
 let client = null;
 
-// =============================================================
-// POSTGIS GEOFENCE CHECK
-// Replaces the JavaScript Haversine + pointInPolygon functions.
-// Returns: true (inside), false (outside), null (no geofence set)
-// =============================================================
+
 async function checkGeofencePostGIS(lat, lng) {
   if (lat == null || lng == null) return null;
 
@@ -50,11 +46,7 @@ async function checkGeofencePostGIS(lat, lng) {
   return result?.inside ?? null;
 }
 
-// =============================================================
-// POSTGIS DISTANCE QUERY
-// Returns the distance in metres between a device and the
-// centre of the active geofence — useful for dashboard display.
-// =============================================================
+
 async function getDistanceToGeofence(lat, lng) {
   if (lat == null || lng == null) return null;
   const result = await db().get(
@@ -72,11 +64,7 @@ async function getDistanceToGeofence(lat, lng) {
   return result?.distance_m ?? null;
 }
 
-// =============================================================
-// POSTGIS NEARBY INCIDENTS QUERY (bonus spatial feature)
-// Find other incidents within N metres of a new incident.
-// Useful for clustering fire events on the map.
-// =============================================================
+
 async function getNearbyIncidents(lat, lng, radiusMetres = 200) {
   if (lat == null || lng == null) return [];
   return db().all(
@@ -97,9 +85,7 @@ async function getNearbyIncidents(lat, lng, radiusMetres = 200) {
   );
 }
 
-// =============================================================
-// THRESHOLD + SEVERITY HELPERS (unchanged)
-// =============================================================
+
 async function getThresholds() {
   const rows = await db().all('SELECT key, value FROM system_config');
   const t = {};
@@ -120,15 +106,12 @@ function getSeverity(smoke, temp, gas, flame, t) {
   return 'low';
 }
 
-// =============================================================
-// HANDLER: sfdaass/sensors/{deviceCode}
-// =============================================================
 async function handleSensorData(deviceCode, payload, io) {
   let data;
+<<<<<<< HEAD
   try { data = JSON.parse(payload); } catch (_) {
     log().warn(`[MQTT] Invalid JSON from ${deviceCode}`); return;
   }
-
   const { smoke_ppm, temperature_c, gas_ppm, humidity_pct,
           battery_pct, flame_detected, lat, lng } = data;
 
@@ -324,12 +307,10 @@ async function handleSensorData(deviceCode, payload, io) {
   }).then(ok => {
     if (ok) db().query('UPDATE incidents SET email_sent = 1 WHERE id = $1', [incidentId]);
   }).catch(() => {});
-}
+=======
+  try { data = JSON.parse(payload); } catch (_) { return; }
 
-// =============================================================
-// HANDLER: sfdaass/status/{deviceCode}
-// =============================================================
-async function handleStatus(deviceCode, payload, io) {
+  const smoke_ppm = data.smoke_ppm ?? data.smoke;
   try {
     const data = JSON.parse(payload);
     await db().query(
@@ -341,10 +322,7 @@ async function handleStatus(deviceCode, payload, io) {
   } catch (_) {}
 }
 
-// =============================================================
-// HANDLER: sfdaass/gps/{deviceCode}
-// Updates both the raw lat/lng columns AND the PostGIS point.
-// =============================================================
+
 async function handleGPS(deviceCode, payload, io) {
   try {
     const { lat, lng } = JSON.parse(payload);
@@ -360,9 +338,7 @@ async function handleGPS(deviceCode, payload, io) {
   } catch (_) {}
 }
 
-// =============================================================
-// connectMQTT() — called once from server.js
-// =============================================================
+
 function connectMQTT(io) {
   const host     = process.env.MQTT_HOST?.trim();
   const port     = parseInt(process.env.MQTT_PORT) || 8883;
@@ -373,19 +349,36 @@ function connectMQTT(io) {
     log().error('[MQTT] ❌ Missing MQTT credentials in .env'); return null;
   }
 
+<<<<<<< HEAD
   const brokerUrl = `tls://${host}:${port}`;
   log().info(`[MQTT] Connecting to HiveMQ → ${brokerUrl}`);
+=======
+  const protocol = process.env.MQTT_USE_TLS === 'true' ? 'mqtts' : 'mqtt';
+  const brokerUrl = `${protocol}://${host}:${port}`;
+  log().info(`[MQTT] Attempting connection → ${brokerUrl}`);
+>>>>>>> 21df124098a1a0d97f63d07d7d1f6388728a2783
 
   client = mqtt.connect(brokerUrl, {
     clientId:           `sfdaass-backend-${Date.now()}`,
     username,
     password,
     rejectUnauthorized: false,
+<<<<<<< HEAD
     reconnectPeriod:    10000,
     connectTimeout:     60000,
     keepalive:          60,
     clean:              true,
   });
+=======
+    reconnectPeriod: 10000,
+    connectTimeout: 60000,
+    keepalive: 60,
+    clean: true,
+    protocolVersion: 4
+  };
+
+  client = mqtt.connect(brokerUrl, options);
+>>>>>>> 21df124098a1a0d97f63d07d7d1f6388728a2783
 
   client.on('connect', () => {
     log().info('[MQTT] ✅ Connected to HiveMQ Cloud');
@@ -412,6 +405,7 @@ function connectMQTT(io) {
     else if (category === 'gps')    handleGPS(deviceCode, payload, io);
   });
 
+<<<<<<< HEAD
   // ── Mark stale devices offline every 30 seconds ──────────────
   setInterval(async () => {
     await db().query(
@@ -427,6 +421,14 @@ function connectMQTT(io) {
        WHERE last_seen IS NOT NULL`
     );
     io?.emit('system:heartbeat', { ts: new Date().toISOString() });
+=======
+  // System heartbeat every 30s
+  setInterval(() => {
+    const connectedClients = io?.engine?.clientsCount || 0;
+    io?.emit('system:heartbeat', { connectedClients, ts: new Date().toISOString() });
+    // Mark stale devices offline
+    db().run(`UPDATE devices SET status = 'offline' WHERE last_seen < datetime('now', '-120 seconds') AND status != 'offline'`);
+>>>>>>> 21df124098a1a0d97f63d07d7d1f6388728a2783
   }, 30000);
 
   return client;
