@@ -143,25 +143,27 @@ async function handleSensorData(deviceCode, payload, io) {
     var data;
     try {
       data = JSON.parse(payload);
+     
     } catch (e) {
       log().warn('[MQTT] Invalid JSON from ' + deviceCode);
       return;
-    }
+    } 
 
-    var smoke_ppm      = data.smoke_ppm;
-    var temperature_c  = data.temperature_c;
-    var gas_ppm        = data.gas_ppm;
-    var humidity_pct   = data.humidity_pct;
-    var battery_pct    = data.battery_pct;
-    var flame_detected = data.flame_detected;
+
+    var smoke_ppm      = data.smoke;
+    var temperature_c  = data.temp;
+    var gas_ppm        = data.gas;
+    var humidity_pct   = data.humidity;
+    var battery_pct    = data.battery;
+    var flame_detected = data.flame;
     var lat            = data.lat;
-    var lng            = data.lng;
+    var lng            = data.lon;
 
     // 1. Upsert device record
     var device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
 
     if (!device) {
-      await db().query(
+        await db().query(
         [
           'INSERT INTO devices',
           '  (device_code, name, location_label, status,',
@@ -223,7 +225,7 @@ async function handleSensorData(deviceCode, payload, io) {
     device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
 
     // 2. Save time-series reading
-    await db().query(
+     const insertNewReading = await db().query(
       [
         'INSERT INTO sensor_readings',
         '  (device_id, device_code, smoke_ppm, temperature_c,',
@@ -243,6 +245,13 @@ async function handleSensorData(deviceCode, payload, io) {
        lat != null ? lat : device.gps_lat,
        lng != null ? lng : device.gps_lng]
     );
+
+    if (!insertNewReading) {
+      log().error('[MQTT] Failed to insert sensor reading for ' + deviceCode);
+    }   
+    else {
+      log().info('[MQTT] Sensor reading saved for ' + deviceCode);
+    }
 
     // 3. Push live update to dashboard ← This is the key line for live readings
     if (io) {
