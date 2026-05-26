@@ -154,8 +154,8 @@ async function handleSensorData(deviceCode, payload, io) {
         '   battery_pct, flame_detected, last_seen, seconds_since_seen, api_key)',
         'VALUES ($1,$2,$3,$4,',
         '  $5,$6,',
-        '  CASE WHEN $5 IS NOT NULL AND $6 IS NOT NULL',
-        '       THEN ST_SetSRID(ST_MakePoint($6,$5),4326) ELSE NULL END,',
+        '  CASE WHEN $5::double precision IS NOT NULL AND $6::double precision IS NOT NULL',
+        '       THEN ST_SetSRID(ST_MakePoint($6::double precision,$5::double precision),4326) ELSE NULL END,',
         '  $7,$8,$9,$10,$11,$12,NOW(),0,$13)'
       ].join(' '),
       [deviceCode, 'Device ' + deviceCode, '', 'online',
@@ -178,8 +178,8 @@ async function handleSensorData(deviceCode, payload, io) {
         '  gps_lat = COALESCE($2, gps_lat),',
         '  gps_lng = COALESCE($3, gps_lng),',
         '  location = CASE',
-        '    WHEN $2 IS NOT NULL AND $3 IS NOT NULL',
-        '    THEN ST_SetSRID(ST_MakePoint($3,$2),4326)',
+        '    WHEN $2::double precision IS NOT NULL AND $3::double precision IS NOT NULL',
+        '    THEN ST_SetSRID(ST_MakePoint($3::double precision,$2::double precision),4326)',
         '    ELSE location END,',
         '  smoke_ppm     = COALESCE($4, smoke_ppm),',
         '  temperature_c = COALESCE($5, temperature_c),',
@@ -214,8 +214,8 @@ async function handleSensorData(deviceCode, payload, io) {
       '   gas_ppm, humidity_pct, battery_pct, flame_detected,',
       '   gps_lat, gps_lng, location)',
       'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,',
-      '  CASE WHEN $9 IS NOT NULL AND $10 IS NOT NULL',
-      '       THEN ST_SetSRID(ST_MakePoint($10,$9),4326) ELSE NULL END)'
+      '  CASE WHEN $9::double precision IS NOT NULL AND $10::double precision IS NOT NULL',
+      '       THEN ST_SetSRID(ST_MakePoint($10::double precision,$9::double precision),4326) ELSE NULL END)'
     ].join(' '),
     [device.id, deviceCode,
      smoke_ppm != null ? smoke_ppm : null,
@@ -286,8 +286,8 @@ async function handleSensorData(deviceCode, payload, io) {
       '   gas_ppm, humidity_pct, flame_detected,',
       '   gps_lat, gps_lng, location, inside_geofence)',
       'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,',
-      '  CASE WHEN $12 IS NOT NULL AND $13 IS NOT NULL',
-      '       THEN ST_SetSRID(ST_MakePoint($13,$12),4326) ELSE NULL END,',
+      '  CASE WHEN $12::double precision IS NOT NULL AND $13::double precision IS NOT NULL',
+      '       THEN ST_SetSRID(ST_MakePoint($13::double precision,$12::double precision),4326) ELSE NULL END,',
       '  $14)',
       'RETURNING id'
     ].join(' '),
@@ -397,7 +397,7 @@ async function handleGPS(deviceCode, payload, io) {
         'UPDATE devices SET',
         '  gps_lat  = $1,',
         '  gps_lng  = $2,',
-        '  location = ST_SetSRID(ST_MakePoint($2,$1), 4326)',
+        '  location = ST_SetSRID(ST_MakePoint($2::double precision,$1::double precision), 4326)',
         'WHERE device_code = $3'
       ].join(' '),
       [lat, lng, deviceCode]
