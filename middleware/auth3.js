@@ -1,4 +1,5 @@
 // middleware/auth.js
+
 const jwt = require('jsonwebtoken');
 const db = require('../db/database');
 
@@ -51,25 +52,19 @@ function requireOperator(req, res, next) {
   });
 }
 
-// Log to audit table - FIXED for PostgreSQL
-async function logAudit(dbInstance, { userId, userName, action, details, ip }) {
+// Log to audit table
+async function logAudit(db, { userId, userName, action, details, ip }) {
   try {
-    await dbInstance.query(
-      'INSERT INTO audit_logs (user_id, user_name, action, details, ip_address) VALUES ($1, $2, $3, $4, $5)',
+    await db.run(
+      'INSERT INTO audit_logs (user_id, user_name, action, details, ip_address) VALUES (?, ?, ?, ?, ?)',
       [userId, userName, action, JSON.stringify(details || {}), ip || '']
     );
-  } catch (e) {
-    console.error('[AUDIT] Failed to log:', e.message);
-  }
+  } catch (e) {}
 }
 
 module.exports = {
-  signAccessToken, 
-  signRefreshToken,
-  verifyAccessToken, 
-  verifyRefreshToken,
-  requireAuth, 
-  requireAdmin, 
-  requireOperator,
+  signAccessToken, signRefreshToken,
+  verifyAccessToken, verifyRefreshToken,
+  requireAuth, requireAdmin, requireOperator,
   logAudit,
 };

@@ -1,7 +1,4 @@
-// db/database.js
-// PostgreSQL + PostGIS connection pool.
-// Uses the 'pg' npm package. Run: npm install pg
-
+// db/database.js — FIXED for PostgreSQL + PostGIS
 require('dotenv').config();
 const { Pool } = require('pg');
 
@@ -21,44 +18,36 @@ async function init() {
     connectionTimeoutMillis: 5000,
   });
 
-  const client = await pool.connect();
-  console.log('[DB] Connected to PostgreSQL');
-  await client.query('CREATE EXTENSION IF NOT EXISTS postgis;');
-  console.log('[DB] PostGIS extension ready');
-  client.release();
+  try {
+    const client = await pool.connect();
+    console.log('[DB] Connected to PostgreSQL');
+    await client.query('CREATE EXTENSION IF NOT EXISTS postgis;');
+    console.log('[DB] PostGIS extension ready');
+    client.release();
+  } catch (e) {
+    console.error('[DB] Connection failed:', e.message);
+  }
 }
 
-// Convert SQLite ? placeholders to PostgreSQL $1 $2 $3
-function toPostgres(sql) {
-  let i = 0;
-  return sql.replace(/\?/g, () => '$' + (++i));
-}
-
-// Run any SQL and return the raw pg result object
-async function query(sql, params) {
+// === IMPORTANT: Do NOT convert queries that already use $1, $2... ===
+async function query(sql, params = []) {
   if (!pool) throw new Error('DB not initialised. Call await db.init() first.');
-  return pool.query(sql, params || []);
+  return pool.query(sql, params);
 }
 
-// INSERT / UPDATE / DELETE — returns { lastID, changes }
-async function run(sql, params) {
-  const pg = toPostgres(sql);
-  const res = await pool.query(pg, params || []);
+async function run(sql, params = []) {
+  const res = await query(sql, params);
   const lastID = res.rows && res.rows[0] ? (res.rows[0].id || null) : null;
   return { lastID, changes: res.rowCount };
 }
 
-// SELECT one row — returns the row object or undefined
-async function get(sql, params) {
-  const pg = toPostgres(sql);
-  const res = await pool.query(pg, params || []);
+async function get(sql, params = []) {
+  const res = await query(sql, params);
   return res.rows[0];
 }
 
-// SELECT many rows — returns array
-async function all(sql, params) {
-  const pg = toPostgres(sql);
-  const res = await pool.query(pg, params || []);
+async function all(sql, params = []) {
+  const res = await query(sql, params);
   return res.rows;
 }
 

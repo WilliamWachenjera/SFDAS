@@ -1,4 +1,5 @@
 // routes/auth.js
+
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
@@ -13,18 +14,14 @@ router.post('/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
 
   try {
-    const user = await db.get(
-      'SELECT * FROM users WHERE email = $1 AND is_active = 1', 
-      [email.toLowerCase().trim()]
-    );
-    
+    const user = await db.get('SELECT * FROM users WHERE email = ? AND is_active = 1', [email.toLowerCase().trim()]);
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const valid = bcrypt.compareSync(password, user.password_hash);
     if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     // Update last login
-    await db.query("UPDATE users SET last_login = NOW() WHERE id = $1", [user.id]);
+    await db.run("UPDATE users SET last_login = NOW() WHERE id = ?", [user.id]);
 
     const payload = { id: user.id, email: user.email, role: user.role, name: user.name };
     const accessToken = signAccessToken(payload);
@@ -32,10 +29,7 @@ router.post('/login', async (req, res) => {
 
     // Store refresh token
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    await db.query(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', 
-      [user.id, refreshToken, expiresAt]
-    );
+    await db.run('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, refreshToken, expiresAt]);
 
     await logAudit(db, { userId: user.id, userName: user.name, action: 'login', ip: req.ip });
 
@@ -43,17 +37,9 @@ router.post('/login', async (req, res) => {
       success: true,
       accessToken,
       refreshToken,
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role, 
-        phone: user.phone, 
-        assigned_devices: JSON.parse(user.assigned_devices || '[]') 
-      },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, assigned_devices: JSON.parse(user.assigned_devices || '[]') },
     });
   } catch (e) {
-    logger.error('Login error: ' + e.message);
     res.status(500).json({ success: false, message: e.message });
   }
 });
@@ -62,7 +48,7 @@ router.post('/login', async (req, res) => {
 router.post('/logout', requireAuth, async (req, res) => {
   const { refreshToken } = req.body;
   try {
-    if (refreshToken) await db.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
+    if (refreshToken) await db.run('DELETE FROM refresh_tokens WHERE token = ?', [refreshToken]);
     await logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'logout', ip: req.ip });
     res.json({ success: true });
   } catch (e) {
@@ -78,21 +64,21 @@ router.post('/refresh', async (req, res) => {
   try {
     const payload = verifyRefreshToken(refreshToken);
     const stored = await db.get(
-      "SELECT * FROM refresh_tokens WHERE token = $1 AND expires_at > NOW()",
+      "SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > NOW()",
       [refreshToken]
     );
     if (!stored) return res.status(401).json({ success: false, message: 'Refresh token expired or invalid' });
 
-    const user = await db.get('SELECT * FROM users WHERE id = $1 AND is_active = 1', [payload.id]);
+    const user = await db.get('SELECT * FROM users WHERE id = ? AND is_active = 1', [payload.id]);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
     // Rotate tokens
-    await db.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
+    await db.run('DELETE FROM refresh_tokens WHERE token = ?', [refreshToken]);
     const newPayload = { id: user.id, email: user.email, role: user.role, name: user.name };
     const newAccessToken = signAccessToken(newPayload);
     const newRefreshToken = signRefreshToken(newPayload);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    await db.query('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [user.id, newRefreshToken, expiresAt]);
+    await db.run('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, newRefreshToken, expiresAt]);
 
     res.json({ success: true, accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (e) {
@@ -104,7 +90,7 @@ router.post('/refresh', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await db.get('SELECT * FROM users WHERE email = $1', [email?.toLowerCase()]);
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email?.toLowerCase()]);
 
     // Always respond success (don't reveal if email exists)
     res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
@@ -118,8 +104,8 @@ router.post('/forgot-password', async (req, res) => {
 
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
-    await db.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.id]);
-    await db.query('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [user.id, token, expiresAt]);
+    await db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [user.id]);
+    await db.run('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, token, expiresAt]);
 
     const protocol = req.protocol === 'http' && req.headers['x-forwarded-proto'] ? req.headers['x-forwarded-proto'] : req.protocol;
     const host = req.get('host');
@@ -165,14 +151,14 @@ router.post('/reset-password', async (req, res) => {
 
   try {
     const record = await db.get(
-      "SELECT * FROM password_reset_tokens WHERE token = $1 AND expires_at > NOW() AND used = 0",
+      "SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW() AND used = 0",
       [token]
     );
     if (!record) return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
 
     const hash = bcrypt.hashSync(newPassword, 10);
-    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, record.user_id]);
-    await db.query('UPDATE password_reset_tokens SET used = 1 WHERE token = $1', [token]);
+    await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, record.user_id]);
+    await db.run('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token]);
 
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (e) {
@@ -183,10 +169,7 @@ router.post('/reset-password', async (req, res) => {
 // GET /api/auth/verify
 router.get('/verify', requireAuth, async (req, res) => {
   try {
-    const user = await db.get(
-      'SELECT id, name, email, role, phone, is_active, assigned_devices FROM users WHERE id = $1', 
-      [req.user.id]
-    );
+    const user = await db.get('SELECT id, name, email, role, phone, is_active, assigned_devices FROM users WHERE id = ?', [req.user.id]);
     if (!user || !user.is_active) return res.status(401).json({ success: false, message: 'User no longer active' });
     res.json({ success: true, user: { ...user, assigned_devices: JSON.parse(user.assigned_devices || '[]') } });
   } catch (e) {
@@ -197,10 +180,7 @@ router.get('/verify', requireAuth, async (req, res) => {
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await db.get(
-      'SELECT id, name, email, role, phone, created_at, assigned_devices FROM users WHERE id = $1', 
-      [req.user.id]
-    );
+    const user = await db.get('SELECT id, name, email, role, phone, created_at, assigned_devices FROM users WHERE id = ?', [req.user.id]);
     res.json({ success: true, user: { ...user, assigned_devices: JSON.parse(user.assigned_devices || '[]') } });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

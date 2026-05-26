@@ -1,4 +1,7 @@
 // routes/dashboard.js
+// GET /api/dashboard/stats
+// GET /api/dashboard/chart-data
+
 const router = require('express').Router();
 const db = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
@@ -12,9 +15,8 @@ router.get('/stats', requireAuth, async (req, res) => {
 
   try {
     if (isOperator) {
-      const user = await db.get('SELECT assigned_devices FROM users WHERE id = $1', [req.user.id]);
+      const user = await db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
       assigned = JSON.parse(user?.assigned_devices || '[]');
-      
       if (assigned.length === 0) {
         return res.json({ 
           success: true, 
@@ -25,23 +27,15 @@ router.get('/stats', requireAuth, async (req, res) => {
           recentReadings: []
         });
       }
-      
-      const placeholders = assigned.map((_, i) => `$${i + 1}`).join(',');
+      const placeholders = assigned.map(() => '?').join(',');
       deviceFilter = ` AND i.device_code IN (${placeholders})`;
       params = assigned;
     }
 
-    const activeCountRes = await db.get(
-      `SELECT COUNT(*) as n FROM incidents i WHERE i.status IN ('active','monitoring','acknowledged')${deviceFilter}`, 
-      params
-    );
-    
+    const activeCountRes = await db.get(`SELECT COUNT(*) as n FROM incidents i WHERE i.status IN ('active','monitoring','acknowledged')${deviceFilter}`, params);
     const totalRes = await db.get(`SELECT COUNT(*) as n FROM incidents i WHERE 1=1${deviceFilter}`, params);
     const todayRes = await db.get(`SELECT COUNT(*) as n FROM incidents i WHERE DATE(i.detected_at) = CURRENT_DATE${deviceFilter}`, params);
-    const thisMonthRes = await db.get(
-      `SELECT COUNT(*) as n FROM incidents i WHERE TO_CHAR(i.detected_at, 'YYYY-MM') = TO_CHAR(NOW(), 'YYYY-MM')${deviceFilter}`, 
-      params
-    );
+    const thisMonthRes = await db.get(`SELECT COUNT(*) as n FROM incidents i WHERE TO_CHAR(i.detected_at, 'YYYY-MM') = TO_CHAR(NOW(), 'YYYY-MM')${deviceFilter}`, params);
 
     const incidents = {
       active_count: parseInt(activeCountRes?.n || 0),
@@ -50,17 +44,10 @@ router.get('/stats', requireAuth, async (req, res) => {
       this_month: parseInt(thisMonthRes?.n || 0),
     };
 
-    // Devices stats
-    const devParams    = isOperator ? assigned : [];
-    // devWhereFilter: used when no WHERE clause exists yet (devTotalRes)
-    // devAndFilter:   used when WHERE already exists (status queries)
-    const devWhereFilter = isOperator ? ` WHERE device_code IN (${assigned.map((_, i) => `$${i+1}`).join(',')})` : '';
-    const devAndFilter   = isOperator ? ` AND device_code IN (${assigned.map((_, i) => `$${i+1}`).join(',')})` : '';
-
-    const devTotalRes   = await db.get(`SELECT COUNT(*) as n FROM devices${devWhereFilter}`, devParams);
-    const devOnlineRes  = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'online'${devAndFilter}`, devParams);
-    const devOfflineRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'offline'${devAndFilter}`, devParams);
-    const devWarningRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'warning'${devAndFilter}`, devParams);
+    const devTotalRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE 1=1${isOperator ? ` AND device_code IN (${assigned.map(() => '?').join(',')})` : ''}`, isOperator ? assigned : []);
+    const devOnlineRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'online'${isOperator ? ` AND device_code IN (${assigned.map(() => '?').join(',')})` : ''}`, isOperator ? assigned : []);
+    const devOfflineRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'offline'${isOperator ? ` AND device_code IN (${assigned.map(() => '?').join(',')})` : ''}`, isOperator ? assigned : []);
+    const devWarningRes = await db.get(`SELECT COUNT(*) as n FROM devices WHERE status = 'warning'${isOperator ? ` AND device_code IN (${assigned.map(() => '?').join(',')})` : ''}`, isOperator ? assigned : []);
 
     const devices = {
       total: parseInt(devTotalRes?.n || 0),
@@ -69,17 +56,11 @@ router.get('/stats', requireAuth, async (req, res) => {
       warning: parseInt(devWarningRes?.n || 0),
     };
 
-    // Sprinkler zones
+    // Sprinkler zones usually assigned to devices
     const sprinklerZones = isOperator 
-      ? await db.all(
-          `SELECT sz.* FROM sprinkler_zones sz 
-           JOIN devices d ON sz.device_id = d.id 
-           WHERE d.device_code IN (${assigned.map((_, i) => `$${i+1}`).join(',')})`, 
-          assigned
-        )
+      ? await db.all(`SELECT sz.* FROM sprinkler_zones sz JOIN devices d ON sz.device_id = d.id WHERE d.device_code IN (${assigned.map(() => '?').join(',')})`, assigned)
       : await db.all('SELECT * FROM sprinkler_zones ORDER BY zone_code');
 
-    // Active incidents
     const activeIncidents = await db.all(`
       SELECT i.*, d.device_code, d.location_label as loc
       FROM incidents i
@@ -89,19 +70,13 @@ router.get('/stats', requireAuth, async (req, res) => {
       LIMIT 10
     `, params);
 
-    // Recent readings
-    // NOTE: sensor_readings has no alias, so we cannot use the 'i.device_code'
-    // alias from the incidents deviceFilter — build a dedicated filter here.
-    const sensorFilter = isOperator
-      ? ` AND device_code IN (${assigned.map((_, i) => `$${i + 1}`).join(',')})` : '';
     const recentReadings = await db.all(
-      `SELECT * FROM sensor_readings WHERE 1=1${sensorFilter} ORDER BY recorded_at DESC LIMIT 5`,
+      `SELECT * FROM sensor_readings WHERE 1=1${deviceFilter} ORDER BY recorded_at DESC LIMIT 5`,
       params
     );
 
     res.json({ success: true, incidents, devices, sprinklerZones, activeIncidents, recentReadings });
   } catch (e) {
-    console.error(e);
     res.status(500).json({ success: false, message: e.message });
   }
 });
@@ -116,21 +91,22 @@ router.get('/chart-data', requireAuth, async (req, res) => {
 
   try {
     if (isOperator) {
-      const user = await db.get('SELECT assigned_devices FROM users WHERE id = $1', [req.user.id]);
+      const user = await db.get('SELECT assigned_devices FROM users WHERE id = ?', [req.user.id]);
       assigned = JSON.parse(user?.assigned_devices || '[]');
       if (assigned.length === 0) return res.json({ success: true, chartData: [] });
-      
-      const placeholders = assigned.map((_, i) => `$${i + 1}`).join(',');
+      const placeholders = assigned.map(() => '?').join(',');
       deviceFilter = ` AND device_code IN (${placeholders})`;
       params = assigned;
     }
 
+    // Hourly averages for charts
+    // Note: ROUND in PostgreSQL requires numeric type, so we cast average results.
     const chartData = await db.all(`
       SELECT
         TO_CHAR(recorded_at, 'YYYY-MM-DD"T"HH24:00:00') as hour,
         ROUND(AVG(smoke_ppm)::numeric, 1) as avg_smoke,
         ROUND(AVG(temperature_c)::numeric, 1) as avg_temp,
-        ROUND(AVG(gas_ppm)::numeric, 1) as avg_gas,
+        ROUND((AVG(flame_detected::double precision) * 100)::numeric, 1) as avg_gas,
         ROUND(AVG(humidity_pct)::numeric, 1) as avg_humidity
       FROM sensor_readings
       WHERE recorded_at >= NOW() - INTERVAL '${hours} hours'${deviceFilter}
@@ -140,7 +116,6 @@ router.get('/chart-data', requireAuth, async (req, res) => {
 
     res.json({ success: true, chartData });
   } catch (e) {
-    console.error(e);
     res.status(500).json({ success: false, message: e.message });
   }
 });
