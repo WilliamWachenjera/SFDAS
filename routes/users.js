@@ -5,18 +5,24 @@ const db = require('../db/database');
 const { requireAdmin, logAudit } = require('../middleware/auth');
 const notifyService = require('../services/notifyService');
 
-router.get('/', requireAdmin, (req, res) => {
-  const users = db.all('SELECT id, name, email, role, phone, is_active, last_login, created_at, assigned_devices FROM users ORDER BY created_at DESC');
-  res.json({ success: true, users });
+router.get('/', requireAdmin, async (req, res) => {
+  try {
+    const users = await db.all('SELECT id, name, email, role, phone, is_active, last_login, created_at, assigned_devices FROM users ORDER BY created_at DESC');
+    res.json({ success: true, users });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
-router.post('/', requireAdmin, (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { name, email, password, role, phone, assigned_devices } = req.body;
   if (!name || !email || !password) return res.status(400).json({ success: false, message: 'Name, email and password required' });
 
-  const exists = db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
-  if (exists) return res.status(409).json({ success: false, message: 'Email already registered' });
+  try {
+    const exists = await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
+    if (exists) return res.status(409).json({ success: false, message: 'Email already registered' });
 
+<<<<<<< HEAD
   const hash = bcrypt.hashSync(password, 10);
   const devicesStr = Array.isArray(assigned_devices) ? JSON.stringify(assigned_devices) : '[]';
   const result = db.run(
@@ -43,34 +49,74 @@ router.post('/', requireAdmin, (req, res) => {
       </div>
     `
   }).catch(e => console.error('Failed to send welcome email:', e));
+=======
+    const hash = bcrypt.hashSync(password, 10);
+    const devicesStr = Array.isArray(assigned_devices) ? JSON.stringify(assigned_devices) : '[]';
+    
+    // Add RETURNING id so result.lastID is populated in PostgreSQL
+    const result = await db.run(
+      'INSERT INTO users (name, email, password_hash, role, phone, assigned_devices) VALUES (?, ?, ?, ?, ?, ?) RETURNING id',
+      [name, email.toLowerCase(), hash, role || 'operator', phone || null, devicesStr]
+    );
+    await logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_created', details: { email }, ip: req.ip });
+    
+    const userRecord = await db.get('SELECT id, name, email, role FROM users WHERE id = ?', [result.lastID]);
+    
+    notifyService.sendEmail({
+      to: email.toLowerCase(),
+      subject: '[SFDAASS] Account Created',
+      text: `Hello ${name},\n\nYour account has been created on the SFDAASS platform.\n\nRole: ${role || 'operator'}\nEmail: ${email.toLowerCase()}\nPassword: ${password}\n\nPlease login and change your password as soon as possible.\n\nBest regards,\nSFDAASS Team`,
+      html: `
+        <div style="background-color:#060a0f; color:#e8f4fd; font-family:sans-serif; padding:40px; border-radius:12px; max-width:600px; margin:0 auto;">
+          <h2 style="color:#00d4aa;">Welcome to SFDAASS, ${name}!</h2>
+          <p>Your account has been successfully created.</p>
+          <p><strong>Role:</strong> ${role || 'operator'}<br>
+          <strong>Email:</strong> ${email.toLowerCase()}<br>
+          <strong>Password:</strong> ${password}</p>
+          <p>Please log in and change your password as soon as possible.</p>
+          <p style="color:#7a9ab8; font-size:12px;">SFDAASS System</p>
+        </div>
+      `
+    }).catch(e => console.error('Failed to send welcome email:', e));
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
 
-  res.status(201).json({ success: true, user: userRecord });
+    res.status(201).json({ success: true, user: userRecord });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
-router.put('/:id', requireAdmin, (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   const { name, role, phone, is_active, assigned_devices } = req.body;
   const devicesStr = Array.isArray(assigned_devices) ? JSON.stringify(assigned_devices) : null;
   
-  db.run(
-    `UPDATE users SET 
-      name = COALESCE(?, name), 
-      role = COALESCE(?, role), 
-      phone = COALESCE(?, phone), 
-      is_active = COALESCE(?, is_active),
-      assigned_devices = COALESCE(?, assigned_devices)
-     WHERE id = ?`,
-    [name, role, phone, is_active, devicesStr, req.params.id]
-  );
-  logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_updated', details: { targetId: req.params.id }, ip: req.ip });
-  res.json({ success: true });
+  try {
+    await db.run(
+      `UPDATE users SET 
+        name = COALESCE(?, name), 
+        role = COALESCE(?, role), 
+        phone = COALESCE(?, phone), 
+        is_active = COALESCE(?, is_active),
+        assigned_devices = COALESCE(?, assigned_devices)
+       WHERE id = ?`,
+      [name, role, phone, is_active, devicesStr, req.params.id]
+    );
+    await logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_updated', details: { targetId: req.params.id }, ip: req.ip });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
-
-router.delete('/:id', requireAdmin, (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   if (parseInt(req.params.id) === req.user.id) return res.status(400).json({ success: false, message: 'Cannot delete yourself' });
-  db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
-  logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_deleted', details: { targetId: req.params.id }, ip: req.ip });
-  res.json({ success: true });
+  try {
+    await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+    await logAudit(db, { userId: req.user.id, userName: req.user.name, action: 'user_deleted', details: { targetId: req.params.id }, ip: req.ip });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 module.exports = router;

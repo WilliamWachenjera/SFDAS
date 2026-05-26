@@ -1,57 +1,69 @@
-// db/database.js — better-sqlite3 version
+// db/database.js
+// PostgreSQL + PostGIS connection pool.
+// Uses the 'pg' npm package. Run: npm install pg
+
 require('dotenv').config();
-const path = require('path');
-const fs   = require('fs');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
-const DB_PATH = path.resolve(__dirname, '..', process.env.SQLITE_PATH || 'sfdaass.db');
-
-let db = null;
+let pool = null;
 
 async function init() {
-  if (db) return;
-  
-  // Ensure directory exists
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  if (pool) return;
 
-  db = new Database(DB_PATH, { 
-    // verbose: console.log 
+  pool = new Pool({
+    host:     process.env.DB_HOST     || 'localhost',
+    port:     parseInt(process.env.DB_PORT) || 5432,
+    database: process.env.DB_NAME     || 'sfdaass',
+    user:     process.env.DB_USER     || 'postgres',
+    password: process.env.DB_PASS     || '',
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
   });
-  
-  db.pragma('foreign_keys = ON');
-  db.pragma('journal_mode = WAL'); // Better for concurrent access
-  
-  console.log('[DB] Connected: ' + DB_PATH);
+
+  const client = await pool.connect();
+  console.log('[DB] Connected to PostgreSQL');
+  await client.query('CREATE EXTENSION IF NOT EXISTS postgis;');
+  console.log('[DB] PostGIS extension ready');
+  client.release();
 }
 
-function run(sql, params = []) {
-  const stmt = db.prepare(sql);
-  const info = stmt.run(params);
-  return { lastID: info.lastInsertRowid, changes: info.changes };
+// Convert SQLite ? placeholders to PostgreSQL $1 $2 $3
+function toPostgres(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => '$' + (++i));
 }
 
-function get(sql, params = []) {
-  const stmt = db.prepare(sql);
-  return stmt.get(params);
+// Run any SQL and return the raw pg result object
+async function query(sql, params) {
+  if (!pool) throw new Error('DB not initialised. Call await db.init() first.');
+  return pool.query(sql, params || []);
 }
 
-function all(sql, params = []) {
-  try {
-    const stmt = db.prepare(sql);
-    return stmt.all(params);
-  } catch (e) {
-    console.error('[DB] all() error:', e.message);
-    return [];
-  }
+// INSERT / UPDATE / DELETE — returns { lastID, changes }
+async function run(sql, params) {
+  const pg = toPostgres(sql);
+  const res = await pool.query(pg, params || []);
+  const lastID = res.rows && res.rows[0] ? (res.rows[0].id || null) : null;
+  return { lastID, changes: res.rowCount };
 }
 
-// Dummy saveDb for backward compatibility if needed, but better-sqlite3 persists automatically
-function saveDb() {
-  // Not needed with better-sqlite3
+// SELECT one row — returns the row object or undefined
+async function get(sql, params) {
+  const pg = toPostgres(sql);
+  const res = await pool.query(pg, params || []);
+  return res.rows[0];
 }
 
-module.exports = { init, run, get, all, saveDb };
+// SELECT many rows — returns array
+async function all(sql, params) {
+  const pg = toPostgres(sql);
+  const res = await pool.query(pg, params || []);
+  return res.rows;
+}
 
+function getPool() {
+  return pool;
+}
+
+module.exports = { init, query, run, get, all, getPool };

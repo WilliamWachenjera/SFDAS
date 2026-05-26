@@ -1,83 +1,138 @@
 // services/mqttService.js
+// PostGIS edition — replaces Haversine formula with ST_Within.
+// Connects to HiveMQ Cloud over TLS port 8883.
+
 require('dotenv').config();
 const mqtt = require('mqtt');
 const { v4: uuidv4 } = require('uuid');
 
+<<<<<<< HEAD
 // Lazy load dependencies to avoid circular issues
 let _db, _notify, _logger;
 const db = () => _db || (_db = require('../db/database'));
 const notify = () => _notify || (_notify = require('./notifyService'));
 const log = () => _logger || (_logger = require('./logger'));
+=======
+var _db, _notify, _logger;
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
 
-let client = null;
-
-// =============================================================
-// HELPER FUNCTIONS
-// =============================================================
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const r = d => (d * Math.PI) / 180;
-  const dLat = r(lat2 - lat1);
-  const dLon = r(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+function db() {
+  if (!_db) _db = require('../db/database');
+  return _db;
+}
+function notify() {
+  if (!_notify) _notify = require('./notifyService');
+  return _notify;
+}
+function log() {
+  if (!_logger) _logger = require('./logger');
+  return _logger;
 }
 
-function pointInPolygon(lat, lng, polygon) {
-  let inside = false;
-  const n = polygon.length;
-  let j = n - 1;
-  for (let i = 0; i < n; i++) {
-    const xi = polygon[i].lng, yi = polygon[i].lat;
-    const xj = polygon[j].lng, yj = polygon[j].lat;
-    if (((yi > lng) !== (yj > lng)) && (lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi)) {
-      inside = !inside;
-    }
-    j = i;
-  }
-  return inside;
-}
+var client = null;
 
-function checkGeofence(lat, lng) {
-  if (!lat || !lng) return null;
-  const geo = db().get('SELECT * FROM geofences WHERE is_active = 1 LIMIT 1');
+// =============================================================
+// PostGIS geofence check
+// Returns true (inside), false (outside), or null (no geofence)
+// ST_Within checks if the device point is inside the stored
+// geofence geometry using the spatial index — no JavaScript math.
+// =============================================================
+async function checkGeofencePostGIS(lat, lng) {
+  if (lat == null || lng == null) return null;
+
+  var geo = await db().get(
+    'SELECT id FROM geofences WHERE is_active = 1 AND geom IS NOT NULL LIMIT 1'
+  );
   if (!geo) return null;
 
-  if (geo.type === 'circle') {
-    return haversine(lat, lng, geo.center_lat, geo.center_lng) <= geo.radius_meters;
-  }
-  if (geo.type === 'polygon' && geo.polygon_coords) {
-    try {
-      return pointInPolygon(lat, lng, JSON.parse(geo.polygon_coords));
-    } catch (_) { return null; }
-  }
-  return null;
+  // ST_MakePoint takes (longitude, latitude) — note the order
+  var result = await db().get(
+    'SELECT ST_Within(ST_SetSRID(ST_MakePoint($1, $2), 4326), geom) AS inside FROM geofences WHERE id = $3',
+    [lng, lat, geo.id]
+  );
+
+  if (!result) return null;
+  return result.inside;
 }
 
-function getThresholds() {
-  const rows = db().all('SELECT key, value FROM system_config');
-  const t = {};
-  rows.forEach(r => { t[r.key] = parseFloat(r.value); });
+// Returns distance in metres from device to geofence centre
+async function getDistanceToGeofence(lat, lng) {
+  if (lat == null || lng == null) return null;
+
+  var result = await db().get(
+    [
+      'SELECT ROUND(',
+      '  ST_Distance(',
+      '    ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,',
+      '    ST_Centroid(geom)::geography',
+      '  )',
+      ') AS distance_m',
+      'FROM geofences WHERE is_active = 1 AND geom IS NOT NULL LIMIT 1'
+    ].join(' '),
+    [lng, lat]
+  );
+
+  return result ? result.distance_m : null;
+}
+
+// Find other active incidents within radiusMetres of this location
+async function getNearbyIncidents(lat, lng, radiusMetres) {
+  if (lat == null || lng == null) return [];
+  var r = radiusMetres || 200;
+
+  return db().all(
+    [
+      'SELECT id, incident_code, severity,',
+      '  ROUND(ST_Distance(location::geography,',
+      '    ST_SetSRID(ST_MakePoint($1,$2),4326)::geography',
+      '  )) AS distance_m',
+      'FROM incidents',
+      'WHERE location IS NOT NULL',
+      '  AND status != \'resolved\'',
+      '  AND ST_DWithin(',
+      '    location::geography,',
+      '    ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,',
+      '    $3',
+      '  )',
+      'ORDER BY distance_m ASC'
+    ].join(' '),
+    [lng, lat, r]
+  );
+}
+
+// =============================================================
+// Read thresholds from system_config table
+// =============================================================
+async function getThresholds() {
+  var rows = await db().all('SELECT key, value FROM system_config');
+  var t = {};
+  rows.forEach(function(r) { t[r.key] = parseFloat(r.value); });
   return {
-    smoke_warning: t.smoke_warning ?? 250,
-    smoke_critical: t.smoke_critical ?? 500,
-    temp_warning: t.temp_warning ?? 50,
-    temp_critical: t.temp_critical ?? 100,
-    gas_warning: t.gas_warning ?? 150,
-    gas_critical: t.gas_critical ?? 300,
+    smoke_warning:  t.smoke_warning  != null ? t.smoke_warning  : 250,
+    smoke_critical: t.smoke_critical != null ? t.smoke_critical : 500,
+    temp_warning:   t.temp_warning   != null ? t.temp_warning   : 50,
+    temp_critical:  t.temp_critical  != null ? t.temp_critical  : 100,
+    gas_warning:    t.gas_warning    != null ? t.gas_warning    : 150,
+    gas_critical:   t.gas_critical   != null ? t.gas_critical   : 300,
   };
 }
 
 function getSeverity(smoke, temp, gas, flame, t) {
-  if (flame || smoke >= t.smoke_critical || temp >= t.temp_critical || gas >= t.gas_critical) return 'critical';
-  if (smoke >= t.smoke_warning || temp >= t.temp_warning || gas >= t.gas_warning) return 'warning';
+  if (flame || smoke >= t.smoke_critical || temp >= t.temp_critical || gas >= t.gas_critical) {
+    return 'critical';
+  }
+  if (smoke >= t.smoke_warning || temp >= t.temp_warning || gas >= t.gas_warning) {
+    return 'warning';
+  }
   return 'low';
 }
 
 // =============================================================
-// MESSAGE HANDLERS
+// Handle sensor data from ESP32
+// Topic: sfdaass/sensors/{deviceCode}
 // =============================================================
 async function handleSensorData(deviceCode, payload, io) {
+<<<<<<< HEAD
   let data;
   try { data = JSON.parse(payload); } catch (_) { return; }
 
@@ -143,104 +198,414 @@ async function handleSensorData(deviceCode, payload, io) {
   // 3. Broadcast real-time reading
   io?.emit('sensor:reading', { deviceCode, smoke_ppm, temperature_c, gas_ppm, humidity_pct, flame_detected, battery_pct, lat, lng });
 }
-
-function handleStatus(deviceCode, payload, io) {
+=======
+  var data;
   try {
-    const data = JSON.parse(payload);
-    db().run(`UPDATE devices SET status = ?, last_seen = datetime('now') WHERE device_code = ?`, 
-      [data.status || 'online', deviceCode]);
-  } catch (_) {}
-}
+    data = JSON.parse(payload);
+  } catch (e) {
+    log().warn('[MQTT] Invalid JSON from ' + deviceCode);
+    return;
+  }
 
-function handleGPS(deviceCode, payload, io) {
-  try {
-    const { lat, lng } = JSON.parse(payload);
-    db().run(`UPDATE devices SET gps_lat = ?, gps_lng = ? WHERE device_code = ?`, [lat, lng, deviceCode]);
-  } catch (_) {}
+  var smoke_ppm      = data.smoke_ppm;
+  var temperature_c  = data.temperature_c;
+  var gas_ppm        = data.gas_ppm;
+  var humidity_pct   = data.humidity_pct;
+  var battery_pct    = data.battery_pct;
+  var flame_detected = data.flame_detected;
+  var lat            = data.lat;
+  var lng            = data.lng;
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
+
+  // 1. Upsert device record
+  var device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
+
+  if (!device) {
+    await db().query(
+      [
+        'INSERT INTO devices',
+        '  (device_code, name, location_label, status,',
+        '   gps_lat, gps_lng, location,',
+        '   smoke_ppm, temperature_c, gas_ppm, humidity_pct,',
+        '   battery_pct, flame_detected, last_seen, seconds_since_seen, api_key)',
+        'VALUES ($1,$2,$3,$4,',
+        '  $5,$6,',
+        '  CASE WHEN $5::double precision IS NOT NULL AND $6::double precision IS NOT NULL',
+        '       THEN ST_SetSRID(ST_MakePoint($6::double precision,$5::double precision),4326) ELSE NULL END,',
+        '  $7,$8,$9,$10,$11,$12,NOW(),0,$13)'
+      ].join(' '),
+      [deviceCode, 'Device ' + deviceCode, '', 'online',
+       lat != null ? lat : null,
+       lng != null ? lng : null,
+       smoke_ppm != null ? smoke_ppm : null,
+       temperature_c != null ? temperature_c : null,
+       gas_ppm != null ? gas_ppm : null,
+       humidity_pct != null ? humidity_pct : null,
+       battery_pct != null ? battery_pct : null,
+       flame_detected ? 1 : 0,
+       uuidv4()]
+    );
+    log().info('[MQTT] Auto-registered device: ' + deviceCode);
+  } else {
+    await db().query(
+      [
+        'UPDATE devices SET',
+        '  status = $1,',
+        '  gps_lat = COALESCE($2, gps_lat),',
+        '  gps_lng = COALESCE($3, gps_lng),',
+        '  location = CASE',
+        '    WHEN $2::double precision IS NOT NULL AND $3::double precision IS NOT NULL',
+        '    THEN ST_SetSRID(ST_MakePoint($3::double precision,$2::double precision),4326)',
+        '    ELSE location END,',
+        '  smoke_ppm     = COALESCE($4, smoke_ppm),',
+        '  temperature_c = COALESCE($5, temperature_c),',
+        '  gas_ppm       = COALESCE($6, gas_ppm),',
+        '  humidity_pct  = COALESCE($7, humidity_pct),',
+        '  battery_pct   = COALESCE($8, battery_pct),',
+        '  flame_detected = COALESCE($9, flame_detected),',
+        '  last_seen = NOW(),',
+        '  seconds_since_seen = 0',
+        'WHERE device_code = $10'
+      ].join(' '),
+      ['online',
+       lat != null ? lat : null,
+       lng != null ? lng : null,
+       smoke_ppm != null ? smoke_ppm : null,
+       temperature_c != null ? temperature_c : null,
+       gas_ppm != null ? gas_ppm : null,
+       humidity_pct != null ? humidity_pct : null,
+       battery_pct != null ? battery_pct : null,
+       flame_detected ? 1 : 0,
+       deviceCode]
+    );
+  }
+
+  device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
+
+  // 2. Save time-series reading
+  await db().query(
+    [
+      'INSERT INTO sensor_readings',
+      '  (device_id, device_code, smoke_ppm, temperature_c,',
+      '   gas_ppm, humidity_pct, battery_pct, flame_detected,',
+      '   gps_lat, gps_lng, location)',
+      'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,',
+      '  CASE WHEN $9::double precision IS NOT NULL AND $10::double precision IS NOT NULL',
+      '       THEN ST_SetSRID(ST_MakePoint($10::double precision,$9::double precision),4326) ELSE NULL END)'
+    ].join(' '),
+    [device.id, deviceCode,
+     smoke_ppm != null ? smoke_ppm : null,
+     temperature_c != null ? temperature_c : null,
+     gas_ppm != null ? gas_ppm : null,
+     humidity_pct != null ? humidity_pct : null,
+     battery_pct != null ? battery_pct : null,
+     flame_detected ? 1 : 0,
+     lat != null ? lat : device.gps_lat,
+     lng != null ? lng : device.gps_lng]
+  );
+
+  // 3. Push live update to dashboard
+  if (io) {
+    io.emit('sensor:reading', {
+      deviceCode: deviceCode,
+      smoke_ppm: smoke_ppm,
+      temperature_c: temperature_c,
+      gas_ppm: gas_ppm,
+      humidity_pct: humidity_pct,
+      battery_pct: battery_pct,
+      flame_detected: flame_detected,
+      gps_lat: lat != null ? lat : device.gps_lat,
+      gps_lng: lng != null ? lng : device.gps_lng,
+      ts: new Date().toISOString(),
+    });
+  }
+
+  // 4. Fire detection
+  var t = await getThresholds();
+  var isFire = flame_detected
+    || (smoke_ppm     != null && smoke_ppm     >= t.smoke_warning)
+    || (temperature_c != null && temperature_c >= t.temp_warning)
+    || (gas_ppm       != null && gas_ppm       >= t.gas_warning);
+
+  if (!isFire) return;
+
+  var existing = await db().get(
+    'SELECT id FROM incidents WHERE device_code = $1 AND status IN ($2,$3,$4)',
+    [deviceCode, 'active', 'monitoring', 'acknowledged']
+  );
+  if (existing) return;
+
+  // 5. PostGIS geofence check — replaces Haversine
+  var effectiveLat = lat != null ? lat : device.gps_lat;
+  var effectiveLng = lng != null ? lng : device.gps_lng;
+  var insideGeo    = await checkGeofencePostGIS(effectiveLat, effectiveLng);
+  var distanceM    = await getDistanceToGeofence(effectiveLat, effectiveLng);
+  var nearby       = await getNearbyIncidents(effectiveLat, effectiveLng, 200);
+
+  log().info(
+    '[PostGIS] ' + deviceCode +
+    ' inside=' + insideGeo +
+    ' dist=' + distanceM + 'm' +
+    ' nearby=' + nearby.length
+  );
+
+  // 6. Create incident
+  var severity = getSeverity(smoke_ppm, temperature_c, gas_ppm, flame_detected, t);
+  var incCode  = 'INC-' + new Date().getFullYear() + '-' +
+                 uuidv4().replace(/-/g, '').slice(0, 6).toUpperCase();
+
+  var result = await db().query(
+    [
+      'INSERT INTO incidents',
+      '  (incident_code, device_id, device_code, location_label,',
+      '   severity, status, smoke_ppm, temperature_c,',
+      '   gas_ppm, humidity_pct, flame_detected,',
+      '   gps_lat, gps_lng, location, inside_geofence)',
+      'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,',
+      '  CASE WHEN $12::double precision IS NOT NULL AND $13::double precision IS NOT NULL',
+      '       THEN ST_SetSRID(ST_MakePoint($13::double precision,$12::double precision),4326) ELSE NULL END,',
+      '  $14)',
+      'RETURNING id'
+    ].join(' '),
+    [incCode, device.id, deviceCode, device.location_label || '',
+     severity, 'active',
+     smoke_ppm != null ? smoke_ppm : null,
+     temperature_c != null ? temperature_c : null,
+     gas_ppm != null ? gas_ppm : null,
+     humidity_pct != null ? humidity_pct : null,
+     flame_detected ? 1 : 0,
+     effectiveLat, effectiveLng,
+     insideGeo === null ? null : (insideGeo ? 1 : 0)]
+  );
+
+  var incidentId = result.rows[0].id;
+
+  await db().query(
+    'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
+    [incidentId, 'detected',
+     'Smoke:' + smoke_ppm + 'ppm Temp:' + temperature_c + 'C Flame:' + flame_detected +
+     ' | PostGIS inside:' + insideGeo + ' dist:' + distanceM + 'm']
+  );
+
+  // 7. Auto-sprinkler for critical events
+  if (severity === 'critical') {
+    if (client) {
+      client.publish(
+        'sfdaass/sprinkler/' + deviceCode,
+        JSON.stringify({ activate: true, incident: incCode }),
+        { qos: 1 }
+      );
+    }
+    await db().query('UPDATE incidents SET sprinkler_activated = 1 WHERE id = $1', [incidentId]);
+    await db().query(
+      'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
+      [incidentId, 'sprinkler_activated', 'Auto sprinkler activation triggered']
+    );
+    log().warn('[MQTT] Sprinkler command sent to ' + deviceCode);
+  }
+
+  // 8. Push to dashboard
+  var incident = await db().get('SELECT * FROM incidents WHERE id = $1', [incidentId]);
+  if (io) {
+    io.emit('incident:created', Object.assign({}, incident, {
+      nearby_count: nearby.length,
+      distance_to_fence_m: distanceM,
+    }));
+  }
+  log().warn('[MQTT] FIRE ' + incCode + ' | ' + deviceCode + ' | ' + severity);
+
+  // 9. Notifications
+  var msg = [
+    'FIRE ALERT [' + severity.toUpperCase() + ']',
+    'Device   : ' + deviceCode + ' - ' + (device.location_label || 'Unknown'),
+    'Smoke    : ' + smoke_ppm + ' ppm',
+    'Temp     : ' + temperature_c + 'C',
+    'Flame    : ' + (flame_detected ? 'YES' : 'NO'),
+    'GPS      : ' + effectiveLat + ', ' + effectiveLng,
+    'Geofence : ' + (insideGeo === null ? 'N/A' : insideGeo ? 'Inside' : 'OUTSIDE'),
+    'Distance : ' + (distanceM != null ? distanceM + 'm from fence centre' : 'N/A'),
+    'Nearby   : ' + nearby.length + ' other incident(s) within 200m',
+    'Incident : ' + incCode,
+  ].join('\n');
+
+  notify().sendSMS(msg).then(function(ok) {
+    if (ok) db().query('UPDATE incidents SET sms_sent = 1 WHERE id = $1', [incidentId]);
+  }).catch(function() {});
+
+  notify().sendEmail({
+    subject: '[SFDAASS] ' + incCode + ' - ' + severity.toUpperCase() + ' Fire Alert',
+    text: msg,
+    html: '<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px">' +
+          '<h2>FIRE ALERT - ' + severity.toUpperCase() + '</h2></div>' +
+          '<pre style="padding:12px;background:#fff3f3;border:1px solid #ffcccc">' + msg + '</pre>',
+  }).then(function(ok) {
+    if (ok) db().query('UPDATE incidents SET email_sent = 1 WHERE id = $1', [incidentId]);
+  }).catch(function() {});
 }
 
 // =============================================================
-// CONNECT TO HIVEMQ CLOUD (Clean Version)
+// Handle heartbeat status
+// Topic: sfdaass/status/{deviceCode}
+// =============================================================
+async function handleStatus(deviceCode, payload, io) {
+  try {
+    var data = JSON.parse(payload);
+    await db().query(
+      'UPDATE devices SET status = $1, last_seen = NOW(), seconds_since_seen = 0 WHERE device_code = $2',
+      [data.status || 'online', deviceCode]
+    );
+    if (io) io.emit('device:status', { deviceCode: deviceCode, status: data.status || 'online' });
+  } catch (e) {}
+}
+
+// =============================================================
+// Handle GPS update
+// Topic: sfdaass/gps/{deviceCode}
+// Updates both plain lat/lng AND the PostGIS location point
+// =============================================================
+async function handleGPS(deviceCode, payload, io) {
+  try {
+    var data = JSON.parse(payload);
+    var lat = data.lat;
+    var lng = data.lng;
+    await db().query(
+      [
+        'UPDATE devices SET',
+        '  gps_lat  = $1,',
+        '  gps_lng  = $2,',
+        '  location = ST_SetSRID(ST_MakePoint($2::double precision,$1::double precision), 4326)',
+        'WHERE device_code = $3'
+      ].join(' '),
+      [lat, lng, deviceCode]
+    );
+    if (io) io.emit('gps:update', { deviceCode: deviceCode, lat: lat, lng: lng });
+  } catch (e) {}
+}
+
+// =============================================================
+// Connect to HiveMQ Cloud
 // =============================================================
 function connectMQTT(io) {
-  const host     = process.env.MQTT_HOST?.trim();
-  const port     = parseInt(process.env.MQTT_PORT) || 8883;
-  const username = process.env.MQTT_USERNAME?.trim();
-  const password = process.env.MQTT_PASSWORD?.trim();
-
-  log().info(`[MQTT] Host: ${host}`);
-  log().info(`[MQTT] Port: ${port}`);
-  log().info(`[MQTT] Username: ${username || 'MISSING'}`);
-  log().info(`[MQTT] Password length: ${password ? password.length : 0}`);
+  var host     = (process.env.MQTT_HOST     || '').trim();
+  var port     = parseInt(process.env.MQTT_PORT) || 8883;
+  var username = (process.env.MQTT_USERNAME || '').trim();
+  var password = (process.env.MQTT_PASSWORD || '').trim();
 
   if (!host || !username || !password) {
-    log().error('[MQTT] ❌ Missing MQTT credentials in .env');
+    log().error('[MQTT] Missing MQTT credentials in .env');
     return null;
   }
 
+<<<<<<< HEAD
   const protocol = process.env.MQTT_USE_TLS === 'true' ? 'mqtts' : 'mqtt';
   const brokerUrl = `${protocol}://${host}:${port}`;
   log().info(`[MQTT] Attempting connection → ${brokerUrl}`);
+=======
+  var brokerUrl = 'tls://' + host + ':' + port;
+  log().info('[MQTT] Connecting to HiveMQ: ' + brokerUrl);
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
 
-  const options = {
-    clientId: `sfdaass-backend-${Date.now()}`,
-    username,
-    password,
+  client = mqtt.connect(brokerUrl, {
+    clientId:           'sfdaass-backend-' + Date.now(),
+    username:           username,
+    password:           password,
     rejectUnauthorized: false,
+<<<<<<< HEAD
     reconnectPeriod: 10000,
     connectTimeout: 60000,
     keepalive: 60,
     clean: true,
     protocolVersion: 4
   };
+=======
+    reconnectPeriod:    10000,
+    connectTimeout:     60000,
+    keepalive:          60,
+    clean:              true,
+  });
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
 
-  client = mqtt.connect(brokerUrl, options);
-
-  client.on('connect', () => {
-    log().info('🎉 ✅ SUCCESSFULLY CONNECTED TO HIVEMQ CLOUD!');
-
-    const topics = ['sfdaass/sensors/#', 'sfdaass/alert/#', 'sfdaass/status/#', 'sfdaass/gps/#'];
-    topics.forEach(t => {
-      client.subscribe(t, { qos: 1 }, (err) => {
-        if (err) log().error(`Subscribe failed: ${t}`);
-        else log().info(`[MQTT] Subscribed → ${t}`);
+  client.on('connect', function() {
+    log().info('[MQTT] Connected to HiveMQ Cloud');
+    var topics = [
+      'sfdaass/sensors/#',
+      'sfdaass/alert/#',
+      'sfdaass/status/#',
+      'sfdaass/gps/#',
+    ];
+    topics.forEach(function(t) {
+      client.subscribe(t, { qos: 1 }, function(err) {
+        if (err) log().error('[MQTT] Subscribe failed: ' + t);
+        else     log().info('[MQTT] Subscribed: ' + t);
       });
     });
   });
 
-  client.on('error', (err) => {
-    log().error(`[MQTT] Error: ${err.message}`);
-    log().error(`[MQTT] Code: ${err.code || 'N/A'}`);
-  });
+  client.on('error',     function(err) { log().error('[MQTT] Error: ' + err.message); });
+  client.on('reconnect', function()    { log().warn('[MQTT] Reconnecting...'); });
+  client.on('offline',   function()    { log().warn('[MQTT] Offline'); });
+  client.on('close',     function()    { log().warn('[MQTT] Connection closed'); });
 
-  client.on('reconnect', () => log().warn('[MQTT] 🔄 Reconnecting...'));
-  client.on('offline', () => log().warn('[MQTT] 📴 Offline'));
-  client.on('close', () => log().warn('[MQTT] Connection closed'));
-
-  client.on('message', (topic, message) => {
-    const payload = message.toString();
-    const parts = topic.split('/');
+  client.on('message', function(topic, message) {
+    var payload  = message.toString();
+    var parts    = topic.split('/');
     if (parts.length < 3) return;
+    var category   = parts[1];
+    var deviceCode = parts[2];
 
-    const category = parts[1];
-    const deviceCode = parts[2];
-
-    if (category === 'sensors' || category === 'alert') handleSensorData(deviceCode, payload, io);
-    else if (category === 'status') handleStatus(deviceCode, payload, io);
-    else if (category === 'gps') handleGPS(deviceCode, payload, io);
+    if (category === 'sensors' || category === 'alert') {
+      handleSensorData(deviceCode, payload, io);
+    } else if (category === 'status') {
+      handleStatus(deviceCode, payload, io);
+    } else if (category === 'gps') {
+      handleGPS(deviceCode, payload, io);
+    }
   });
 
+<<<<<<< HEAD
   // System heartbeat every 30s
   setInterval(() => {
     const connectedClients = io?.engine?.clientsCount || 0;
     io?.emit('system:heartbeat', { connectedClients, ts: new Date().toISOString() });
     // Mark stale devices offline
     db().run(`UPDATE devices SET status = 'offline' WHERE last_seen < datetime('now', '-120 seconds') AND status != 'offline'`);
+=======
+  // Mark stale devices offline every 30 seconds
+  setInterval(async function() {
+    try {
+      await db().query(
+        [
+          'UPDATE devices SET',
+          '  status = $1,',
+          '  seconds_since_seen = EXTRACT(EPOCH FROM (NOW() - last_seen))::INTEGER',
+          'WHERE last_seen < NOW() - INTERVAL \'120 seconds\'',
+          '  AND status != $1'
+        ].join(' '),
+        ['offline']
+      );
+      await db().query(
+        [
+          'UPDATE devices SET',
+          '  seconds_since_seen = EXTRACT(EPOCH FROM (NOW() - last_seen))::INTEGER',
+          'WHERE last_seen IS NOT NULL'
+        ].join(' ')
+      );
+      if (io) io.emit('system:heartbeat', { ts: new Date().toISOString() });
+    } catch (e) {}
+>>>>>>> a9ffaf6e83a0ec680119db41e667fd15e8a74f17
   }, 30000);
 
   return client;
 }
 
-function getClient() { return client; }
+function getClient() {
+  return client;
+}
 
-module.exports = { connectMQTT, getClient };
+module.exports = {
+  connectMQTT: connectMQTT,
+  getClient: getClient,
+  checkGeofencePostGIS: checkGeofencePostGIS,
+  getDistanceToGeofence: getDistanceToGeofence,
+  getNearbyIncidents: getNearbyIncidents,
+};

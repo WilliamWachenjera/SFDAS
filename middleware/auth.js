@@ -53,9 +53,9 @@ function requireOperator(req, res, next) {
 }
 
 // Log to audit table
-function logAudit(db, { userId, userName, action, details, ip }) {
+async function logAudit(db, { userId, userName, action, details, ip }) {
   try {
-    db.run(
+    await db.run(
       'INSERT INTO audit_logs (user_id, user_name, action, details, ip_address) VALUES (?, ?, ?, ?, ?)',
       [userId, userName, action, JSON.stringify(details || {}), ip || '']
     );
