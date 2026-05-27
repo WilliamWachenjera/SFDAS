@@ -10,12 +10,15 @@ let transporter = null;
 function getTransporter() {
   if (transporter) return transporter;
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  const port = parseInt(process.env.SMTP_PORT) || 587;
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
+    port,
+    secure: port === 465,      // true only for SSL port 465; port 587 uses STARTTLS
+    requireTLS: port !== 465,  // FIX: force STARTTLS upgrade on port 587; without this
+                               // nodemailer may fall back to plaintext and Gmail rejects it
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    tls: { rejectUnauthorized: false } // Helps with some server environments
+    tls: { rejectUnauthorized: false },
   });
   return transporter;
 }

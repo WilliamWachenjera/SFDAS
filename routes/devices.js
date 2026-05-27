@@ -3,6 +3,7 @@ const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db/database');
 const { requireAuth, requireAdmin, requireOperator, logAudit } = require('../middleware/auth');
+const { pushConfigToDevice } = require('../services/mqttService');
 
 // GET /api/devices
 router.get('/', requireAuth, async (req, res) => {
@@ -169,8 +170,8 @@ router.get('/:id/readings', requireAuth, async (req, res) => {
   const hours = parseInt(req.query.hours) || 24;
   try {
     const readings = await db.all(
-      `SELECT * FROM sensor_readings WHERE device_code = $1 AND recorded_at >= NOW() - INTERVAL '${hours} hours' ORDER BY recorded_at ASC`,
-      [req.params.id]
+      `SELECT * FROM sensor_readings WHERE device_code = $1 AND recorded_at >= NOW() - ($2 || ' hours')::INTERVAL ORDER BY recorded_at ASC`,
+      [req.params.id, hours]
     );
     res.json({ success: true, readings });
   } catch (e) {
@@ -182,10 +183,16 @@ router.get('/:id/readings', requireAuth, async (req, res) => {
 router.post('/:deviceCode/sprinkler', requireOperator, async (req, res) => {
   const { activate } = req.body;
   try {
+    // FIX: check connection state and return 503 instead of silently doing nothing
     const mqttClient = require('../services/mqttService').getClient();
-    if (mqttClient?.connected) {
-      mqttClient.publish(`sfdaass/sprinkler/${req.params.deviceCode}`, JSON.stringify({ activate, source: 'api' }));
+    if (!mqttClient || !mqttClient.connected) {
+      return res.status(503).json({ success: false, message: 'MQTT broker not connected — sprinkler command not sent' });
     }
+    mqttClient.publish(
+      `sfdaass/sprinkler/${req.params.deviceCode}`,
+      JSON.stringify({ activate, source: 'api' }),
+      { qos: 1 }
+    );
     await logAudit(db, { 
       userId: req.user.id, 
       userName: req.user.name, 
@@ -195,6 +202,59 @@ router.post('/:deviceCode/sprinkler', requireOperator, async (req, res) => {
     });
     res.json({ success: true, activate });
   } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+
+// POST /api/devices/:deviceCode/config  — Push threshold config to a physical device via MQTT
+// Called by the dashboard's "Push Config" button (submitDeviceConfig in index.html)
+router.post('/:deviceCode/config', requireOperator, async (req, res) => {
+  try {
+    const { deviceCode } = req.params;
+
+    // Verify the device actually exists (by ID or device_code) before attempting a push
+    let device;
+    const idNum = parseInt(deviceCode);
+    if (!isNaN(idNum) && String(idNum) === deviceCode) {
+      device = await db.get('SELECT id, device_code FROM devices WHERE id = $1 OR device_code = $2', [idNum, deviceCode]);
+    } else {
+      device = await db.get('SELECT id, device_code FROM devices WHERE device_code = $1', [deviceCode]);
+    }
+    
+    if (!device) return res.status(404).json({ success: false, message: 'Device not found' });
+
+    const {
+      smoke_warning   = 250,  smoke_critical   = 500,
+      temp_warning    = 50,   temp_critical    = 100,
+      gas_warning     = 150,  gas_critical     = 300,
+      humidity_warning = 70,  humidity_critical = 90,
+    } = req.body;
+
+    const config = {
+      smoke_warning, smoke_critical,
+      temp_warning,  temp_critical,
+      gas_warning,   gas_critical,
+      humidity_warning, humidity_critical,
+    };
+
+    // Publish to sfdaass/config/<device_code> (QoS 1, retained)
+    const sent = pushConfigToDevice(device.device_code, config);
+    if (!sent) {
+      return res.status(503).json({ success: false, message: 'MQTT broker not connected — config not pushed' });
+    }
+
+    await logAudit(db, {
+      userId:   req.user.id,
+      userName: req.user.name,
+      action:   'device_config_push',
+      details:  { deviceCode: device.device_code, config },
+      ip:       req.ip,
+    });
+
+    res.json({ success: true, message: `Config pushed to ${device.device_code}` });
+  } catch (e) {
+    console.error('[devices/config]', e);
     res.status(500).json({ success: false, message: e.message });
   }
 });

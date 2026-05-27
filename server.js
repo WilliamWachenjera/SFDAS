@@ -26,7 +26,12 @@ async function startServer() {
   await db.init();
 
   // STEP 2 — Create tables and seed defaults
-  require('./db/migrate');
+  try {
+    const { migrate } = require('./db/migrate');
+    await migrate();
+  } catch (err) {
+    logger.error(`[DB] Migration failed: ${err.message}`);
+  }
 
   const app        = express();
   const httpServer = http.createServer(app);

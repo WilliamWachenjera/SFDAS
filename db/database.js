@@ -15,7 +15,7 @@ async function init() {
     password: process.env.DB_PASS     || '',
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 30000,
   });
 
   try {

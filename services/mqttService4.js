@@ -51,7 +51,7 @@ async function checkGeofencePostGIS(lat, lng) {
 
   // FIX: PostgreSQL BOOLEAN columns require `= true`, not `= 1` (SQLite-style)
   var geo = await db().get(
-    'SELECT id FROM geofences WHERE is_active = 1 AND geom IS NOT NULL LIMIT 1'
+    'SELECT id FROM geofences WHERE is_active = true AND geom IS NOT NULL LIMIT 1'
   );
   if (!geo) return null;
 
@@ -76,7 +76,8 @@ async function getDistanceToGeofence(lat, lng) {
       '    ST_Centroid(geom)::geography',
       '  )',
       ') AS distance_m',
-      'FROM geofences WHERE is_active = 1 AND geom IS NOT NULL LIMIT 1'
+      // FIX: PostgreSQL BOOLEAN columns require `= true`, not `= 1` (SQLite-style)
+      'FROM geofences WHERE is_active = true AND geom IS NOT NULL LIMIT 1'
     ].join(' '),
     [lng, lat]
   );
@@ -156,7 +157,7 @@ async function handleSensorData(deviceCode, payload, io) {
     var gas_ppm        = data.gas;
     var humidity_pct   = data.humidity;
     var battery_pct    = data.battery;
-    var flame_detected = (data.flame === true || data.flame === 1 || String(data.flame).toLowerCase() === 'true') ? 1 : 0;
+    var flame_detected = data.flame;
     var lat            = data.lat;
     var lng            = data.lon;
 
@@ -185,7 +186,7 @@ async function handleSensorData(deviceCode, payload, io) {
          gas_ppm != null ? gas_ppm : null,
          humidity_pct != null ? humidity_pct : null,
          battery_pct != null ? battery_pct : null,
-         flame_detected ? 1 : 0,
+         !!flame_detected  /* FIX: PostgreSQL BOOLEAN */,
          uuidv4()]
       );
       log().info('[MQTT] Auto-registered device: ' + deviceCode);
@@ -218,7 +219,7 @@ async function handleSensorData(deviceCode, payload, io) {
          gas_ppm != null ? gas_ppm : null,
          humidity_pct != null ? humidity_pct : null,
          battery_pct != null ? battery_pct : null,
-         flame_detected ? 1 : 0,
+         !!flame_detected  /* FIX: PostgreSQL BOOLEAN */,
          deviceCode]
       );
     }
@@ -242,7 +243,7 @@ async function handleSensorData(deviceCode, payload, io) {
        gas_ppm != null ? gas_ppm : null,
        humidity_pct != null ? humidity_pct : null,
        battery_pct != null ? battery_pct : null,
-       flame_detected ? 1 : 0,
+       !!flame_detected  /* FIX: PostgreSQL BOOLEAN */,
        lat != null ? lat : device.gps_lat,
        lng != null ? lng : device.gps_lng]
     );
@@ -323,9 +324,9 @@ async function handleSensorData(deviceCode, payload, io) {
        temperature_c != null ? temperature_c : null,
        gas_ppm != null ? gas_ppm : null,
        humidity_pct != null ? humidity_pct : null,
-       flame_detected ? 1 : 0,
+       !!flame_detected  /* FIX: PostgreSQL BOOLEAN */,
        effectiveLat, effectiveLng,
-       insideGeo === null ? null : (insideGeo ? 1 : 0)]
+       insideGeo === null ? null : !!insideGeo  /* FIX: PostgreSQL BOOLEAN */]
     );
 
     var incidentId = result.rows[0].id;
@@ -345,7 +346,8 @@ async function handleSensorData(deviceCode, payload, io) {
           { qos: 1 }
         );
       }
-      await db().query('UPDATE incidents SET sprinkler_activated = 1 WHERE id = $1', [incidentId]);
+      // FIX: PostgreSQL BOOLEAN — use true instead of integer 1
+      await db().query('UPDATE incidents SET sprinkler_activated = true WHERE id = $1', [incidentId]);
       await db().query(
         'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
         [incidentId, 'sprinkler_activated', 'Auto sprinkler activation triggered']

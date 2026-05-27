@@ -8,7 +8,7 @@ router.get('/', requireAdmin, async (req, res) => {
     let query = 'SELECT * FROM audit_logs';
     let params = [];
     if (req.query.userId) {
-      query += ' WHERE user_id = ?';
+      query += ' WHERE user_id = $1';
       params.push(req.query.userId);
     }
     query += ' ORDER BY created_at DESC LIMIT 200';
@@ -30,7 +30,7 @@ router.delete('/', requireAdmin, async (req, res) => {
 
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    await db.run('DELETE FROM audit_logs WHERE id = ?', [req.params.id]);
+    await db.run('DELETE FROM audit_logs WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

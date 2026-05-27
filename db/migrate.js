@@ -95,9 +95,20 @@ async function migrate() {
     '  seconds_since_seen INTEGER DEFAULT 9999,',
     '  last_seen          TIMESTAMPTZ,',
     '  geofence_id        INTEGER REFERENCES geofences(id),',
+    '  owner_name         TEXT,',
+    '  owner_email        TEXT,',
+    '  owner_phone        TEXT,',
     '  registered_at      TIMESTAMPTZ DEFAULT NOW()',
     ')'
   ].join(' '));
+
+  try {
+    await query('ALTER TABLE devices ADD COLUMN IF NOT EXISTS owner_name TEXT;');
+    await query('ALTER TABLE devices ADD COLUMN IF NOT EXISTS owner_email TEXT;');
+    await query('ALTER TABLE devices ADD COLUMN IF NOT EXISTS owner_phone TEXT;');
+  } catch (err) {
+    console.log('[DB] Optional owner columns notice:', err.message);
+  }
 
   await query('CREATE INDEX IF NOT EXISTS idx_devices_location ON devices USING GIST (location)');
 
@@ -293,7 +304,4 @@ async function seedDefaults() {
   }
 }
 
-migrate().catch(function(err) {
-  console.error('[DB] Migration failed:', err.message);
-  process.exit(1);
-});
+module.exports = { migrate };
