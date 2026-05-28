@@ -40,7 +40,8 @@ router.post('/:zoneCode/activate', requireOperator, async (req, res) => {
 
     const mqttClient = require('../services/mqttService').getClient();
     if (mqttClient?.connected) {
-      mqttClient.publish(`sfdaass/sprinkler/${req.params.zoneCode}`, JSON.stringify({ activate: true }));
+      const target = zone.device_code || req.params.zoneCode;
+      mqttClient.publish(`sfdaass/sprinkler/${target}`, JSON.stringify({ activate: true }));
     }
 
     global.io?.emit('sprinkler:activated', { zone: req.params.zoneCode });
@@ -73,7 +74,8 @@ router.post('/:zoneCode/deactivate', requireOperator, async (req, res) => {
 
     const mqttClient = require('../services/mqttService').getClient();
     if (mqttClient?.connected) {
-      mqttClient.publish(`sfdaass/sprinkler/${req.params.zoneCode}`, JSON.stringify({ activate: false }));
+      const target = zone.device_code || req.params.zoneCode;
+      mqttClient.publish(`sfdaass/sprinkler/${target}`, JSON.stringify({ activate: false }));
     }
 
     global.io?.emit('sprinkler:deactivated', { zone: req.params.zoneCode });

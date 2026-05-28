@@ -249,36 +249,8 @@ async function seedDefaults() {
     console.log('[DB] Default geofence created (PostGIS 500m circle)');
   }
 
-  const zones = ['ZONE-A', 'ZONE-B', 'ZONE-C', 'ZONE-D'];
-  for (const z of zones) {
-    const ex = await query('SELECT id FROM sprinkler_zones WHERE zone_code = $1', [z]);
-    if (ex.rows.length === 0) {
-      await query(
-        'INSERT INTO sprinkler_zones (zone_code, name, status) VALUES ($1, $2, $3)',
-        [z, z, 'standby']
-      );
-    }
-  }
-
-  const defaults = {
-    smoke_warning:       process.env.SMOKE_WARNING_PPM   || '250',
-    smoke_critical:      process.env.SMOKE_CRITICAL_PPM  || '500',
-    temp_warning:        process.env.TEMP_WARNING_C      || '50',
-    temp_critical:       process.env.TEMP_CRITICAL_C     || '100',
-    gas_warning:         process.env.GAS_WARNING_PPM     || '150',
-    gas_critical:        process.env.GAS_CRITICAL_PPM    || '300',
-    confirm_duration_ms: process.env.CONFIRM_DURATION_MS || '5000',
-  };
-
-  for (const [k, v] of Object.entries(defaults)) {
-    await query(
-      'INSERT INTO system_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING',
-      [k, v]
-    );
-  }
-
   const demos = [
-    { code: 'ESP32-001', name: 'Block A Sensor',  loc: 'Block A, Floor 1',   lat: -15.3833, lng: 35.3333, bat: 87 },
+    { code: 'ESP8266-001', name: 'Block A Sensor',  loc: 'Block A, Floor 1',   lat: -15.3833, lng: 35.3333, bat: 87 },
     { code: 'ESP32-002', name: 'Library Sensor',  loc: 'University Library',  lat: -15.3840, lng: 35.3340, bat: 92 },
     { code: 'ESP32-003', name: 'Lab Sensor',      loc: 'Computer Lab',        lat: -15.3828, lng: 35.3325, bat: 45 },
   ];
@@ -301,6 +273,51 @@ async function seedDefaults() {
          d.bat, uuidv4(), 'online', 45, 25, 80, 60, 30]
       );
     }
+  }
+
+  const zones = [
+    { code: 'ZONE-A', device: 'ESP8266-001' },
+    { code: 'ZONE-B', device: 'ESP32-002' },
+    { code: 'ZONE-C', device: 'ESP32-003' },
+    { code: 'ZONE-D', device: null }
+  ];
+  for (const z of zones) {
+    let deviceId = null;
+    if (z.device) {
+      const devRes = await query('SELECT id FROM devices WHERE device_code = $1', [z.device]);
+      if (devRes.rows.length > 0) {
+        deviceId = devRes.rows[0].id;
+      }
+    }
+    const ex = await query('SELECT id FROM sprinkler_zones WHERE zone_code = $1', [z.code]);
+    if (ex.rows.length === 0) {
+      await query(
+        'INSERT INTO sprinkler_zones (zone_code, name, status, device_id) VALUES ($1, $2, $3, $4)',
+        [z.code, z.code, 'standby', deviceId]
+      );
+    } else {
+      await query(
+        'UPDATE sprinkler_zones SET device_id = $1 WHERE zone_code = $2',
+        [deviceId, z.code]
+      );
+    }
+  }
+
+  const defaults = {
+    smoke_warning:       process.env.SMOKE_WARNING_PPM   || '250',
+    smoke_critical:      process.env.SMOKE_CRITICAL_PPM  || '500',
+    temp_warning:        process.env.TEMP_WARNING_C      || '50',
+    temp_critical:       process.env.TEMP_CRITICAL_C     || '100',
+    gas_warning:         process.env.GAS_WARNING_PPM     || '150',
+    gas_critical:        process.env.GAS_CRITICAL_PPM    || '300',
+    confirm_duration_ms: process.env.CONFIRM_DURATION_MS || '5000',
+  };
+
+  for (const [k, v] of Object.entries(defaults)) {
+    await query(
+      'INSERT INTO system_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING',
+      [k, v]
+    );
   }
 }
 

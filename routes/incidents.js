@@ -129,15 +129,38 @@ router.get('/:id/export/csv', requireAuth, async (req, res) => {
       [inc.id]
     );
 
-    // CSV generation logic (same as before)
+    // CSV generation logic
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    // ... (keeping original CSV logic for brevity - it doesn't need params)
+    const rows = [
+      ['Field', 'Value'],
+      ['Incident ID', inc.incident_code],
+      ['Date & Time', inc.detected_at],
+      ['Device', inc.device_code],
+      ['Location', inc.location_label],
+      ['Severity', inc.severity],
+      ['Status', inc.status],
+      ['GPS Lat', inc.gps_lat],
+      ['GPS Lng', inc.gps_lng],
+      ['Inside Geofence', inc.inside_geofence],
+      ['Smoke (ppm)', inc.smoke_ppm],
+      ['Temperature (°C)', inc.temperature_c],
+      ['Gas (ppm)', inc.gas_ppm],
+      ['Flame Detected', inc.flame_detected],
+      ['Sprinkler Activated', inc.sprinkler_activated],
+      ['Sprinkler On At', inc.sprinkler_on_at],
+      ['Sprinkler Off At', inc.sprinkler_off_at],
+      ['Resolved At', inc.resolved_at],
+      ['Resolution Notes', inc.resolution_notes],
+      [],
+      ['--- TIMELINE ---'],
+      ['Time', 'Event', 'Description', 'Actor'],
+      ...events.map(e => [e.occurred_at, e.event_type, e.description, e.actor]),
+    ];
 
-    // Full CSV construction remains the same as your original
+    const csv = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${inc.incident_code || 'incident'}.csv"`);
-    // Send CSV here (you can keep your original CSV building code)
-    res.send('CSV content would go here'); // Replace with your full CSV logic if needed
+    res.setHeader('Content-Disposition', `attachment; filename="incident_${inc.incident_code}.csv"`);
+    res.send(csv);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Export failed' });
   }
@@ -169,9 +192,98 @@ router.get('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// PATCH routes (acknowledge, resolve, escalate) - Fixed
-router.patch('/:id/acknowledge', requireOperator, async (req, res) => { /* similar fixes as above */ });
-router.patch('/:id/resolve', requireOperator, async (req, res) => { /* similar fixes */ });
-router.patch('/:id/escalate', requireOperator, async (req, res) => { /* similar fixes */ });
+// PATCH /api/incidents/:id/acknowledge
+router.patch('/:id/acknowledge', requireOperator, async (req, res) => {
+  try {
+    const { notes } = req.body || {};
+    const idNum = parseInt(req.params.id);
+    const incident = !isNaN(idNum) && String(idNum) === req.params.id
+      ? await db.get('SELECT * FROM incidents WHERE id = $1', [idNum])
+      : await db.get('SELECT * FROM incidents WHERE incident_code = $1', [req.params.id]);
+    if (!incident) return res.status(404).json({ success: false, message: 'Incident not found' });
+    if (incident.status === 'resolved') return res.status(400).json({ success: false, message: 'Incident is already resolved' });
+
+    await db.query(
+      'UPDATE incidents SET status = $1 WHERE id = $2',
+      ['acknowledged', incident.id]
+    );
+    await db.query(
+      'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1, $2, $3)',
+      [incident.id, 'acknowledged', notes || 'Acknowledged via dashboard']
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('incident:acknowledged', { id: incident.id, incident_code: incident.incident_code });
+
+    await logAudit(req, 'incident_acknowledged', `Incident ${incident.incident_code} acknowledged`);
+    res.json({ success: true, message: 'Incident acknowledged' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// PATCH /api/incidents/:id/resolve
+router.patch('/:id/resolve', requireOperator, async (req, res) => {
+  try {
+    const { notes } = req.body || {};
+    const idNum = parseInt(req.params.id);
+    const incident = !isNaN(idNum) && String(idNum) === req.params.id
+      ? await db.get('SELECT * FROM incidents WHERE id = $1', [idNum])
+      : await db.get('SELECT * FROM incidents WHERE incident_code = $1', [req.params.id]);
+    if (!incident) return res.status(404).json({ success: false, message: 'Incident not found' });
+    if (incident.status === 'resolved') return res.status(400).json({ success: false, message: 'Incident is already resolved' });
+
+    const resolvedAt = new Date();
+    const detectedAt = new Date(incident.detected_at);
+    const resolutionSecs = Math.round((resolvedAt - detectedAt) / 1000);
+
+    await db.query(
+      'UPDATE incidents SET status = $1, resolved_at = $2, resolution_secs = $3 WHERE id = $4',
+      ['resolved', resolvedAt.toISOString(), resolutionSecs, incident.id]
+    );
+    await db.query(
+      'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1, $2, $3)',
+      [incident.id, 'resolved', notes || 'Resolved via dashboard']
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('incident:resolved', { id: incident.id, incident_code: incident.incident_code });
+
+    await logAudit(req, 'incident_resolved', `Incident ${incident.incident_code} resolved`);
+    res.json({ success: true, message: 'Incident resolved', resolution_secs: resolutionSecs });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// PATCH /api/incidents/:id/escalate
+router.patch('/:id/escalate', requireOperator, async (req, res) => {
+  try {
+    const { notes } = req.body || {};
+    const idNum = parseInt(req.params.id);
+    const incident = !isNaN(idNum) && String(idNum) === req.params.id
+      ? await db.get('SELECT * FROM incidents WHERE id = $1', [idNum])
+      : await db.get('SELECT * FROM incidents WHERE incident_code = $1', [req.params.id]);
+    if (!incident) return res.status(404).json({ success: false, message: 'Incident not found' });
+    if (incident.status === 'resolved') return res.status(400).json({ success: false, message: 'Cannot escalate a resolved incident' });
+
+    await db.query(
+      'UPDATE incidents SET severity = $1, status = $2 WHERE id = $3',
+      ['critical', 'active', incident.id]
+    );
+    await db.query(
+      'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1, $2, $3)',
+      [incident.id, 'escalated', notes || 'Escalated to critical via dashboard']
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('incident:escalated', { id: incident.id, incident_code: incident.incident_code });
+
+    await logAudit(req, 'incident_escalated', `Incident ${incident.incident_code} escalated to critical`);
+    res.json({ success: true, message: 'Incident escalated to critical' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 
 module.exports = router;

@@ -32,9 +32,11 @@ function notify() {
     try {
       _notify = require('./notifyService');
     } catch (e) {
+      // FIX: include sendAlert stub so notify().sendAlert() never throws
       _notify = {
-        sendSMS: () => Promise.resolve(false),
-        sendEmail: () => Promise.resolve(false)
+        sendSMS:   () => Promise.resolve(false),
+        sendEmail: () => Promise.resolve(false),
+        sendAlert: () => Promise.resolve(false),
       };
     }
   }
@@ -345,7 +347,8 @@ async function handleSensorData(deviceCode, payload, io) {
           { qos: 1 }
         );
       }
-      await db().query('UPDATE incidents SET sprinkler_activated = 1 WHERE id = $1', [incidentId]);
+      // FIX: PostgreSQL uses boolean true, not integer 1
+      await db().query('UPDATE incidents SET sprinkler_activated = true WHERE id = $1', [incidentId]);
       await db().query(
         'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
         [incidentId, 'sprinkler_activated', 'Auto sprinkler activation triggered']
@@ -363,27 +366,17 @@ async function handleSensorData(deviceCode, payload, io) {
     log().warn('[MQTT] FIRE ' + incCode + ' | ' + deviceCode + ' | ' + severity);
 
     // 9. Notifications (safe)
-    var msg = [
-      'FIRE ALERT [' + severity.toUpperCase() + ']',
-      'Device   : ' + deviceCode + ' - ' + (device.location_label || 'Unknown'),
-      'Smoke    : ' + smoke_ppm + ' ppm',
-      'Temp     : ' + temperature_c + 'C',
-      'Flame    : ' + (flame_detected ? 'YES' : 'NO'),
-      'GPS      : ' + effectiveLat + ', ' + effectiveLng,
-      'Geofence : ' + (insideGeo === null ? 'N/A' : insideGeo ? 'Inside' : 'OUTSIDE'),
-      'Distance : ' + (distanceM != null ? distanceM + 'm from fence centre' : 'N/A'),
-      'Nearby   : ' + nearby.length + ' other incident(s) within 200m',
-      'Incident : ' + incCode,
-    ].join('\n');
-
-    notify().sendSMS(msg).catch(() => {});
-    notify().sendEmail({
-      subject: '[SFDAASS] ' + incCode + ' - ' + severity.toUpperCase() + ' Fire Alert',
-      text: msg,
-      html: '<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px">' +
-            '<h2>FIRE ALERT - ' + severity.toUpperCase() + '</h2></div>' +
-            '<pre style="padding:12px;background:#fff3f3;border:1px solid #ffcccc">' + msg + '</pre>',
-    }).catch(() => {});
+    try {
+      await notify().sendAlert(incident);
+      // FIX: PostgreSQL uses boolean true/false, not integer 1/0
+      await db().query(
+        'UPDATE incidents SET email_sent = true, sms_sent = $1 WHERE id = $2',
+        [severity === 'critical' ? true : false, incidentId]
+      );
+      log().info('[MQTT] Alert notifications dispatched for ' + incCode);
+    } catch (e) {
+      log().error('Failed to send email/SMS alerts: ' + e.message);
+    }
 
   } catch (err) {
     log().error(`[MQTT] Critical error handling sensor data from ${deviceCode}: ${err.message}`);

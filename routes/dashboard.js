@@ -130,7 +130,7 @@ router.get('/chart-data', requireAuth, async (req, res) => {
         TO_CHAR(recorded_at, 'YYYY-MM-DD"T"HH24:00:00') as hour,
         ROUND(AVG(smoke_ppm)::numeric, 1) as avg_smoke,
         ROUND(AVG(temperature_c)::numeric, 1) as avg_temp,
-        ROUND(AVG(gas_ppm)::numeric, 1) as avg_gas,
+        ROUND(AVG(flame_detected * 100)::numeric, 1) as flame_freq,
         ROUND(AVG(humidity_pct)::numeric, 1) as avg_humidity
       FROM sensor_readings
       WHERE recorded_at >= NOW() - INTERVAL '${hours} hours'${deviceFilter}
