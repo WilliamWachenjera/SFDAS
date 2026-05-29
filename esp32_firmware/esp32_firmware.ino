@@ -90,6 +90,27 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("]: ");
   Serial.println(message);
 
+  // ── Remote config pushed from dashboard ──────────────────────────
+  if (strstr(topic, "config")) {
+    StaticJsonDocument<256> doc;
+    DeserializationError err = deserializeJson(doc, message);
+    if (!err) {
+      if (doc.containsKey("smoke_warning")) {
+        smokeThreshold = doc["smoke_warning"].as<int>();
+        Serial.print("Config: smokeThreshold = "); Serial.println(smokeThreshold);
+      }
+      if (doc.containsKey("temp_warning")) {
+        tempThreshold = doc["temp_warning"].as<float>();
+        Serial.print("Config: tempThreshold  = "); Serial.println(tempThreshold);
+      }
+      Serial.println("✅ Remote config applied");
+    } else {
+      Serial.println("⚠ Config JSON parse failed");
+    }
+    return; // handled
+  }
+
+  // ── Sprinkler control ─────────────────────────────────────────────
   if (strstr(topic, "sprinkler")) {
     StaticJsonDocument<256> doc;
     DeserializationError error = deserializeJson(doc, message);
@@ -146,8 +167,14 @@ void reconnect() {
       String sub = "sfdaass/sprinkler/" + String(DEVICE_CODE);
       client.subscribe(sub.c_str());
 
-      String status = "sfdaass/status/" + String(DEVICE_CODE);
-      client.publish(status.c_str(), "ONLINE");
+      // Subscribe to remote config topic so dashboard can push threshold changes
+      String cfgTopic = "sfdaass/config/" + String(DEVICE_CODE);
+      client.subscribe(cfgTopic.c_str());
+
+      // FIX: publish JSON so handleStatus() can parse it correctly
+      String statusTopic = "sfdaass/status/" + String(DEVICE_CODE);
+      String statusPayload = "{\"status\":\"online\",\"device\":\"" + String(DEVICE_CODE) + "\"}";
+      client.publish(statusTopic.c_str(), statusPayload.c_str());
       }
     else {
       Serial.print("Failed rc=");
@@ -222,12 +249,7 @@ void loop() {
         // Send alert every 5 seconds, not every loop (to avoid spam)
         if (millis() - lastAlert > 5000) {
             lastAlert = millis();
-            String alert = "sfdaass/alerts/" + String(DEVICE_CODE);
-            if(client.publish(alert.c_str(), "FIRE DETECTED")) {
-                Serial.println("✅ ALERT SENT!");
-            } else {
-                Serial.println("❌ ALERT FAILED - MQTT disconnected?");
-            }
+            // FIX: This duplicate alert publish is removed — the main loop already publishes to sfdaass/alert/<device>
         }
     }
 
@@ -354,10 +376,15 @@ void loop() {
     }
   
 
-    // FIRE ALERT
+    // FIRE ALERT — FIX: publish JSON so handleSensorData() can parse it
     if (confirmedFire) {
-      String alert = "sfdaass/alerts/" + String(DEVICE_CODE);
-      client.publish(alert.c_str(), "FIRE DETECTED");
+      char alertPayload[256];
+      snprintf(alertPayload, sizeof(alertPayload),
+        "{\"smoke\":%d,\"temp\":%.2f,\"humidity\":%.2f,\"flame\":true,\"fire\":true,\"lat\":%.6f,\"lon\":%.6f}",
+        smokeValue, temperature, humidity, lat, lon
+      );
+      String alert = "sfdaass/alert/" + String(DEVICE_CODE);
+      client.publish(alert.c_str(), alertPayload);
     }
 
     // ================== DEBUG ==================

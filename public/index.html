@@ -2864,10 +2864,6 @@
           </div>
           <div class="form-group"><label>Temp Critical (°C)</label><input type="number" id="cfgTempC"
               placeholder="100" /></div>
-          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="cfgGasW" placeholder="150" />
-          </div>
-          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="cfgGasC"
-              placeholder="300" /></div>
           <div class="form-group"><label>Humidity Warning (%)</label><input type="number" id="cfgHumW"
               placeholder="70" />
           </div>
@@ -3518,8 +3514,13 @@
       <td>${bat}</td>
       <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">${lastSeen}</td>
       <td><span class="pill ${pCls}">${d.status}</span></td>
-      <td style="display:flex;gap:5px;">
+      <td style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="openDeviceConfig('${d.id || d.device_code}')">⚙️ Config</button>
+        <button class="btn" id="spr-btn-${d.device_code}"
+          style="font-size:10px;padding:3px 8px;background:${d.sprinkler_on ? 'var(--accent-fire)' : 'var(--accent-teal)'};color:#fff"
+          onclick="activateSprinkler('${d.device_code}', ${d.sprinkler_on ? 'false' : 'true'}, this)">
+          ${d.sprinkler_on ? '🔴 Deactivate' : '💧 Activate'}
+        </button>
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--accent-fire)" onclick="deleteDevice('${d.id || d.device_code}')">Delete</button>
       </td>
     </tr>`;
@@ -4521,14 +4522,12 @@
 
     async function submitDeviceConfig() {
       const body = {
-        smoke_warning: parseInt(document.getElementById('cfgSmokeW').value) || 250,
-        smoke_critical: parseInt(document.getElementById('cfgSmokeC').value) || 500,
-        temp_warning: parseInt(document.getElementById('cfgTempW').value) || 50,
-        temp_critical: parseInt(document.getElementById('cfgTempC').value) || 100,
-        gas_warning: parseInt(document.getElementById('cfgGasW').value) || 150,
-        gas_critical: parseInt(document.getElementById('cfgGasC').value) || 300,
-        humidity_warning: parseInt(document.getElementById('cfgHumW').value) || 70,
-        humidity_critical: parseInt(document.getElementById('cfgHumC').value) || 90,
+        smoke_warning:    parseInt(document.getElementById('cfgSmokeW').value)   || 250,
+        smoke_critical:   parseInt(document.getElementById('cfgSmokeC').value)   || 500,
+        temp_warning:     parseInt(document.getElementById('cfgTempW').value)    || 50,
+        temp_critical:    parseInt(document.getElementById('cfgTempC').value)    || 100,
+        humidity_warning: parseInt(document.getElementById('cfgHumW').value)     || 70,
+        humidity_critical:parseInt(document.getElementById('cfgHumC').value)     || 90,
       };
       try {
         const res = await apiFetch(`/devices/${currentConfigDevice}/config`, { method: 'POST', body: JSON.stringify(body) });
@@ -4541,6 +4540,28 @@
         }
       } catch (e) {
         toast('Error pushing device config', 'error');
+      }
+    }
+
+    // Activate or deactivate sprinkler for a specific device
+    async function activateSprinkler(deviceCode, activate, btn) {
+      const action = activate ? 'activate' : 'deactivate';
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        const res = await apiFetch(`/sprinklers/${deviceCode}/${action}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          toast(activate ? `💧 Sprinkler ${deviceCode} activated` : `✅ Sprinkler ${deviceCode} deactivated`);
+          // Refresh the devices table to reflect new state
+          await loadDevices();
+        } else {
+          toast(data.message || 'Failed to control sprinkler', 'error');
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('Error controlling sprinkler', 'error');
+        btn.disabled = false;
       }
     }
 
