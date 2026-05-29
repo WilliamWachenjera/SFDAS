@@ -35,8 +35,7 @@ function notify() {
     } catch (e) {
       _notify = {
         sendSMS: () => Promise.resolve(false),
-        sendEmail: () => Promise.resolve(false),
-        sendAlert: () => Promise.resolve(false),
+        sendEmail: () => Promise.resolve(false)
       };
     }
   }
@@ -150,295 +149,183 @@ function pushConfigToAll(config) {
   return pushConfigToDevice('broadcast', config);
 }
 
-// =============================================================
-// Handle Sensor Data (Main Logic)
-// =============================================================
-async function handleSensorData(deviceCode, payload, io) { 
+    if (!insertNewReading) {
+      log().error('[MQTT] Failed to insert sensor reading for ' + deviceCode);
+    }   
+    else {
+      log().info('[MQTT] Sensor reading saved for ' + deviceCode);
+    }
+
+    // 3. Push live update to dashboard ← This is the key line for live readings
+    if (io) {
+      io.emit('sensor:reading', {
+        deviceCode: deviceCode,
+        smoke_ppm: smoke_ppm,
+        temperature_c: temperature_c,
+        gas_ppm: gas_ppm,
+        humidity_pct: humidity_pct,
+        battery_pct: battery_pct,
+        flame_detected: flame_detected,
+        gps_lat: lat != null ? lat : device.gps_lat,
+        gps_lng: lng != null ? lng : device.gps_lng,
+        ts: new Date().toISOString(),
+      });
+    }
+
+    // 4. Fire detection
+    var t = await getThresholds();
+    var isFire = flame_detected
+      || (smoke_ppm     != null && smoke_ppm     >= t.smoke_warning)
+      || (temperature_c != null && temperature_c >= t.temp_warning)
+      || (gas_ppm       != null && gas_ppm       >= t.gas_warning);
+
+    if (!isFire) return;
+
+    // Check for existing incident
+    var existing = await db().get(
+      'SELECT id FROM incidents WHERE device_code = $1 AND status IN ($2,$3,$4)',
+      [deviceCode, 'active', 'monitoring', 'acknowledged']
+    );
+    if (existing) return;
+
+    // Determine effective coordinates first
+    var effectiveLat = lat != null ? lat : device.gps_lat;
+    var effectiveLng = lng != null ? lng : device.gps_lng;
+
+    // ── Geofence checks with graceful fallback ──────────────────────
+    let insideGeo = null;
+    let distanceM = null;
     try {
-        var data;
-        try {
-          data = JSON.parse(payload);
-         
-        } catch (e) {
-          log().warn('[MQTT] Invalid JSON from ' + deviceCode);
-          return;
-        } 
-    
-    
-        var smoke_ppm      = data.smoke;
-        var temperature_c  = data.temp;
-        var gas_ppm        = data.gas;
-        var humidity_pct   = data.humidity;
-        var battery_pct    = data.battery;
-        var flame_detected = data.flame;
-        var lat            = data.lat;
-        var lng            = data.lon;
-    
-        // 1. Upsert device record
-        var device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
-    
-        if (!device) {
-            await db().query(
-            [
-              'INSERT INTO devices',
-              '  (device_code, name, location_label, status,',
-              '   gps_lat, gps_lng, location,',
-              '   smoke_ppm, temperature_c, gas_ppm, humidity_pct,',
-              '   battery_pct, flame_detected, last_seen, seconds_since_seen, api_key)',
-              'VALUES ($1,$2,$3,$4,',
-              '  $5,$6,',
-              '  CASE WHEN $5::double precision IS NOT NULL AND $6::double precision IS NOT NULL',
-              '       THEN ST_SetSRID(ST_MakePoint($6::double precision,$5::double precision),4326) ELSE NULL END,',
-              '  $7,$8,$9,$10,$11,$12,NOW(),0,$13)'
-            ].join(' '),
-            [deviceCode, 'Device ' + deviceCode, '', 'online',
-             lat != null ? lat : null,
-             lng != null ? lng : null,
-             smoke_ppm != null ? smoke_ppm : null,
-             temperature_c != null ? temperature_c : null,
-             gas_ppm != null ? gas_ppm : null,
-             humidity_pct != null ? humidity_pct : null,
-             battery_pct != null ? battery_pct : null,
-             flame_detected ? 1 : 0,
-             uuidv4()]
-          );
-          log().info('[MQTT] Auto-registered device: ' + deviceCode);
-        } else {
-          await db().query(
-            [
-              'UPDATE devices SET',
-              '  status = $1,',
-              '  gps_lat = COALESCE($2, gps_lat),',
-              '  gps_lng = COALESCE($3, gps_lng),',
-              '  location = CASE',
-              '    WHEN $2::double precision IS NOT NULL AND $3::double precision IS NOT NULL',
-              '    THEN ST_SetSRID(ST_MakePoint($3::double precision,$2::double precision),4326)',
-              '    ELSE location END,',
-              '  smoke_ppm     = COALESCE($4, smoke_ppm),',
-              '  temperature_c = COALESCE($5, temperature_c),',
-              '  gas_ppm       = COALESCE($6, gas_ppm),',
-              '  humidity_pct  = COALESCE($7, humidity_pct),',
-              '  battery_pct   = COALESCE($8, battery_pct),',
-              '  flame_detected = COALESCE($9, flame_detected),',
-              '  last_seen = NOW(),',
-              '  seconds_since_seen = 0',
-              'WHERE device_code = $10'
-            ].join(' '),
-            ['online',
-             lat != null ? lat : null,
-             lng != null ? lng : null,
-             smoke_ppm != null ? smoke_ppm : null,
-             temperature_c != null ? temperature_c : null,
-             gas_ppm != null ? gas_ppm : null,
-             humidity_pct != null ? humidity_pct : null,
-             battery_pct != null ? battery_pct : null,
-             flame_detected ? 1 : 0,
-             deviceCode]
-          );
-        }
-    
-        device = await db().get('SELECT * FROM devices WHERE device_code = $1', [deviceCode]);
-    
-        // 2. Save time-series reading
-         const insertNewReading = await db().query(
-          [
-            'INSERT INTO sensor_readings',
-            '  (device_id, device_code, smoke_ppm, temperature_c,',
-            '   gas_ppm, humidity_pct, battery_pct, flame_detected,',
-            '   gps_lat, gps_lng, location)',
-            'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,',
-            '  CASE WHEN $9::double precision IS NOT NULL AND $10::double precision IS NOT NULL',
-            '       THEN ST_SetSRID(ST_MakePoint($10::double precision,$9::double precision),4326) ELSE NULL END)'
-          ].join(' '),
-          [device.id, deviceCode,
-           smoke_ppm != null ? smoke_ppm : null,
-           temperature_c != null ? temperature_c : null,
-           gas_ppm != null ? gas_ppm : null,
-           humidity_pct != null ? humidity_pct : null,
-           battery_pct != null ? battery_pct : null,
-           flame_detected ? 1 : 0,
-           lat != null ? lat : device.gps_lat,
-           lng != null ? lng : device.gps_lng]
-        );
-    
-        if (!insertNewReading) {
-          log().error('[MQTT] Failed to insert sensor reading for ' + deviceCode);
-        }   
-        else {
-          log().info('[MQTT] Sensor reading saved for ' + deviceCode);
-        }
-    
-        // 3. Push live update to dashboard ← This is the key line for live readings
-        if (io) {
-          io.emit('sensor:reading', {
-            deviceCode: deviceCode,
-            smoke_ppm: smoke_ppm,
-            temperature_c: temperature_c,
-            gas_ppm: gas_ppm,
-            humidity_pct: humidity_pct,
-            battery_pct: battery_pct,
-            flame_detected: flame_detected,
-            gps_lat: lat != null ? lat : device.gps_lat,
-            gps_lng: lng != null ? lng : device.gps_lng,
-            ts: new Date().toISOString(),
-          });
-        }
-    
-        // 4. Fire detection
-        var t = await getThresholds();
-        var isFire = flame_detected
-          || (smoke_ppm     != null && smoke_ppm     >= t.smoke_warning)
-          || (temperature_c != null && temperature_c >= t.temp_warning)
-          || (gas_ppm       != null && gas_ppm       >= t.gas_warning);
-    
-        if (!isFire) return;
+      insideGeo = await checkGeofencePostGIS(effectiveLat, effectiveLng);
+      distanceM = await getDistanceToGeofence(effectiveLat, effectiveLng);
+    } catch (geoErr) {
+      log().warn('[MQTT] Geofence check failed, proceeding without: ' + geoErr.message);
+    }
 
-        // Removed duplicate existing incident check – only one lookup needed
-      // var existing = await db().get(
-      //   'SELECT id FROM incidents WHERE device_code = $1 AND status IN ($2,$3,$4)',
-      //   [deviceCode, 'active', 'monitoring', 'acknowledged']
-      // );
-        var existing = await db().get(
-          'SELECT id FROM incidents WHERE device_code = $1 AND status IN ($2,$3,$4)',
-          [deviceCode, 'active', 'monitoring', 'acknowledged']
-        );
-        if (existing) return;
-    
-        // Determine effective coordinates first
-        var effectiveLat = lat != null ? lat : device.gps_lat;
-        var effectiveLng = lng != null ? lng : device.gps_lng;
+    var nearby = await getNearbyIncidents(effectiveLat, effectiveLng, 200);
 
-        // ── Geofence checks with graceful fallback ──────────────────────
-        let insideGeo = null;
-        let distanceM = null;
-        try {
-          insideGeo = await checkGeofencePostGIS(effectiveLat, effectiveLng);
-          distanceM = await getDistanceToGeofence(effectiveLat, effectiveLng);
-        } catch (geoErr) {
-          log().warn('[MQTT] Geofence check failed, proceeding without: ' + geoErr.message);
-        }
+    log().info(
+      '[PostGIS] ' + deviceCode +
+      ' inside=' + insideGeo +
+      ' dist=' + distanceM + 'm' +
+      ' nearby=' + nearby.length
+    );
 
-        var nearby = await getNearbyIncidents(effectiveLat, effectiveLng, 200);
-    
-        log().info(
-          '[PostGIS] ' + deviceCode +
-          ' inside=' + insideGeo +
-          ' dist=' + distanceM + 'm' +
-          ' nearby=' + nearby.length
+    var severity = getSeverity(smoke_ppm, temperature_c, gas_ppm, flame_detected, t);
+    var incCode  = 'INC-' + new Date().getFullYear() + '-' +
+                   uuidv4().replace(/-/g, '').slice(0, 6).toUpperCase();
+
+    // Log incident data before insertion
+    log().info('[MQTT] Inserting incident with code ' + incCode + ', severity ' + severity + ', location (' + effectiveLat + ', ' + effectiveLng + ')');
+    // Insert incident with error handling
+    let result;
+    try {
+      result = await db().query(
+        [
+          'INSERT INTO incidents',
+          '  (incident_code, device_id, device_code, location_label,',
+          '   severity, status, smoke_ppm, temperature_c,',
+          '   gas_ppm, humidity_pct, flame_detected,',
+          '   gps_lat, gps_lng, location, inside_geofence)',
+          'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,',
+          '  CASE WHEN $12::double precision IS NOT NULL AND $13::double precision IS NOT NULL',
+          '       THEN ST_SetSRID(ST_MakePoint($13::double precision,$12::double precision),4326) ELSE NULL END,',
+          '  $14)',
+          'RETURNING id'
+        ].join(' '),
+        [incCode, device.id, deviceCode, device.location_label || '',
+         severity, 'active',
+         smoke_ppm != null ? smoke_ppm : null,
+         temperature_c != null ? temperature_c : null,
+         gas_ppm != null ? gas_ppm : null,
+         humidity_pct != null ? humidity_pct : null,
+         flame_detected ? 1 : 0,
+         effectiveLat, effectiveLng,
+         insideGeo === null ? null : (insideGeo ? 1 : 0)]
+      );
+    } catch (dbErr) {
+      log().error('[MQTT] Failed to insert incident: ' + dbErr.message);
+      throw dbErr; // propagate to outer catch
+    }
+
+    var incidentId = result.rows[0].id;
+    log().info('[MQTT] Incident inserted with ID ' + incidentId);
+
+    await db().query(
+      'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
+      [incidentId, 'detected',
+       'Smoke:' + smoke_ppm + 'ppm Temp:' + temperature_c + 'C Flame:' + flame_detected +
+       ' | PostGIS inside:' + insideGeo + ' dist:' + distanceM + 'm']
+    );
+
+    if (severity === 'critical') {
+      if (client) {
+        client.publish(
+          'sfdaass/sprinkler/' + deviceCode,
+          JSON.stringify({ activate: true, incident: incCode }),
+          { qos: 1 }
         );
-    
-        var severity = getSeverity(smoke_ppm, temperature_c, gas_ppm, flame_detected, t);
-        var incCode  = 'INC-' + new Date().getFullYear() + '-' +
-                       uuidv4().replace(/-/g, '').slice(0, 6).toUpperCase();
-    
-        // Log incident data before insertion
-        log().info('[MQTT] Inserting incident with code ' + incCode + ', severity ' + severity + ', location (' + effectiveLat + ', ' + effectiveLng + ')');
-        // Insert incident with error handling
-        let result;
-        try {
-          result = await db().query(
-            [
-              'INSERT INTO incidents',
-              '  (incident_code, device_id, device_code, location_label,',
-              '   severity, status, smoke_ppm, temperature_c,',
-              '   gas_ppm, humidity_pct, flame_detected,',
-              '   gps_lat, gps_lng, location, inside_geofence)',
-              'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,',
-              '  CASE WHEN $12::double precision IS NOT NULL AND $13::double precision IS NOT NULL',
-              '       THEN ST_SetSRID(ST_MakePoint($13::double precision,$12::double precision),4326) ELSE NULL END,',
-              '  $14)',
-              'RETURNING id'
-            ].join(' '),
-            [incCode, device.id, deviceCode, device.location_label || '',
-             severity, 'active',
-             smoke_ppm != null ? smoke_ppm : null,
-             temperature_c != null ? temperature_c : null,
-             gas_ppm != null ? gas_ppm : null,
-             humidity_pct != null ? humidity_pct : null,
-             flame_detected ? 1 : 0,
-             effectiveLat, effectiveLng,
-             insideGeo === null ? null : (insideGeo ? 1 : 0)]
-          );
-        } catch (dbErr) {
-          log().error('[MQTT] Failed to insert incident: ' + dbErr.message);
-          return; // abort further processing for this sensor data
-        }
-    
-        var incidentId = result.rows[0].id;
-        log().info('[MQTT] Incident inserted with ID ' + incidentId);
-    
-        await db().query(
-          'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
-          [incidentId, 'detected',
-           'Smoke:' + smoke_ppm + 'ppm Temp:' + temperature_c + 'C Flame:' + flame_detected +
-           ' | PostGIS inside:' + insideGeo + ' dist:' + distanceM + 'm']
-        );
-    
-        if (severity === 'critical') {
-          if (client) {
-            client.publish(
-              'sfdaass/sprinkler/' + deviceCode,
-              JSON.stringify({ activate: true, incident: incCode }),
-              { qos: 1 }
-            );
-          }
-          await db().query('UPDATE incidents SET sprinkler_activated = 1 WHERE id = $1', [incidentId]);
-          await db().query(
-            'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
-            [incidentId, 'sprinkler_activated', 'Auto sprinkler activation triggered']
-          );
-          log().warn('[MQTT] Sprinkler command sent to ' + deviceCode);
-        }
-    
-        var incident = await db().get('SELECT * FROM incidents WHERE id = $1', [incidentId]);
-        if (io) {
-          io.emit('incident:created', Object.assign({}, incident, {
-            nearby_count: nearby.length,
-            distance_to_fence_m: distanceM,
-          }));
-        }
-        // After incident record retrieval, send alert via notify service
-        if (incident) {
-          try {
-            await notify().sendAlert(incident);
-          } catch (alertErr) {
-            log().error('[MQTT] Failed to send alert: ' + alertErr.message);
-          }
-        }
-    
-        // 9. Notifications (safe)
-        var msg = [
-          'FIRE ALERT [' + severity.toUpperCase() + ']',
-          'Device   : ' + deviceCode + ' - ' + (device.location_label || 'Unknown'),
-          'Smoke    : ' + smoke_ppm + ' ppm',
-          'Temp     : ' + temperature_c + 'C',
-          'Flame    : ' + (flame_detected ? 'YES' : 'NO'),
-          'GPS      : ' + effectiveLat + ', ' + effectiveLng,
-          'Geofence : ' + (insideGeo === null ? 'N/A' : insideGeo ? 'Inside' : 'OUTSIDE'),
-          'Distance : ' + (distanceM != null ? distanceM + 'm from fence centre' : 'N/A'),
-          'Nearby   : ' + nearby.length + ' other incident(s) within 200m',
-          'Incident : ' + incCode,
-        ].join('\n');
-    
-        // ── Send notifications and await them ───────────────────────
-      // SMS (optional)
-      try {
-        await notify().sendSMS(msg);
-      } catch (e) {
-        log().error('[MQTT] SMS send failed: ' + e.message);
       }
-      // Email (always)
+      await db().query('UPDATE incidents SET sprinkler_activated = 1 WHERE id = $1', [incidentId]);
+      await db().query(
+        'INSERT INTO incident_events (incident_id, event_type, description) VALUES ($1,$2,$3)',
+        [incidentId, 'sprinkler_activated', 'Auto sprinkler activation triggered']
+      );
+      log().warn('[MQTT] Sprinkler command sent to ' + deviceCode);
+    }
+
+    var incident = await db().get('SELECT * FROM incidents WHERE id = $1', [incidentId]);
+    if (io) {
+      io.emit('incident:created', Object.assign({}, incident, {
+        nearby_count: nearby.length,
+        distance_to_fence_m: distanceM,
+      }));
+    }
+    
+    // After incident record retrieval, send alert via notify service
+    if (incident) {
       try {
-        await notify().sendEmail({
-          subject: '[SFDAASS] ' + incCode + ' - ' + severity.toUpperCase() + ' Fire Alert',
-          text: msg,
-          html: '<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px">' +
-                '<h2>FIRE ALERT - ' + severity.toUpperCase() + '</h2></div>' +
-                '<pre style="padding:12px;background:#fff3f3;border:1px solid #ffcccc">' + msg + '</pre>',
-        });
-      } catch (e) {
-        log().error('[MQTT] Email send failed: ' + e.message);
+        await notify().sendAlert(incident);
+      } catch (alertErr) {
+        log().error('[MQTT] Failed to send alert: ' + alertErr.message);
       }
+    }
+
+    log().warn('[MQTT] FIRE ' + incCode + ' | ' + deviceCode + ' | ' + severity);
+
+    // 9. Notifications (safe)
+    var msg = [
+      'FIRE ALERT [' + severity.toUpperCase() + ']',
+      'Device   : ' + deviceCode + ' - ' + (device.location_label || 'Unknown'),
+      'Smoke    : ' + smoke_ppm + ' ppm',
+      'Temp     : ' + temperature_c + 'C',
+      'Flame    : ' + (flame_detected ? 'YES' : 'NO'),
+      'GPS      : ' + effectiveLat + ', ' + effectiveLng,
+      'Geofence : ' + (insideGeo === null ? 'N/A' : insideGeo ? 'Inside' : 'OUTSIDE'),
+      'Distance : ' + (distanceM != null ? distanceM + 'm from fence centre' : 'N/A'),
+      'Nearby   : ' + nearby.length + ' other incident(s) within 200m',
+      'Incident : ' + incCode,
+    ].join('\n');
+
+    // ── Send notifications and await them ───────────────────────
+    // SMS (optional)
+    try {
+      await notify().sendSMS(msg);
+    } catch (e) {
+      log().error('[MQTT] SMS send failed: ' + e.message);
+    }
+    // Email (always)
+    try {
+      await notify().sendEmail({
+        subject: '[SFDAASS] ' + incCode + ' - ' + severity.toUpperCase() + ' Fire Alert',
+        text: msg,
+        html: '<div style="background:#ff4e1a;color:white;padding:16px;border-radius:8px">' +
+              '<h2>FIRE ALERT - ' + severity.toUpperCase() + '</h2></div>' +
+              '<pre style="padding:12px;background:#fff3f3;border:1px solid #ffcccc">' + msg + '</pre>',
+      });
+    } catch (e) {
+      log().error('[MQTT] Email send failed: ' + e.message);
+    }
     
       } catch (err) {
         log().error(`[MQTT] Critical error handling sensor data from ${deviceCode}: ${err.message}`);
