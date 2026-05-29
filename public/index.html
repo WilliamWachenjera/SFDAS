@@ -13,6 +13,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
   <style>
     /* ══════════════════ VARIABLES ══════════════════ */
     :root {
@@ -1940,7 +1942,8 @@
             <div class="user-role" id="userRole">—</div>
           </div>
           <button class="logout-btn" onclick="doLogout()" title="Logout">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
               <line x1="12" y1="2" x2="12" y2="12"></line>
             </svg>
@@ -2086,7 +2089,9 @@
                 <div class="sfill" id="sb-temp" style="background:var(--accent-amber);width:0%"></div>
               </div>
             </div>
+
             <div class="s-tile">
+<<<<<<< HEAD
               <div class="sl">MQ-2 Gas (CO/LPG)</div>
               <div class="sv" id="sv-gas" style="color:var(--accent-amber)">—</div>
               <div class="su">ppm</div>
@@ -2100,6 +2105,21 @@
               <div class="su">Flame Sensor</div>
               <div class="sbar">
                 <div class="sfill" id="sb-flame" style="background:var(--accent-green);width:0%"></div>
+=======
+              <div class="sl">Fire Status</div>
+              <div class="sv" id="sv-flame" style="color:var(--accent-fire)">CLEAR</div>
+              <div class="su"> FIRE/CLEAR</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-flame" style="background:var(--accent-green);width:0%"></div>
+              </div>
+            </div>
+            <div class="s-tile">
+              <div class="sl">Flame Sensor Reading</div>
+              <div class="sv" id="sv-flame-reading" style="color:var(--accent-fire)">—</div>
+              <div class="su">State</div>
+              <div class="sbar">
+                <div class="sfill" id="sb-flame-reading" style="background:var(--accent-fire);width:0%"></div>
+>>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
               </div>
             </div>
             <div class="s-tile">
@@ -2404,8 +2424,15 @@
           <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
           <div class="form-group"><label>Temperature Warning (°C)</label><input type="number" id="sysTempW" /></div>
           <div class="form-group"><label>Temperature Critical (°C)</label><input type="number" id="sysTempC" /></div>
+<<<<<<< HEAD
           <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW" disabled /></div>
           <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC" disabled /></div>
+=======
+          <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW"
+              disabled /></div>
+          <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC"
+              disabled /></div>
+>>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
           <div class="form-group"><label>Confirmation Duration (ms)</label><input type="number" id="sysConfMs" /></div>
           <button class="btn btn-teal" onclick="saveSystemThresholds()">💾 Save Settings</button>
         </div>
@@ -2858,10 +2885,6 @@
           </div>
           <div class="form-group"><label>Temp Critical (°C)</label><input type="number" id="cfgTempC"
               placeholder="100" /></div>
-          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="cfgGasW" placeholder="150" />
-          </div>
-          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="cfgGasC"
-              placeholder="300" /></div>
           <div class="form-group"><label>Humidity Warning (%)</label><input type="number" id="cfgHumW"
               placeholder="70" />
           </div>
@@ -3267,12 +3290,31 @@
         });
 
         socket.on('incident:resolved', () => { loadDashboard(); loadIncidents(); });
+        socket.on('incident:acknowledged', () => { loadIncidents(); });
+        socket.on('incident:escalated', () => { loadDashboard(); loadIncidents(); });
         socket.on('sprinkler:activated', ({ zone }) => { toast(`💧 Sprinkler ${zone} activated`); loadDashboard(); });
         socket.on('sprinkler:deactivated', ({ zone }) => { toast(`✅ Sprinkler ${zone} deactivated`); loadDashboard(); });
         socket.on('geofence:updated', () => { loadGeofence(); });
         socket.on('device:status', ({ deviceCode, status }) => {
           toast(`📡 ${deviceCode}: ${status.toUpperCase()}`);
           loadDevices();
+          // FIX: When device goes offline clear sensor tiles so stale FIRE readings don't persist
+          if (status === 'offline') {
+            const flameEl = document.getElementById('sv-flame');
+            const flameBar = document.getElementById('sb-flame');
+            if (flameEl) { flameEl.textContent = '—'; flameEl.style.color = 'var(--text-muted)'; }
+            if (flameBar) { flameBar.style.width = '0%'; flameBar.style.background = 'var(--text-muted)'; }
+            const svFR = document.getElementById('sv-flame-reading');
+            const sbFR = document.getElementById('sb-flame-reading');
+            if (svFR) svFR.textContent = '—';
+            if (sbFR) sbFR.style.width = '0%';
+            document.getElementById('sv-smoke').textContent = '—';
+            document.getElementById('sb-smoke').style.width = '0%';
+            document.getElementById('sv-temp').textContent = '—';
+            document.getElementById('sb-temp').style.width = '0%';
+            document.getElementById('sv-hum').textContent = '—';
+            document.getElementById('sb-hum').style.width = '0%';
+          }
         });
         socket.on('system:heartbeat', ({ connectedClients }) => {
           // silent
@@ -3404,18 +3446,41 @@
       const pct = (v, max) => v != null ? Math.min(100, Math.round(v / max * 100)) + '%' : '0%';
       if (smoke_ppm != null) { document.getElementById('sv-smoke').textContent = s(smoke_ppm); document.getElementById('sb-smoke').style.width = pct(smoke_ppm, 1000); }
       if (temperature_c != null) { document.getElementById('sv-temp').textContent = s(temperature_c); document.getElementById('sb-temp').style.width = pct(temperature_c, 200); }
+<<<<<<< HEAD
       if (gas_ppm != null) { document.getElementById('sv-gas').textContent = s(gas_ppm); document.getElementById('sb-gas').style.width = pct(gas_ppm, 1000); }
       
       const flameEl = document.getElementById('sv-flame');
       const flameBar = document.getElementById('sb-flame');
       if (flame_detected != null) {
         const isFire = !!flame_detected;
+=======
+
+      const svGas = document.getElementById('sv-gas');
+      const sbGas = document.getElementById('sb-gas');
+      if (svGas && gas_ppm != null) svGas.textContent = s(gas_ppm);
+      if (sbGas && gas_ppm != null) sbGas.style.width = pct(gas_ppm, 1000);
+
+      const flameEl = document.getElementById('sv-flame');
+      const flameBar = document.getElementById('sb-flame');
+      if (flame_detected != null) {
+        const isFire = flame_detected === 1 || flame_detected === true || String(flame_detected).toLowerCase() === 'true';
+>>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
         flameEl.textContent = isFire ? 'FIRE!' : 'CLEAR';
         flameEl.style.color = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
         flameBar.style.width = isFire ? '100%' : '0%';
         flameBar.style.background = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
+<<<<<<< HEAD
       }
       
+=======
+
+        const svFlameReading = document.getElementById('sv-flame-reading');
+        const sbFlameReading = document.getElementById('sb-flame-reading');
+        if (svFlameReading) svFlameReading.textContent = isFire ? '1' : '0';
+        if (sbFlameReading) sbFlameReading.style.width = isFire ? '100%' : '0%';
+      }
+
+>>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
       if (humidity_pct != null) { document.getElementById('sv-hum').textContent = s(humidity_pct); document.getElementById('sb-hum').style.width = pct(humidity_pct, 100); }
     }
 
@@ -3429,7 +3494,7 @@
           labels = data.chartData.map(r => parseDate(r.hour).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
           smokeVals = data.chartData.map(r => parseFloat(r.avg_smoke) || 0);
           tempVals = data.chartData.map(r => parseFloat(r.avg_temp) || 0);
-          gasVals = data.chartData.map(r => parseFloat(r.avg_gas) || 0);
+          gasVals = data.chartData.map(r => parseFloat(r.flame_freq) || 0);
           humVals = data.chartData.map(r => parseFloat(r.avg_humidity) || 0);
         }
       } catch (e) { }
@@ -3484,8 +3549,13 @@
       <td>${bat}</td>
       <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">${lastSeen}</td>
       <td><span class="pill ${pCls}">${d.status}</span></td>
-      <td style="display:flex;gap:5px;">
+      <td style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="openDeviceConfig('${d.id || d.device_code}')">⚙️ Config</button>
+        <button class="btn" id="spr-btn-${d.device_code}"
+          style="font-size:10px;padding:3px 8px;background:${d.sprinkler_on ? 'var(--accent-fire)' : 'var(--accent-teal)'};color:#fff"
+          onclick="activateSprinkler('${d.device_code}', ${d.sprinkler_on ? 'false' : 'true'}, this)">
+          ${d.sprinkler_on ? '🔴 Deactivate' : '💧 Activate'}
+        </button>
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--accent-fire)" onclick="deleteDevice('${d.id || d.device_code}')">Delete</button>
       </td>
     </tr>`;
@@ -3571,6 +3641,7 @@
       <td style="color:${stColor};font-size:12px;font-weight:600">${i.status.toUpperCase()}</td>
       <td onclick="event.stopPropagation()" style="display:flex;gap:5px;flex-wrap:wrap">
         ${canResolve ? `<button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="resolveIncident('${i.id || i.incident_code}')">✅ Resolve</button>` : ''}
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--accent-teal)" onclick="exportIncidentPDF('${i.id || i.incident_code}')">PDF</button>
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="exportIncidentCSV('${i.id || i.incident_code}')">CSV</button>
       </td>
     </tr>`;
@@ -3642,10 +3713,11 @@
       const canAck = canAct && inc.status !== 'acknowledged';
 
       document.getElementById('mActions').innerHTML = `
-    ${canAck ? `<button class="btn btn-amber" onclick="acknowledgeIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">✋ Acknowledge</button>` : ''}
-    ${canAct ? `<button class="btn btn-fire" onclick="escalateIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">🚨 Escalate</button>` : ''}
-    ${canAct ? `<button class="btn btn-teal" onclick="resolveIncident('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}');closeModal('incModal')">✅ Resolve</button>` : ''}
-    <button class="btn btn-ghost" onclick="exportIncidentCSV('\${inc.id||inc.incident_code}${inc.id || inc.incident_code}')">⬇ Export CSV</button>
+    ${canAck ? `<button class="btn btn-amber" onclick="acknowledgeIncident('${inc.id || inc.incident_code}');closeModal('incModal')">✋ Acknowledge</button>` : ''}
+    ${canAct ? `<button class="btn btn-fire" onclick="escalateIncident('${inc.id || inc.incident_code}');closeModal('incModal')">🚨 Escalate</button>` : ''}
+    ${canAct ? `<button class="btn btn-teal" onclick="resolveIncident('${inc.id || inc.incident_code}');closeModal('incModal')">✅ Resolve</button>` : ''}
+    <button class="btn btn-ghost" onclick="exportIncidentPDF('${inc.id || inc.incident_code}')">⬇ Export PDF</button>
+    <button class="btn btn-ghost" onclick="exportIncidentCSV('${inc.id || inc.incident_code}')">⬇ Export CSV</button>
     <button class="btn btn-ghost" onclick="closeModal('incModal')">Close</button>
   `;
     }
@@ -4211,6 +4283,130 @@
     // ═══════════════════════════════════════════════════════
     // EXPORT
     // ═══════════════════════════════════════════════════════
+    async function exportIncidentPDF(id) {
+      try {
+        toast('Generating PDF report...');
+        const res = await apiFetch(`/incidents/${id}`);
+        const data = await res.json();
+        if (!data.success || !data.incident) {
+          toast('Failed to load incident details', 'error');
+          return;
+        }
+        const inc = data.incident;
+        const events = data.events || [];
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setProperties({
+          title: `SFDAASS Incident Report ${inc.incident_code}`,
+          subject: 'Fire Incident Detailed Report',
+          author: 'SFDAASS Fire Safety System',
+        });
+
+        // Header Background
+        doc.setFillColor(6, 10, 15);
+        doc.rect(0, 0, 210, 40, 'F');
+
+        // Header Title
+        doc.setTextColor(255, 78, 26);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.text('SFDAASS MONITORING PLATFORM', 15, 20);
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Smart Fire Detection, Alerting & Automated Suppression System', 15, 28);
+        doc.text(`Report Generated: ${new Date().toLocaleString()}`, 15, 34);
+
+        // Incident Header Section
+        doc.setTextColor(16, 28, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`INCIDENT REPORT: ${inc.incident_code}`, 15, 52);
+
+        // Divider
+        doc.setDrawColor(255, 78, 26);
+        doc.setLineWidth(0.8);
+        doc.line(15, 55, 195, 55);
+
+        // Details Matrix
+        const detailsData = [
+          ['Field', 'Value', 'Field', 'Value'],
+          ['Incident ID', inc.incident_code || '—', 'Status', (inc.status || '—').toUpperCase()],
+          ['Date & Time', parseDate(inc.detected_at).toLocaleString() || '—', 'Severity', (inc.severity || '—').toUpperCase()],
+          ['Device Code', inc.device_code || '—', 'Location', inc.location_label || '—'],
+          ['GPS Latitude', inc.gps_lat != null ? parseFloat(inc.gps_lat).toFixed(6) : '—', 'GPS Longitude', inc.gps_lng != null ? parseFloat(inc.gps_lng).toFixed(6) : '—'],
+          ['Inside Geofence', inc.inside_geofence ? 'Yes' : 'No', 'Sprinkler Activated', inc.sprinkler_activated ? 'Yes' : 'No'],
+          ['Smoke Level', inc.smoke_ppm != null ? `${inc.smoke_ppm} ppm` : '—', 'Temperature', inc.temperature_c != null ? `${inc.temperature_c} °C` : '—'],
+          ['Flame Detected', inc.flame_detected ? 'Yes' : 'No', 'Resolution Time', inc.resolution_secs != null ? `${Math.floor(inc.resolution_secs / 60)}m ${inc.resolution_secs % 60}s` : '—'],
+        ];
+
+        doc.autoTable({
+          startY: 60,
+          head: [detailsData[0]],
+          body: detailsData.slice(1),
+          theme: 'grid',
+          headStyles: { fillColor: [12, 21, 32], textColor: [255, 255, 255], fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [245, 247, 250] },
+          margin: { left: 15, right: 15 },
+          styles: { fontSize: 9, cellPadding: 3 }
+        });
+
+        // Timeline Section
+        let currentY = doc.lastAutoTable.finalY + 12;
+        doc.setTextColor(16, 28, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('INCIDENT EVENT TIMELINE', 15, currentY);
+
+        doc.setDrawColor(0, 212, 170);
+        doc.setLineWidth(0.8);
+        doc.line(15, currentY + 3, 195, currentY + 3);
+
+        const timelineRows = events.map(e => [
+          parseDate(e.occurred_at).toLocaleString(),
+          (e.event_type || '—').toUpperCase(),
+          e.description || '—'
+        ]);
+
+        doc.autoTable({
+          startY: currentY + 8,
+          head: [['Occurred At', 'Event Type', 'Description']],
+          body: timelineRows,
+          theme: 'striped',
+          headStyles: { fillColor: [12, 21, 32], textColor: [255, 255, 255], fontStyle: 'bold' },
+          margin: { left: 15, right: 15 },
+          styles: { fontSize: 9, cellPadding: 3 }
+        });
+
+        // Signatures
+        currentY = doc.lastAutoTable.finalY + 22;
+        if (currentY > 260) {
+          doc.addPage();
+          currentY = 30;
+        }
+
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(15, currentY, 80, currentY);
+        doc.line(130, currentY, 195, currentY);
+
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Reporting Officer Signature', 15, currentY + 5);
+        doc.text('System Administrator Signature', 130, currentY + 5);
+
+        doc.save(`SFDAASS_Incident_${inc.incident_code}.pdf`);
+        toast('✅ PDF report downloaded');
+      } catch (err) {
+        console.error('PDF export error:', err);
+        toast('Error exporting PDF report', 'error');
+      }
+    }
+
     function exportIncidentCSV(id) {
       window.open(`${API_BASE}/incidents/${id}/export/csv`, '_blank');
     }
@@ -4361,14 +4557,12 @@
 
     async function submitDeviceConfig() {
       const body = {
-        smoke_warning: parseInt(document.getElementById('cfgSmokeW').value) || 250,
-        smoke_critical: parseInt(document.getElementById('cfgSmokeC').value) || 500,
-        temp_warning: parseInt(document.getElementById('cfgTempW').value) || 50,
-        temp_critical: parseInt(document.getElementById('cfgTempC').value) || 100,
-        gas_warning: parseInt(document.getElementById('cfgGasW').value) || 150,
-        gas_critical: parseInt(document.getElementById('cfgGasC').value) || 300,
-        humidity_warning: parseInt(document.getElementById('cfgHumW').value) || 70,
-        humidity_critical: parseInt(document.getElementById('cfgHumC').value) || 90,
+        smoke_warning:    parseInt(document.getElementById('cfgSmokeW').value)   || 250,
+        smoke_critical:   parseInt(document.getElementById('cfgSmokeC').value)   || 500,
+        temp_warning:     parseInt(document.getElementById('cfgTempW').value)    || 50,
+        temp_critical:    parseInt(document.getElementById('cfgTempC').value)    || 100,
+        humidity_warning: parseInt(document.getElementById('cfgHumW').value)     || 70,
+        humidity_critical:parseInt(document.getElementById('cfgHumC').value)     || 90,
       };
       try {
         const res = await apiFetch(`/devices/${currentConfigDevice}/config`, { method: 'POST', body: JSON.stringify(body) });
@@ -4381,6 +4575,28 @@
         }
       } catch (e) {
         toast('Error pushing device config', 'error');
+      }
+    }
+
+    // Activate or deactivate sprinkler for a specific device
+    async function activateSprinkler(deviceCode, activate, btn) {
+      const action = activate ? 'activate' : 'deactivate';
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        const res = await apiFetch(`/sprinklers/${deviceCode}/${action}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          toast(activate ? `💧 Sprinkler ${deviceCode} activated` : `✅ Sprinkler ${deviceCode} deactivated`);
+          // Refresh the devices table to reflect new state
+          await loadDevices();
+        } else {
+          toast(data.message || 'Failed to control sprinkler', 'error');
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('Error controlling sprinkler', 'error');
+        btn.disabled = false;
       }
     }
 

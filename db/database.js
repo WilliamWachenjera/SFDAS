@@ -1,57 +1,58 @@
-// db/database.js — better-sqlite3 version
+// db/database.js — FIXED for PostgreSQL + PostGIS
 require('dotenv').config();
-const path = require('path');
-const fs   = require('fs');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 
-const DB_PATH = path.resolve(__dirname, '..', process.env.SQLITE_PATH || 'sfdaass.db');
-
-let db = null;
+let pool = null;
 
 async function init() {
-  if (db) return;
-  
-  // Ensure directory exists
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  if (pool) return;
 
-  db = new Database(DB_PATH, { 
-    // verbose: console.log 
+  pool = new Pool({
+    host:     process.env.DB_HOST     || 'localhost',
+    port:     parseInt(process.env.DB_PORT) || 5432,
+    database: process.env.DB_NAME     || 'sfdaass',
+    user:     process.env.DB_USER     || 'postgres',
+    password: process.env.DB_PASS     || '',
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 30000,
   });
-  
-  db.pragma('foreign_keys = ON');
-  db.pragma('journal_mode = WAL'); // Better for concurrent access
-  
-  console.log('[DB] Connected: ' + DB_PATH);
-}
 
-function run(sql, params = []) {
-  const stmt = db.prepare(sql);
-  const info = stmt.run(params);
-  return { lastID: info.lastInsertRowid, changes: info.changes };
-}
-
-function get(sql, params = []) {
-  const stmt = db.prepare(sql);
-  return stmt.get(params);
-}
-
-function all(sql, params = []) {
   try {
-    const stmt = db.prepare(sql);
-    return stmt.all(params);
+    const client = await pool.connect();
+    console.log('[DB] Connected to PostgreSQL');
+    await client.query('CREATE EXTENSION IF NOT EXISTS postgis;');
+    console.log('[DB] PostGIS extension ready');
+    client.release();
   } catch (e) {
-    console.error('[DB] all() error:', e.message);
-    return [];
+    console.error('[DB] Connection failed:', e.message);
   }
 }
 
-// Dummy saveDb for backward compatibility if needed, but better-sqlite3 persists automatically
-function saveDb() {
-  // Not needed with better-sqlite3
+// === IMPORTANT: Do NOT convert queries that already use $1, $2... ===
+async function query(sql, params = []) {
+  if (!pool) throw new Error('DB not initialised. Call await db.init() first.');
+  return pool.query(sql, params);
 }
 
-module.exports = { init, run, get, all, saveDb };
+async function run(sql, params = []) {
+  const res = await query(sql, params);
+  const lastID = res.rows && res.rows[0] ? (res.rows[0].id || null) : null;
+  return { lastID, changes: res.rowCount };
+}
 
+async function get(sql, params = []) {
+  const res = await query(sql, params);
+  return res.rows[0];
+}
+
+async function all(sql, params = []) {
+  const res = await query(sql, params);
+  return res.rows;
+}
+
+function getPool() {
+  return pool;
+}
+
+module.exports = { init, query, run, get, all, getPool };

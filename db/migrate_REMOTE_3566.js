@@ -10,23 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 async function migrate() {
   console.log('[DB] Running migrations...');
 
-<<<<<<< HEAD
-  run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'operator',
-    phone TEXT,
-    assigned_devices TEXT DEFAULT '[]',
-    is_active INTEGER DEFAULT 1,
-    last_login TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
-  )`);
-=======
   await query('CREATE EXTENSION IF NOT EXISTS postgis;');
->>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
 
   await query([
     'CREATE TABLE IF NOT EXISTS users (',
