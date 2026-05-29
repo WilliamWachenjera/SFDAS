@@ -2091,35 +2091,11 @@
             </div>
 
             <div class="s-tile">
-<<<<<<< HEAD
-              <div class="sl">MQ-2 Gas (CO/LPG)</div>
-              <div class="sv" id="sv-gas" style="color:var(--accent-amber)">—</div>
+              <div class="sl">Gas (CO/LPG)</div>
+              <div class="sv" id="sv-gas" style="color:var(--accent-green)">—</div>
               <div class="su">ppm</div>
               <div class="sbar">
-                <div class="sfill" id="sb-gas" style="background:var(--accent-amber);width:0%"></div>
-              </div>
-            </div>
-            <div class="s-tile">
-              <div class="sl">Fire Status</div>
-              <div class="sv" id="sv-flame" style="color:var(--accent-fire)">CLEAR</div>
-              <div class="su">Flame Sensor</div>
-              <div class="sbar">
-                <div class="sfill" id="sb-flame" style="background:var(--accent-green);width:0%"></div>
-=======
-              <div class="sl">Fire Status</div>
-              <div class="sv" id="sv-flame" style="color:var(--accent-fire)">CLEAR</div>
-              <div class="su"> FIRE/CLEAR</div>
-              <div class="sbar">
-                <div class="sfill" id="sb-flame" style="background:var(--accent-green);width:0%"></div>
-              </div>
-            </div>
-            <div class="s-tile">
-              <div class="sl">Flame Sensor Reading</div>
-              <div class="sv" id="sv-flame-reading" style="color:var(--accent-fire)">—</div>
-              <div class="su">State</div>
-              <div class="sbar">
-                <div class="sfill" id="sb-flame-reading" style="background:var(--accent-fire);width:0%"></div>
->>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
+                <div class="sfill" id="sb-gas" style="background:var(--accent-green);width:0%"></div>
               </div>
             </div>
             <div class="s-tile">
@@ -2424,15 +2400,8 @@
           <div class="form-group"><label>Smoke Critical (ppm)</label><input type="number" id="sysSmokeC" /></div>
           <div class="form-group"><label>Temperature Warning (°C)</label><input type="number" id="sysTempW" /></div>
           <div class="form-group"><label>Temperature Critical (°C)</label><input type="number" id="sysTempC" /></div>
-<<<<<<< HEAD
-          <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW" disabled /></div>
-          <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC" disabled /></div>
-=======
-          <div class="form-group"><label>Gas Warning (ppm) [Deprecated]</label><input type="number" id="sysGasW"
-              disabled /></div>
-          <div class="form-group"><label>Gas Critical (ppm) [Deprecated]</label><input type="number" id="sysGasC"
-              disabled /></div>
->>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
+          <div class="form-group"><label>Gas Warning (ppm)</label><input type="number" id="sysGasW" /></div>
+          <div class="form-group"><label>Gas Critical (ppm)</label><input type="number" id="sysGasC" /></div>
           <div class="form-group"><label>Confirmation Duration (ms)</label><input type="number" id="sysConfMs" /></div>
           <button class="btn btn-teal" onclick="saveSystemThresholds()">💾 Save Settings</button>
         </div>
@@ -3446,41 +3415,7 @@
       const pct = (v, max) => v != null ? Math.min(100, Math.round(v / max * 100)) + '%' : '0%';
       if (smoke_ppm != null) { document.getElementById('sv-smoke').textContent = s(smoke_ppm); document.getElementById('sb-smoke').style.width = pct(smoke_ppm, 1000); }
       if (temperature_c != null) { document.getElementById('sv-temp').textContent = s(temperature_c); document.getElementById('sb-temp').style.width = pct(temperature_c, 200); }
-<<<<<<< HEAD
       if (gas_ppm != null) { document.getElementById('sv-gas').textContent = s(gas_ppm); document.getElementById('sb-gas').style.width = pct(gas_ppm, 1000); }
-      
-      const flameEl = document.getElementById('sv-flame');
-      const flameBar = document.getElementById('sb-flame');
-      if (flame_detected != null) {
-        const isFire = !!flame_detected;
-=======
-
-      const svGas = document.getElementById('sv-gas');
-      const sbGas = document.getElementById('sb-gas');
-      if (svGas && gas_ppm != null) svGas.textContent = s(gas_ppm);
-      if (sbGas && gas_ppm != null) sbGas.style.width = pct(gas_ppm, 1000);
-
-      const flameEl = document.getElementById('sv-flame');
-      const flameBar = document.getElementById('sb-flame');
-      if (flame_detected != null) {
-        const isFire = flame_detected === 1 || flame_detected === true || String(flame_detected).toLowerCase() === 'true';
->>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
-        flameEl.textContent = isFire ? 'FIRE!' : 'CLEAR';
-        flameEl.style.color = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
-        flameBar.style.width = isFire ? '100%' : '0%';
-        flameBar.style.background = isFire ? 'var(--accent-fire)' : 'var(--accent-teal)';
-<<<<<<< HEAD
-      }
-      
-=======
-
-        const svFlameReading = document.getElementById('sv-flame-reading');
-        const sbFlameReading = document.getElementById('sb-flame-reading');
-        if (svFlameReading) svFlameReading.textContent = isFire ? '1' : '0';
-        if (sbFlameReading) sbFlameReading.style.width = isFire ? '100%' : '0%';
-      }
-
->>>>>>> c061d6f30554e47211824662aefcd1c061e521ea
       if (humidity_pct != null) { document.getElementById('sv-hum').textContent = s(humidity_pct); document.getElementById('sb-hum').style.width = pct(humidity_pct, 100); }
     }
 
